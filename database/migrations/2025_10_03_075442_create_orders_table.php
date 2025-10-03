@@ -12,8 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_pemesanan');
+            $table->unsignedBigInteger('id_user');
+            $table->enum('status', ['pending', 'dikonfirmasi', 'diproses', 'dikirim', 'selesai', 'dibatalkan'])->default('pending');
+            $table->decimal('total_harga', 12, 2)->default(0);
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('id_user')->references('id_user')->on('users')->onDelete('cascade');
         });
     }
 

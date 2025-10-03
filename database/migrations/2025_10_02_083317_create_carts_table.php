@@ -12,8 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('carts', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_keranjang');
+            $table->unsignedBigInteger('id_user');
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('id_user')->references('id_user')->on('users')->onDelete('cascade');
+
+            // Unique constraint: satu user hanya bisa punya satu cart aktif
+            $table->unique('id_user');
         });
     }
 
