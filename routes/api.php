@@ -46,7 +46,7 @@ Route::post('/login', function(Illuminate\Http\Request $request) {
     ]);
 
     $loginField = $request->login;
-    
+
     // Cek apakah input adalah email atau username
     $user = null;
     if (filter_var($loginField, FILTER_VALIDATE_EMAIL)) {

@@ -12,22 +12,15 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * Handle an incoming authentication request.
+     * NOTE: This controller is not used in API-only authentication.
+     * Use routes/api.php login endpoint instead.
      */
     public function store(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        // Generate token for API response
-        $user = Auth::user();
-        $token = $user->createToken('auth-token')->plainTextToken;
-
+        // This controller should not be used with API-only auth
         return response()->json([
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token
-        ]);
+            'error' => 'This endpoint is deprecated. Use /api/login instead.'
+        ], 410);
     }
 
     /**
