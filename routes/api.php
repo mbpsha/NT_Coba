@@ -121,6 +121,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('dashboard/sales-data', [App\Http\Controllers\DashboardController::class, 'getSalesData']);
     Route::get('dashboard/product-stats', [App\Http\Controllers\DashboardController::class, 'getProductStats']);
 
+    // Payment-specific routes
+    Route::post('payments/{id}/upload-proof', [App\Http\Controllers\PaymentController::class, 'uploadPaymentProof']);
+    Route::get('payments/{id}/qr-code', [App\Http\Controllers\PaymentController::class, 'getQRCode']);
+    Route::get('payments/{id}/status', [App\Http\Controllers\PaymentController::class, 'getPaymentStatus']);
+
     // Admin actions
     Route::patch('payments/{paymentId}/verify', [App\Http\Controllers\DashboardController::class, 'verifyPayment']);
     Route::patch('orders/{orderId}/status', [App\Http\Controllers\DashboardController::class, 'updateOrderStatus']);

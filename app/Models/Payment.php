@@ -17,10 +17,14 @@ class Payment extends Model
         'jumlah',
         'status_pembayaran',
         'bukti_pembayaran',
+        'payment_details',
+        'payment_date',
     ];
 
     protected $casts = [
         'jumlah' => 'decimal:2',
+        'payment_details' => 'array',
+        'payment_date' => 'datetime',
     ];
 
     // Relations
