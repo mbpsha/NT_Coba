@@ -1,23 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { usePage, useForm } from '@inertiajs/vue3'
-
-const page = usePage()
-const user = computed(() => page.props.auth.user)
-
-const logoutForm = useForm({})
-
-function logout() {
-    logoutForm.post(route('logout'))
-}
-
-function goToLogin() {
-    window.location.href = route('login')
-}
-
-function goToRegister() {
-    window.location.href = route('register')
-}
+import Header from './User/Header.vue'
+import Footer from './User/Footer.vue'
 
 function scrollToNews() {
     const newsSection = document.getElementById('news-section')
@@ -34,43 +17,8 @@ function scrollToNews() {
 
     <div class="text-gray-900 font-inter">
         <!-- NAVBAR -->
-        <header class="fixed inset-x-0 top-0 z-50 shadow-sm bg-white/90 backdrop-blur">
-            <nav class="flex items-center justify-between w-full h-16 px-0 sm:px-2 lg:px-4 ">
-                <div class="flex items-center gap-2">
-                        <div class="flex justify-start">
-                    <img src="/assets/dashboard/logo-ngundur.png" alt="NGUNDUR" class="h-20 w-50 ">
-                        </div>
-                </div>
-                <ul class="items-center hidden gap-6 text-sm md:flex">
-                    <li><a href="#" class="font-bold text-green-700">Home</a></li>
-                    <li><a href="#" class="hover:text-green-700">Toko</a></li>
-                    <li><a href="#" class="hover:text-green-700">Berita</a></li>
-                    <li><a href="#" class="hover:text-green-700">Tentang</a></li>
-                    <li><a href="#" class="hover:text-green-700">Blog</a></li>
-                </ul>
-                <div class="items-center hidden gap-2 sm:flex">
-                    <div v-if="!user">
-                        <button class="px-4 py-2 text-white bg-green-500 rounded-full hover:bg-green-600 font-inter" @click="goToLogin">Masuk</button>
-                        <button class="px-4 py-2 text-green-700 bg-green-100 rounded-full hover:bg-green-200 font-inter" @click="goToRegister">Daftar</button>
-                    </div>
-                    <div v-else class="flex items-center gap-4">
-                        <!-- Shopping Cart Icon -->
-                        <svg class="w-6 h-6 text-gray-700 cursor-pointer hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.6 8M7 13L5.4 5M7 13l2.25 2.25M16 16a2 2 0 104 0 2 2 0 00-4 0zM9 16a2 2 0 104 0 2 2 0 00-4 0z"></path>
-                        </svg>
+        <Header />
 
-                        <!-- Profile Section -->
-                        <div class="flex items-center gap-2">
-                            <img src="/assets/dashboard/profil.png" alt="Profil" class="w-8 h-8 border border-green-700 rounded-full">
-                            <span class="font-semibold text-green-700">{{ user.nama }}</span>
-                            <button @click="logout" :disabled="logoutForm.processing" class="px-3 py-1 text-red-700 bg-red-100 rounded-full hover:bg-red-200 font-inter">
-                                {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </header>
         <!-- HERO -->
         <section class="relative flex justify-center">
             <div class="relative w-[1920px] h-[1000px] overflow-hidden rounded-2x1">
@@ -198,30 +146,6 @@ function scrollToNews() {
             </div>
         </section>
         <!-- FOOTER -->
-        <footer class="relative mt-10">
-            <div class="relative text-white bg-gradient-to-r from-green-800 to-green-700">
-                <div class="absolute inset-y-0 right-0 hidden w-1/3 opacity-30 md:block">
-                    <img src="/assets/dashboard/footer-logo.png" alt="" class="object-cover w-full h-full">
-                </div>
-                <div class="relative grid max-w-6xl gap-8 px-4 py-10 mx-auto sm:px-6 lg:px-8 md:grid-cols-2">
-                    <div>
-                        <h4 class="text-xl font-semibold">NGUNDUR</h4>
-                        <p class="mt-3 text-sm leading-7 text-white/90">
-                            Jl. Ringroad Barat, Dowangan, Banyuraden,<br>
-                            Gamping, Sleman, Daerah Istimewa Yogyakarta
-                        </p>
-                        <div class="mt-4 space-y-1 text-sm text-white/90">
-                            <p><span class="font-semibold">Phone</span> +62 000-000-000</p>
-                            <p><span class="font-semibold">WA</span> +62 000-000-000</p>
-                            <p><span class="font-semibold">Hours</span> Senin–Jum'at 09.00–16.00</p>
-                        </div>
-                        <div class="h-px max-w-sm mt-6 bg-white/30"></div>
-                        <p class="mt-4 text-xs text-white/70">© 2025 NGUNDUR</p>
-                    </div>
-                    <div class="flex items-center justify-end">
-                    </div>
-                </div>
-            </div>
-        </footer>
+        <Footer />
     </div>
 </template>

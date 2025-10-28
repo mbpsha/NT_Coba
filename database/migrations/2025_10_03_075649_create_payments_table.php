@@ -12,18 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
-            $table->id('id_pembayaran');
-            $table->unsignedBigInteger('id_pemesanan');
-            $table->enum('metode_pembayaran', ['qris'])->default('qris'); // Simplified to single method
+            $table->id('id_payment');
+            $table->unsignedBigInteger('id_order');
+            $table->enum('metode_pembayaran', ['qris'])->default('qris'); // Only QRIS
             $table->decimal('jumlah', 12, 2)->default(0);
-            $table->enum('status_pembayaran', ['pending', 'berhasil', 'gagal'])->default('pending');
-            $table->string('bukti_pembayaran')->nullable(); // For payment proof upload
-            $table->text('payment_details')->nullable(); // JSON for additional payment info
-            $table->datetime('payment_date')->nullable(); // When payment was made
+            $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
+            $table->string('bukti_transfer')->nullable(); // For payment proof upload
             $table->timestamps();
 
             // Foreign key constraint
-            $table->foreign('id_pemesanan')->references('id_pemesanan')->on('orders')->onDelete('cascade');
+            $table->foreign('id_order')->references('id_order')->on('orders')->onDelete('cascade');
         });
     }
 

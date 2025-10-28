@@ -9,7 +9,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id_pemesanan';
+    protected $primaryKey = 'id_order';
 
     protected $fillable = [
         'id_user',
@@ -30,12 +30,12 @@ class Order extends Model
 
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetail::class, 'id_pemesanan');
+        return $this->hasMany(OrderDetail::class, 'id_order', 'id_order');
     }
 
     public function payment()
     {
-        return $this->hasOne(Payment::class, 'id_pemesanan');
+        return $this->hasOne(Payment::class, 'id_order', 'id_order');
     }
 
     public function address()

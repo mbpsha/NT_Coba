@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id('id_pemesanan');
+            $table->id('id_order');
             $table->unsignedBigInteger('id_user');
-            $table->enum('status', ['pending', 'dikonfirmasi', 'diproses', 'dikirim', 'selesai', 'dibatalkan'])->default('pending');
+            $table->enum('status', ['pending', 'diproses', 'dikirim', 'selesai', 'dibatalkan'])->default('pending');
             $table->decimal('total_harga', 12, 2)->default(0);
             $table->timestamps();
 

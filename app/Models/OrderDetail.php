@@ -9,26 +9,24 @@ class OrderDetail extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id_detail_pemesanan';
+    protected $primaryKey = 'id_order_detail';
 
     protected $fillable = [
-        'id_pemesanan',
+        'id_order',
         'id_produk',
         'jumlah',
-        'harga_satuan',
-        'subtotal',
+        'harga',
     ];
 
     protected $casts = [
         'jumlah' => 'integer',
-        'harga_satuan' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'harga' => 'decimal:2',
     ];
 
     // Relations
     public function order()
     {
-        return $this->belongsTo(Order::class, 'id_pemesanan', 'id_pemesanan');
+        return $this->belongsTo(Order::class, 'id_order', 'id_order');
     }
 
     public function product()

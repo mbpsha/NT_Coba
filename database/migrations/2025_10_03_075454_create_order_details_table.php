@@ -12,16 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_details', function (Blueprint $table) {
-            $table->id('id_detail_pemesanan');
-            $table->unsignedBigInteger('id_pemesanan');
+            $table->id('id_order_detail');
+            $table->unsignedBigInteger('id_order');
             $table->unsignedBigInteger('id_produk');
             $table->integer('jumlah')->default(1);
-            $table->decimal('harga_satuan', 12, 2)->default(0);
-            $table->decimal('subtotal', 12, 2)->default(0);
+            $table->decimal('harga', 12, 2)->default(0);
             $table->timestamps();
 
             // Foreign key constraints
-            $table->foreign('id_pemesanan')->references('id_pemesanan')->on('orders')->onDelete('cascade');
+            $table->foreign('id_order')->references('id_order')->on('orders')->onDelete('cascade');
             $table->foreign('id_produk')->references('id_produk')->on('products')->onDelete('cascade');
         });
     }

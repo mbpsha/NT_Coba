@@ -12,10 +12,11 @@ class Product extends Model
     protected $primaryKey = 'id_produk';
 
     protected $fillable = [
-        'nama',
+        'nama_produk',
         'deskripsi',
         'harga',
-        'foto',
+        'gambar',
+        'kategori',
         'stok',
     ];
 

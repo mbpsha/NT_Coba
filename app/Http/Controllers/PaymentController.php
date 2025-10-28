@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\Order;
 use App\Http\Requests\PaymentRequest;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
+    // Public API methods
     public function index()
     {
         return response()->json(Payment::all());
@@ -17,6 +20,38 @@ class PaymentController extends Controller
     {
         $payment = Payment::findOrFail($id);
         return response()->json($payment);
+    }
+
+    // Admin methods
+    public function indexAdmin()
+    {
+        $payments = Payment::with(['order.user', 'order.orderDetails.product'])
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('PaymentVerification', [
+            'payments' => $payments
+        ]);
+    }
+
+    public function verify(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,verified,rejected'
+        ]);
+
+        $payment = Payment::findOrFail($id);
+        $payment->update(['status' => $validated['status']]);
+
+        // Update order status if payment is verified
+        if ($validated['status'] === 'verified') {
+            $order = Order::find($payment->id_order);
+            if ($order && $order->status === 'pending') {
+                $order->update(['status' => 'diproses']);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Payment status updated successfully!');
     }
 
     public function store(PaymentRequest $request)
@@ -52,14 +87,13 @@ class PaymentController extends Controller
 
         // Upload file
         $file = $request->file('bukti_pembayaran');
-        $filename = 'payment_proof_' . $payment->id_pembayaran . '_' . time() . '.' . $file->extension();
+        $filename = 'payment_proof_' . $payment->id_payment . '_' . time() . '.' . $file->extension();
         $path = $file->storeAs('payment_proofs', $filename, 'public');
 
         // Update payment record
         $payment->update([
-            'bukti_pembayaran' => $path,
-            'status_pembayaran' => 'pending', // Wait for admin verification
-            'payment_date' => now()
+            'bukti_transfer' => '/storage/' . $path,
+            'status' => 'pending', // Wait for admin verification
         ]);
 
         return response()->json([
@@ -80,16 +114,16 @@ class PaymentController extends Controller
         $qrData = [
             'merchant' => 'NGUNDUR',
             'amount' => $payment->jumlah,
-            'transaction_id' => $payment->id_pembayaran,
+            'transaction_id' => $payment->id_payment,
             'payment_method' => 'QRIS'
         ];
 
         return response()->json([
             'payment_details' => [
-                'id_pembayaran' => $payment->id_pembayaran,
+                'id_payment' => $payment->id_payment,
                 'metode_pembayaran' => $payment->metode_pembayaran,
                 'jumlah' => $payment->jumlah,
-                'status' => $payment->status_pembayaran,
+                'status' => $payment->status,
                 'tanggal' => $payment->created_at->format('d M Y'),
                 'payment_method' => 'QRIS'
             ],
@@ -109,12 +143,11 @@ class PaymentController extends Controller
         $payment = Payment::findOrFail($id);
 
         return response()->json([
-            'id_pembayaran' => $payment->id_pembayaran,
-            'status' => $payment->status_pembayaran,
+            'id_payment' => $payment->id_payment,
+            'status' => $payment->status,
             'jumlah' => $payment->jumlah,
             'metode_pembayaran' => $payment->metode_pembayaran,
-            'bukti_pembayaran' => $payment->bukti_pembayaran ? asset('storage/' . $payment->bukti_pembayaran) : null,
-            'payment_date' => $payment->payment_date,
+            'bukti_transfer' => $payment->bukti_transfer ? asset('storage/' . $payment->bukti_transfer) : null,
             'created_at' => $payment->created_at,
             'updated_at' => $payment->updated_at
         ]);
