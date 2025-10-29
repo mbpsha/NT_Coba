@@ -11,7 +11,7 @@
       <div class="w-full max-w-2xl bg-green-50/90 rounded-xl border border-green-200 shadow-2xl p-6">
         <div class="flex justify-center mb-2"><img :src="Logo" class="h-10"/></div>
         <h1 class="text-center text-lg font-semibold text-gray-700 mb-6">Create Your Account</h1>
-  <form @submit.prevent="onSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form @submit.prevent="onSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="md:col-span-2">
             <label class="block text-sm mb-1">Username</label>
             <input v-model="form.username" type="text" class="w-full rounded-md bg-white/70 border border-green-200 px-3 py-2 focus:ring-2 focus:ring-green-400" required />
@@ -24,7 +24,6 @@
             <label class="block text-sm mb-1">E- mail</label>
             <input v-model="form.email" type="email" class="w-full rounded-md bg-white/70 border border-green-200 px-3 py-2 focus:ring-2 focus:ring-green-400" required />
           </div>
-          
           <div class="md:col-span-2">
             <label class="block text-sm mb-1">Password</label>
             <input v-model="form.password" type="password" class="w-full rounded-md bg-white/70 border border-green-200 px-3 py-2 focus:ring-2 focus:ring-green-400" minlength="6" required />
@@ -45,9 +44,9 @@
 <script setup>
 import { reactive } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
-import { useAuth } from '../composables/useAuth'
-import Logo from '../assets/logo-ngundur.png'
-import BgHero from '../assets/bg-depan01.png'
+import { useAuth } from '../../composables/useAuth'
+import Logo from '../../assets/logo-ngundur.png'
+import BgHero from '../../assets/bg-depan01.png'
 
 const router = useRouter()
 const { register } = useAuth()
