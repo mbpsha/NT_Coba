@@ -77,7 +77,7 @@ class ProductController extends Controller
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
             'kategori' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096'
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
         ]);
 
         // Handle image upload
@@ -90,6 +90,8 @@ class ProductController extends Controller
 
             $imagePath = $request->file('gambar')->store('products', 'public');
             $validated['gambar'] = '/storage/' . $imagePath;
+        } else {
+            unset($validated['gambar']);
         }
 
         $product->update($validated);

@@ -49,7 +49,8 @@ function handleFileUpload(event) {
 
 function submitForm() {
     if (editMode.value) {
-        form.put(route('admin.products.update', selectedProduct.value.id_produk), {
+        form.transform((data) => ({...data, _method: 'PUT'}))
+        form.post(route('admin.products.update', selectedProduct.value.id_produk), {
             onSuccess: () => closeModal(),
             forceFormData: true
         })
