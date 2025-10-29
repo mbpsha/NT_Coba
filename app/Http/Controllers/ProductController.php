@@ -91,6 +91,10 @@ class ProductController extends Controller
             $imagePath = $request->file('gambar')->store('products', 'public');
             $validated['gambar'] = '/storage/' . $imagePath;
         }
+        else {
+            // Keep the old image if no new image is uploaded
+            unset($validated['gambar']);
+        }
 
         $product->update($validated);
 
