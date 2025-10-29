@@ -1,0 +1,79 @@
+<script setup>
+import { onMounted } from 'vue'
+import Header from '@/component/Header.vue'
+import Footer from '@/component/Footer.vue'
+import HeroSection from '@/component/HeroSection.vue'
+import NewsCarousel from '@/component/NewsCarousel.vue'
+import FeatureSection from '@/component/FeatureSection.vue'
+
+import Band3 from '@/assets/foto-bawah-3.png'
+import FooterLogo from '@/assets/footer-logo.png'
+import Profil from '@/assets/profil.png'
+
+function scrollToNews() {
+    const el = document.getElementById('news-section')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+onMounted(() => window.scrollTo({ top: 0 }))
+</script>
+
+<template>
+    <div class="font-inter text-gray-900">
+        <!-- NAVBAR -->
+        <Header />
+
+    <!-- HERO -->
+    <section class="mt-16">
+        <HeroSection @readMore="scrollToNews" />
+    </section>
+
+    <!-- NEWS -->
+    <section id="news-section" class="py-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <NewsCarousel />
+        </div>
+    </section>
+
+    <!-- TITLE CHIP -->
+    <section class="mt-2">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="inline-block bg-green-100 text-green-800 px-5 py-2 rounded-xl shadow-sm border border-green-200">
+            <span class="font-semibold">Keunggulan Alat</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <FeatureSection />
+
+    <!-- IMAGE BAND -->
+    <section class="py-10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-4">
+            <div class="relative rounded-xl overflow-hidden">
+            <img :src="Band3" alt="" class="w-full h-48 md:h-56 object-cover">
+            <div class="absolute inset-0 bg-black/35"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-white text-2xl font-bold drop-shadow">Monitoring<br class="md:hidden"> Real time</span>
+            </div>
+            </div>
+            <div class="relative rounded-xl overflow-hidden">
+            <img :src="FooterLogo" alt="" class="w-full h-48 md:h-56 object-cover">
+            <div class="absolute inset-0 bg-black/35"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-white text-2xl font-bold drop-shadow">Irigasi<br class="md:hidden"> Otomatis</span>
+            </div>
+            </div>
+            <div class="relative rounded-xl overflow-hidden">
+            <img :src="Profil" alt="" class="w-full h-48 md:h-56 object-cover">
+            <div class="absolute inset-0 bg-black/35"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-white text-2xl font-bold drop-shadow">Dashboard<br class="md:hidden"> Web</span>
+            </div>
+            </div>
+        </div>
+        </section>
+
+        <!-- FOOTER -->
+        <Footer />
+    </div>
+</template>
