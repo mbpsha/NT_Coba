@@ -9,9 +9,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    public function index()
+    {
+        return Inertia::render('User/Dashboard');
+        // return view('dashboard');
+    }
+
     public function getStatistics()
     {
         $today = Carbon::today();
@@ -22,8 +29,8 @@ class DashboardController extends Controller
             'total_orders' => Order::count(),
             'today_orders' => Order::whereDate('created_at', $today)->count(),
             'today_revenue' => Order::whereDate('created_at', $today)
-                                   ->where('status', '!=', 'dibatalkan')
-                                   ->sum('total_harga'),
+                                    ->where('status', '!=', 'dibatalkan')
+                                    ->sum('total_harga'),
             'pending_payments' => Payment::where('status_pembayaran', 'pending')->count(),
             'low_stock_products' => Product::where('stok', '<', 10)->count()
         ]);
@@ -34,9 +41,9 @@ class DashboardController extends Controller
         $today = Carbon::today();
 
         $transactions = Order::with(['user', 'payment'])
-                           ->whereDate('created_at', $today)
-                           ->orderBy('created_at', 'desc')
-                           ->get();
+                            ->whereDate('created_at', $today)
+                            ->orderBy('created_at', 'desc')
+                            ->get();
 
         return response()->json($transactions);
     }
