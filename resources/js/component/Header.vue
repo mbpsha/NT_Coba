@@ -14,6 +14,13 @@ function logout() {
   logoutForm.post(route('logout'))
 }
 
+const isRoute = (name) => route().current(name)                  // untuk route bernama
+const isUrl   = (prefix) => page.url.startsWith(prefix)          // untuk path biasa
+const linkClass = (active) => [
+  'hover:text-green-700',
+  active ? 'text-green-700 font-semibold' : 'text-gray-800'
+]
+
 const profileMenuOpen = ref(false)
 function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
 </script>
@@ -26,11 +33,11 @@ function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
       </div>
 
       <ul class="hidden md:flex items-center gap-6 text-sm">
-        <li><Link :href="route('dashboard')" class="font-bold text-green-700">Home</Link></li>
-        <li><Link href="/shop" class="hover:text-green-700">Toko</Link></li>
-        <li><Link href="/news" class="hover:text-green-700">Berita</Link></li>
-        <li><Link :href="route('about')" class="hover:text-green-700">Tentang</Link></li>
-        <li><Link href="/blog" class="hover:text-green-700">Blog</Link></li>
+        <li><Link :href="route('dashboard')" :class="linkClass(isRoute('dashboard'))">Home</Link></li>
+        <li><Link href="/shop"  :class="linkClass(isUrl('/shop'))">Toko</Link></li>
+        <li><Link href="/news"  :class="linkClass(isUrl('/news'))">Berita</Link></li>
+        <li><Link :href="route('about')" :class="linkClass(isRoute('about'))">Tentang</Link></li>
+        <li><Link href="/blog"  :class="linkClass(isUrl('/blog'))">Blog</Link></li>
       </ul>
 
       <div class="hidden sm:flex items-center gap-3">

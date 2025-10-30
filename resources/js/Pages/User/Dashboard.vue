@@ -6,7 +6,9 @@ import HeroSection from '@/component/HeroSection.vue'
 import NewsCarousel from '@/component/NewsCarousel.vue'
 import FeatureSection from '@/component/FeatureSection.vue'
 
-import Band3 from '@/assets/foto-bawah-3.png'
+import Band1 from '@/assets/bawah1.png'
+import Band2 from '@/assets/bawah2.png'
+import Band3 from '@/assets/bawah3.png'
 import FooterLogo from '@/assets/footer-logo.png'
 import Profil from '@/assets/profil.png'
 
@@ -50,21 +52,21 @@ onMounted(() => window.scrollTo({ top: 0 }))
     <section class="py-10">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-4">
             <div class="relative rounded-xl overflow-hidden">
-            <img :src="Band3" alt="" class="w-full h-48 md:h-56 object-cover">
+            <img :src="Band1" alt="" class="w-full h-48 md:h-56 object-cover">
             <div class="absolute inset-0 bg-black/35"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <span class="text-white text-2xl font-bold drop-shadow">Monitoring<br class="md:hidden"> Real time</span>
             </div>
             </div>
             <div class="relative rounded-xl overflow-hidden">
-            <img :src="FooterLogo" alt="" class="w-full h-48 md:h-56 object-cover">
+            <img :src="Band2" alt="" class="w-full h-48 md:h-56 object-cover">
             <div class="absolute inset-0 bg-black/35"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <span class="text-white text-2xl font-bold drop-shadow">Irigasi<br class="md:hidden"> Otomatis</span>
             </div>
             </div>
             <div class="relative rounded-xl overflow-hidden">
-            <img :src="Profil" alt="" class="w-full h-48 md:h-56 object-cover">
+            <img :src="Band3" alt="" class="w-full h-48 md:h-56 object-cover">
             <div class="absolute inset-0 bg-black/35"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <span class="text-white text-2xl font-bold drop-shadow">Dashboard<br class="md:hidden"> Web</span>
