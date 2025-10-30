@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
-import SidebarAdmin from './Admin/SidebarAdmin.vue'
-import HeaderAdmin from './Admin/HeaderAdmin.vue'
+import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
+import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
 
 const props = defineProps({
     stats: Object,

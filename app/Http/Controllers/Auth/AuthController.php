@@ -94,8 +94,6 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    public function dashboard()
-    {
-        return Inertia::render('Dashboard');
-    }
+
+
 }

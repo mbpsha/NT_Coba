@@ -62,7 +62,7 @@ class ProductController extends Controller
     public function edit($id)
     {
         $product = Product::findOrFail($id);
-        return Inertia::render('ProductsManagement', [
+        return Inertia::render('Admin/ProductsManagement', [
             'product' => $product
         ]);
     }

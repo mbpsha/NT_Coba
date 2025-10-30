@@ -28,7 +28,7 @@ class OrderController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('OrdersManagement', [
+        return Inertia::render('Admin/OrdersManagement', [
             'orders' => $orders
         ]);
     }

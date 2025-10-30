@@ -1,6 +1,6 @@
 <script setup>
-import Header from './User/Header.vue'
-import Footer from './User/Footer.vue'
+import Header from '@/Components/User/Header.vue'
+import Footer from '@/Components/User/Footer.vue'
 
 function scrollToNews() {
     const newsSection = document.getElementById('news-section')

@@ -24,6 +24,10 @@ Route::middleware('guest')->group(function () {
 
 // Public Dashboard route (accessible by guests and authenticated users)
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+Route::get('/toko', [AuthController::class, 'toko'])->name('toko');
+Route::get('/berita', [AuthController::class, 'berita'])->name('berita');
+Route::get('/blog', [AuthController::class, 'blog'])->name('blog');
+Route::get('/about', [AuthController::class, 'about'])->name('about');
 
 // Protected Routes
 Route::middleware('auth')->group(function () {

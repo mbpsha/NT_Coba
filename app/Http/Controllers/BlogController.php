@@ -38,4 +38,8 @@ class BlogController extends Controller
         $blog->delete();
         return response()->json(null, 204);
     }
+    public function blog()
+    {
+        return Inertia::render('User/Blog');
+    }
 }

@@ -18,6 +18,7 @@ function goToLogin() {
 function goToRegister() {
     window.location.href = route('register')
 }
+
 </script>
 
 <template>
@@ -30,10 +31,10 @@ function goToRegister() {
                 </div>
             </div>
             <ul class="items-center hidden gap-6 text-sm md:flex">
-                <li><a href="#" class="font-bold text-green-700">Home</a></li>
+                <li><a :href="route('dashboard')" class="font-bold text-green-700">Home</a></li>
                 <li><a href="#" class="hover:text-green-700">Toko</a></li>
                 <li><a href="#" class="hover:text-green-700">Berita</a></li>
-                <li><a href="#" class="hover:text-green-700">Tentang</a></li>
+                <li><a :href="route('about')" class="hover:text-green-700">Tentang</a></li>
                 <li><a href="#" class="hover:text-green-700">Blog</a></li>
             </ul>
             <div class="items-center hidden gap-2 sm:flex">

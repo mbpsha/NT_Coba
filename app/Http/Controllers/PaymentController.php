@@ -29,7 +29,7 @@ class PaymentController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('PaymentVerification', [
+        return Inertia::render('Admin/PaymentVerification', [
             'payments' => $payments
         ]);
     }

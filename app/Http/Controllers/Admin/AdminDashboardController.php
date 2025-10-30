@@ -49,7 +49,7 @@ class AdminDashboardController extends Controller
             ];
         }
 
-        return Inertia::render('DashboardAdmin', [
+        return Inertia::render('Admin/DashboardAdmin', [
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'recentUsers' => $recentUsers,
