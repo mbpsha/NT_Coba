@@ -13,12 +13,14 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use Inertia\Inertia;
 
 // Root → redirect ke dashboard
 Route::get('/', fn () => redirect()->route('dashboard'));
 
 // Dashboard publik (satu saja, tanpa duplikat)
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/about', fn () => Inertia::render('User/About'))->name('about');
 
 // AUTH (guest)
 Route::middleware('guest')->group(function () {

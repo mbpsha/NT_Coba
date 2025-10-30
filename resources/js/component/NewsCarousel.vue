@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Link } from '@inertiajs/vue3'
-import NewsLeft from '../assets/berita-kiri.png'
-import NewsMid from '../assets/berita-1.png'
-import NewsRight from '../assets/berita-kanan.png'
+import NewsLeft from '@/assets/berita-kiri.png'
+import NewsMid from '@/assets/berita-1.png'
+import NewsRight from '@/assets/berita-kanan.png'
 
 const cards = [
   { title: 'Indonesia Dorong Pertanian Ramah Lingkungan dengan Teknologi IoT', image: NewsLeft, href: '#' },
@@ -35,8 +35,8 @@ onBeforeUnmount(() => { clearInterval(timer) })
     <div class="relative h-full flex items-center justify-center select-none">
       <div class="relative w-full h-full [perspective:1200px]">
         <div v-for="(card,i) in cards" :key="card.title"
-             class="absolute left-1/2 top-1/2 will-change-transform transition-transform duration-700 ease-out"
-             :style="getCardStyle(i)">
+              class="absolute left-1/2 top-1/2 will-change-transform transition-transform duration-700 ease-out"
+              :style="getCardStyle(i)">
           <Link :href="card.href" class="block w-[280px] md:w-[320px]">
             <img :src="card.image" :alt="card.title" class="w-full h-48 md:h-56 object-cover rounded-xl shadow-lg" />
             <p class="mt-3 text-sm md:text-base font-semibold text-gray-800 text-center px-2">{{ card.title }}</p>
