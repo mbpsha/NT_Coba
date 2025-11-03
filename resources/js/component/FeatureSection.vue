@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import F1 from '@/assets/keunggulan-alat-0.png'
-import F2 from '@/assets/keunggulan-alat-1.png'
-import F3 from '@/assets/keunggulan-alat-2.png'
+import F1 from '*/dashboard/keunggulan-alat-0.png'
+import F2 from '*/dashboard/keunggulan-alat-1.png'
+import F3 from '*/dashboard/keunggulan-alat-2.png'
 
 const props = defineProps({ items: { type: Array, default: null } })
 

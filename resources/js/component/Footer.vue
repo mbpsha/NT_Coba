@@ -1,5 +1,5 @@
 <script setup>
-import FooterBg from '@/assets/footer-logo.png'
+import FooterBg from '*/dashboard/footer-logo.png'
 </script>
 
 <template>

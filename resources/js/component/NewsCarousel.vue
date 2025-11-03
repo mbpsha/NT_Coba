@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Link } from '@inertiajs/vue3'
-import NewsLeft from '@/assets/berita-kiri.png'
-import NewsMid from '@/assets/berita-1.png'
-import NewsRight from '@/assets/berita-kanan.png'
-import NewsExtra from '@/assets/berita-4.jpg' // gambar baru
+import NewsLeft from '*/dashboard/berita-kiri.png'
+import NewsMid from '*/dashboard/berita-1.png'
+import NewsRight from '*/dashboard/berita-kanan.png'
+import NewsExtra from '*/dashboard/berita-4.jpg' // gambar baru
 
 const cards = [
   { title: 'Indonesia Dorong Pertanian Ramah Lingkungan dengan Teknologi IoT', image: NewsLeft, href: '#' },

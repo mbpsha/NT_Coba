@@ -2,8 +2,8 @@
 import Header from '@/component/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
 import Footer from '@/component/Footer.vue'
 
-import Logo from '@/assets/logo-ngundur.png'
-import Profil from '@/assets/profil.png'
+import Logo from '*/dashboard/logo-ngundur.png'
+import Profil from '*/dashboard/profil.png'
 </script>
 
 <template>

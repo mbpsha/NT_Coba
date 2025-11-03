@@ -6,11 +6,11 @@ import HeroSection from '@/component/HeroSection.vue'
 import NewsCarousel from '@/component/NewsCarousel.vue'
 import FeatureSection from '@/component/FeatureSection.vue'
 
-import Band1 from '@/assets/bawah1.png'
-import Band2 from '@/assets/bawah2.png'
-import Band3 from '@/assets/bawah3.png'
-import FooterLogo from '@/assets/footer-logo.png'
-import Profil from '@/assets/profil.png'
+import Band1 from '*/dashboard/bawah1.png'
+import Band2 from '*/dashboard/bawah2.png'
+import Band3 from '*/dashboard/bawah3.png'
+import FooterLogo from '*/dashboard/footer-logo.png'
+import Profil from '*/dashboard/profil.png'
 
 function scrollToNews() {
     const el = document.getElementById('news-section')

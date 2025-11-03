@@ -5,11 +5,11 @@ import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { Head } from '@inertiajs/vue3'
 
 // Gambar sama dengan NewsCarousel
-import NewsLeft from '@/assets/berita-kiri.png'
-import NewsMid from '@/assets/berita-1.png'
-import NewsRight from '@/assets/berita-kanan.png'
-import NewsExtra from '@/assets/berita-4.jpg'
-import BgBerita from '@/assets/bg-berita.jpg'
+import NewsLeft from '*/dashboard/berita-kiri.png'
+import NewsMid from '*/dashboard/berita-1.png'
+import NewsRight from '*/dashboard/berita-kanan.png'
+import NewsExtra from '*/dashboard/berita-4.jpg'
+import BgBerita from '*/dashboard/bg-berita.jpg'
 
 const articles = [
   {

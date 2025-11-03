@@ -1,6 +1,6 @@
 <script setup>
 import { Link, useForm, usePage } from '@inertiajs/vue3'
-import Logo from '@/assets/logo-ngundur.png'
+import Logo from '*/dashboard/logo-ngundur.png'
 
 const page = usePage()
 const user = page.props.user ?? page.props.auth?.user ?? {}

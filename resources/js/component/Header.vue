@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Link, useForm, usePage } from '@inertiajs/vue3'
-import Logo from '@/assets/logo-ngundur.png'
+import Logo from '*/dashboard/logo-ngundur.png'
 
 // Ambil user dari props Inertia (diset di HandleInertiaRequests)
 const page = usePage()

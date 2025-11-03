@@ -1,5 +1,5 @@
 <script setup>
-import BgHero from '@/assets/bg-depan01.png'
+import BgHero from '*/dashboard/bg-depan01.png'
 defineEmits(['readMore'])
 </script>
 

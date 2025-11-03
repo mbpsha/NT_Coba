@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import Logo from '@/assets/logo-ngundur.png'
+import Logo from '*/dashboard/logo-ngundur.png'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
