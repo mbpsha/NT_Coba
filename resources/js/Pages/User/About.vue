@@ -1,9 +1,9 @@
 <script setup>
-import Header from '@/Components/User/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
-import Footer from '@/Components/User/Footer.vue'
+import Header from '@/component/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
+import Footer from '@/component/Footer.vue'
 
-import Logo from '*/dashboard/logo-ngundur.png'
-import Profil from '*/dashboard/profil.png'
+import Logo from '@/assets/logo-ngundur.png'
+import Profil from '@/assets/profil.png'
 </script>
 
 <template>

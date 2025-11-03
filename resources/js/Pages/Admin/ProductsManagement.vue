@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
-import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
+import SidebarAdmin from '@/component/SidebarAdmin.vue'
+import HeaderAdmin from '@/component/HeaderAdmin.vue'
 
 const props = defineProps({
     products: Object
@@ -49,8 +49,7 @@ function handleFileUpload(event) {
 
 function submitForm() {
     if (editMode.value) {
-        form.transform((data) => ({...data, _method: 'PUT'}))
-        form.post(route('admin.products.update', selectedProduct.value.id_produk), {
+        form.put(route('admin.products.update', selectedProduct.value.id_produk), {
             onSuccess: () => closeModal(),
             forceFormData: true
         })

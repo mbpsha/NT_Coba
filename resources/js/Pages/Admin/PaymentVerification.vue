@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
-import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
+import SidebarAdmin from '@/component/SidebarAdmin.vue'
+import HeaderAdmin from '@/component/HeaderAdmin.vue'
 
 const props = defineProps({
     payments: Object
