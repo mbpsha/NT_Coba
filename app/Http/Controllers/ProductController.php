@@ -22,19 +22,32 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
+    // Halaman Toko (User)
+    public function shop()
+    {
+        $products = Product::select('id_produk','nama_produk','deskripsi','harga','stok','kategori','gambar')
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return Inertia::render('User/Toko', [
+            'products' => $products
+        ]);
+    }
+
     // Admin methods
     public function indexAdmin()
     {
         $products = Product::latest()->paginate(10);
 
-        return Inertia::render('ProductsManagement', [
+        return Inertia::render('Admin/ProductsManagement', [
             'products' => $products
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('ProductsManagement');
+        return Inertia::render('Admin/ProductsManagement');
     }
 
     public function store(Request $request)

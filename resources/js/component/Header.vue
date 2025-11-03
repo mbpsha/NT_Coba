@@ -34,10 +34,10 @@ function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
 
       <ul class="hidden md:flex items-center gap-6 text-sm">
         <li><Link :href="route('dashboard')" :class="linkClass(isRoute('dashboard'))">Home</Link></li>
-        <li><Link href="/shop"  :class="linkClass(isUrl('/shop'))">Toko</Link></li>
-  <li><Link href="/berita"  :class="linkClass(isUrl('/berita'))">Berita</Link></li>
+        <li><Link :href="route('shop')" :class="linkClass(isUrl('/shop'))">Toko</Link></li>
+        <li><Link :href="route('berita')" :class="linkClass(isUrl('/berita'))">Berita</Link></li>
         <li><Link :href="route('about')" :class="linkClass(isRoute('about'))">Tentang</Link></li>
-        <li><Link href="/blog"  :class="linkClass(isUrl('/blog'))">Blog</Link></li>
+        <li><Link :href="route('blog')" :class="linkClass(isUrl('/blog'))">Blog</Link></li>
       </ul>
 
       <div class="hidden sm:flex items-center gap-3">
