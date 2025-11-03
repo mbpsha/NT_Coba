@@ -6,8 +6,5 @@ use Illuminate\Http\Request;
 
 class NewsController extends Controller
 {
-    public function berita()
-    {
-        return Inertia::render('User/Berita');
-    }
+    
 }
