@@ -2,8 +2,16 @@
 import Header from '@/component/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
 import Footer from '@/component/Footer.vue'
 
+import { computed } from 'vue'
 import Logo from '*/dashboard/logo-ngundur.png'
 import Profil from '*/dashboard/profil.png'
+
+// hero background with a soft gray overlay using public asset
+const heroStyle = computed(() => ({
+  backgroundImage: `linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg')`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}))
 </script>
 
 <template>
@@ -13,7 +21,7 @@ import Profil from '*/dashboard/profil.png'
     <!-- HERO -->
     <section
       class="mt-16 h-[260px] md:h-[320px] relative flex items-center"
-      style="background-image: linear-gradient(to bottom, rgba(0,0,0,.25), rgba(0,0,0,.25)), url('/images/about-hero.jpg'); background-size: cover; background-position: center;"
+      :style="heroStyle"
     >
       <!-- jika belum punya gambar, cukup hapus url(...) di atas, gradient tetap tampil -->
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,7 +87,7 @@ import Profil from '*/dashboard/profil.png'
         </p>
 
         <h4 class="mt-10 text-xl font-semibold text-gray-800">MISI NGUNDUR</h4>
-        <ul class="mt-3 space-y-2 text-gray-700 text-left max-w-2xl mx-auto list-decimal list-inside">
+  <ul class="mt-3 space-y-2 text-gray-700 text-justify max-w-2xl mx-auto list-decimal list-inside" style="text-align:justify;">
           <li>Menghadirkan solusi IoT yang efisien dan hemat sumber daya.</li>
           <li>Memberikan manfaat nyata bagi petani maupun penghobi berkebun.</li>
           <li>Mendorong teknologi ramah lingkungan untuk keberlanjutan pangan.</li>
