@@ -94,16 +94,6 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    public function toko()
-    {
-        return Inertia::render('User/Toko');
-    }
-
-    public function berita()
-    {
-        return Inertia::render('User/Berita');
-    }
-
     public function blog()
     {
         return Inertia::render('User/Blog');

@@ -26,25 +26,25 @@ function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
 </script>
 
 <template>
-  <header class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur shadow-sm">
-    <nav class="w-full h-16 flex items-center justify-between px-3 sm:px-4 lg:px-6">
+  <header class="fixed inset-x-0 top-0 z-50 shadow-sm bg-white/90 backdrop-blur">
+    <nav class="flex items-center justify-between w-full h-16 px-3 sm:px-4 lg:px-6">
       <div class="flex items-center gap-2">
         <img :src="Logo" alt="NGUNDUR" class="h-12" />
       </div>
 
-      <ul class="hidden md:flex items-center gap-6 text-sm">
+      <ul class="items-center hidden gap-6 text-sm md:flex">
         <li><Link :href="route('dashboard')" :class="linkClass(isRoute('dashboard'))">Home</Link></li>
-        <li><Link href="/shop"  :class="linkClass(isUrl('/shop'))">Toko</Link></li>
-        <li><Link href="/news"  :class="linkClass(isUrl('/news'))">Berita</Link></li>
+        <li><Link :href="route('shop')" :class="linkClass(isUrl('/shop'))">Toko</Link></li>
+        <li><Link :href="route('berita')" :class="linkClass(isUrl('/berita'))">Berita</Link></li>
         <li><Link :href="route('about')" :class="linkClass(isRoute('about'))">Tentang</Link></li>
-        <li><Link href="/blog"  :class="linkClass(isUrl('/blog'))">Blog</Link></li>
+        <li><Link :href="route('blog')" :class="linkClass(isUrl('/blog'))">Blog</Link></li>
       </ul>
 
-      <div class="hidden sm:flex items-center gap-3">
+      <div class="items-center hidden gap-3 sm:flex">
         <!-- Belum login -->
         <template v-if="!isAuthenticated">
-          <Link :href="route('login')" class="px-4 py-2 rounded-full text-white bg-green-500 hover:bg-green-600">Masuk</Link>
-          <Link :href="route('register')" class="px-4 py-2 rounded-full bg-green-100 text-green-700 hover:bg-green-200">Daftar</Link>
+          <Link :href="route('login')" class="px-4 py-2 text-white bg-green-500 rounded-full hover:bg-green-600">Masuk</Link>
+          <Link :href="route('register')" class="px-4 py-2 text-green-700 bg-green-100 rounded-full hover:bg-green-200">Daftar</Link>
         </template>
 
         <!-- Sudah login -->
@@ -58,20 +58,20 @@ function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
 
           <div class="relative" @keydown.escape="profileMenuOpen = false">
             <button @click="toggleProfileMenu"
-              class="h-10 w-10 rounded-full flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200 ring-1 ring-green-300">
+              class="flex items-center justify-center w-10 h-10 text-green-700 bg-green-100 rounded-full hover:bg-green-200 ring-1 ring-green-300">
               <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
               </svg>
 
 
             </button>
-            <div v-if="profileMenuOpen" class="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black/5 overflow-hidden z-50">
+            <div v-if="profileMenuOpen" class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white rounded-md shadow-lg ring-1 ring-black/5">
               <div class="px-4 py-3 text-sm">
                 <p class="font-medium text-gray-900">Halo, {{ user.username ?? user.name }}</p>
-                <p v-if="user.email" class="text-gray-500 text-xs truncate">{{ user.email }}</p>
+                <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
               </div>
               <Link @click="profileMenuOpen=false" href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil Saya</Link>
-              <button :disabled="logoutForm.processing" @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+              <button :disabled="logoutForm.processing" @click="logout" class="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50">
                 Keluar
               </button>
             </div>

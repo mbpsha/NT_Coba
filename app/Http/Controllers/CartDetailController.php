@@ -17,8 +17,8 @@ class CartDetailController extends Controller
     public function getCartItems($cartId)
     {
         $cartItems = CartDetail::with('product')
-                              ->where('id_keranjang', $cartId)
-                              ->get();
+                            ->where('id_keranjang', $cartId)
+                            ->get();
         return response()->json($cartItems);
     }
 
@@ -26,8 +26,8 @@ class CartDetailController extends Controller
     {
         // Cek apakah produk sudah ada di keranjang
         $existingItem = CartDetail::where('id_keranjang', $request->id_keranjang)
-                                 ->where('id_produk', $request->id_produk)
-                                 ->first();
+                                ->where('id_produk', $request->id_produk)
+                                ->first();
 
         if ($existingItem) {
             // Update jumlah jika sudah ada

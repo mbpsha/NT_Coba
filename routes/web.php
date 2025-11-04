@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NewsController;
 use App\Models\User;
 
 // Redirect root to dashboard (public)
@@ -26,7 +27,8 @@ Route::middleware('guest')->group(function () {
 // Public Dashboard route (accessible by guests and authenticated users)
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 Route::get('/toko', [AuthController::class, 'toko'])->name('toko');
-Route::get('/berita', [AuthController::class, 'berita'])->name('berita');
+Route::get('/berita', [NewsController::class, 'index'])->name('berita');
+Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
 Route::get('/blog', [AuthController::class, 'blog'])->name('blog');
 Route::get('/about', [AuthController::class, 'about'])->name('about');
 
@@ -37,6 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
+
+// Halaman Toko (User)
+Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
 
 // Admin Routes (Protected with auth + admin middleware)
 Route::middleware(['auth', App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
@@ -64,4 +69,12 @@ Route::middleware(['auth', App\Http\Middleware\AdminMiddleware::class])->prefix(
     // Payment Verification
     Route::get('/payments', [PaymentController::class, 'indexAdmin'])->name('payments.index');
     Route::put('/payments/{id}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
+
+    // News Management
+    Route::get('/news', [NewsController::class, 'indexAdmin'])->name('news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+    Route::get('/news/{id}/edit', [NewsController::class, 'edit'])->name('news.edit');
+    Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
+    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
 });

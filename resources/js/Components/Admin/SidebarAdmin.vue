@@ -69,6 +69,18 @@ const isActive = (routeName) => {
                 <span>Payment Verification</span>
             </Link>
 
+            <Link
+                :href="route('admin.news.index')"
+                class="flex items-center gap-3 px-6 py-3 hover:bg-green-500 transition-colors"
+                :class="{ 'bg-green-500': isActive('admin.news.*') }"
+            >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path>
+                    <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path>
+                </svg>
+                <span>News Management</span>
+            </Link>
+
             <div class="border-t border-green-500 my-4"></div>
 
             <Link
