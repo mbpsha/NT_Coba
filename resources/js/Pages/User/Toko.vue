@@ -32,8 +32,11 @@ const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency:
             {{ fmt(p.harga) }}
           </p>
 
-          <button class="block w-40 mx-auto mt-3 text-sm bg-green-300 rounded-full h-9 hover:bg-green-400">
-            Tambah ke Keranjang
+          <button class="grid w-40 mx-auto mt-3 text-sm bg-green-300 rounded-full place-items-center h-9 hover:bg-green-400">
+            <svg class="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
           </button>
         </div>
       </div>

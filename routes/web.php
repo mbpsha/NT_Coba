@@ -27,8 +27,7 @@ Route::middleware('guest')->group(function () {
 // Public Dashboard route (accessible by guests and authenticated users)
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 Route::get('/toko', [AuthController::class, 'toko'])->name('toko');
-Route::get('/berita', [NewsController::class, 'index'])->name('berita');
-Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
+Route::get('/berita', [AuthController::class, 'berita'])->name('berita');
 Route::get('/blog', [AuthController::class, 'blog'])->name('blog');
 Route::get('/about', [AuthController::class, 'about'])->name('about');
 
@@ -38,10 +37,11 @@ Route::middleware('auth')->group(function () {
         // Profil
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Halaman Toko (User)
+    Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
 });
 
-// Halaman Toko (User)
-Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
+
 
 // Admin Routes (Protected with auth + admin middleware)
 Route::middleware(['auth', App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
