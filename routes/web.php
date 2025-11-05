@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NewsController;
+use App\Http\Middleware\AdminMiddleware;
 use App\Models\User;
 
 // Redirect root to dashboard (public)
@@ -26,7 +27,6 @@ Route::middleware('guest')->group(function () {
 
 // Public Dashboard route (accessible by guests and authenticated users)
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-Route::get('/toko', [AuthController::class, 'toko'])->name('toko');
 Route::get('/berita', [AuthController::class, 'berita'])->name('berita');
 Route::get('/blog', [AuthController::class, 'blog'])->name('blog');
 Route::get('/about', [AuthController::class, 'about'])->name('about');
@@ -44,7 +44,7 @@ Route::middleware('auth')->group(function () {
 
 
 // Admin Routes (Protected with auth + admin middleware)
-Route::middleware(['auth', App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 

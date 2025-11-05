@@ -11,7 +11,14 @@ const isAuthenticated = computed(() => !!user.value)
 // Logout via Inertia
 const logoutForm = useForm({})
 function logout() {
-  logoutForm.post(route('logout'))
+  logoutForm.post(route('logout'),
+  {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = route('dashboard')
+        }
+    })
 }
 
 const isRoute = (name) => route().current(name)                  // untuk route bernama

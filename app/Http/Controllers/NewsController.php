@@ -44,7 +44,7 @@ class NewsController extends Controller
     // Form create
     public function create()
     {
-        return Inertia::render('Admin/NewsCreate');
+        return Inertia::render('Admin/NewsManagement');
     }
 
     // Store berita baru
