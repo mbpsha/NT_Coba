@@ -36,10 +36,11 @@ Route::middleware('auth')->group(function () {
         // Profil
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Halaman Toko (User)
+    Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
 });
 
-// Halaman Toko (User)
-Route::get('/shop', [ProductController::class, 'shop'])->name('shop');
+
 
 // Admin Routes (Protected with auth + admin middleware)
 Route::middleware(['auth', App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
