@@ -88,7 +88,7 @@ function togglePublished(article) {
         content: article.content,
         is_published: !article.is_published
     })
-    
+
     formData.put(route('admin.news.update', article.id), {
         preserveScroll: true
     })
@@ -130,10 +130,10 @@ function togglePublished(article) {
                                 <div class="text-sm text-gray-500 line-clamp-2">{{ article.excerpt }}</div>
                             </td>
                             <td class="px-6 py-4">
-                                <button @click="togglePublished(article)" 
+                                <button @click="togglePublished(article)"
                                     class="px-3 py-1 rounded-full text-xs font-medium cursor-pointer"
-                                    :class="article.is_published 
-                                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                    :class="article.is_published
+                                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
                                     {{ article.is_published ? 'Published' : 'Draft' }}
                                 </button>
@@ -143,11 +143,11 @@ function togglePublished(article) {
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
-                                    <button @click="openEditModal(article)" 
+                                    <button @click="openEditModal(article)"
                                         class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                         Edit
                                     </button>
-                                    <button @click="deleteNews(article.id)" 
+                                    <button @click="deleteNews(article.id)"
                                         class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
                                         Delete
                                     </button>
@@ -172,8 +172,8 @@ function togglePublished(article) {
                            :href="link.url"
                            v-html="link.label"
                            class="px-3 py-1 rounded border"
-                           :class="link.active 
-                               ? 'bg-green-500 text-white border-green-500' 
+                           :class="link.active
+                               ? 'bg-green-500 text-white border-green-500'
                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
                            :disabled="!link.url">
                         </a>
