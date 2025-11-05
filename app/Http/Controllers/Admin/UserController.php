@@ -19,7 +19,7 @@ class UserController extends Controller
     {
         $users = User::latest()->paginate(10);
 
-        return Inertia::render('UsersManagement', [
+        return Inertia::render('Admin/UsersManagement', [
             'users' => $users
         ]);
     }
