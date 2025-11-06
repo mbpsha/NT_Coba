@@ -1,6 +1,7 @@
 <script setup>
-import Header from '@/component/Header.vue'
-import Footer from '@/component/Footer.vue'
+import Header from '@/Components/User/Header.vue'
+import Footer from '@/Components/User/Footer.vue'
+
 import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { Head } from '@inertiajs/vue3'
 
@@ -69,7 +70,7 @@ Selain meningkatkan efisiensi sumber daya, penggunaan IoT juga berkontribusi pad
 
 Sistem ini memanfaatkan sensor kelembapan tanah untuk menentukan kapan lahan membutuhkan air. Pompa air akan aktif secara otomatis ketika kadar air di tanah menurun, dan berhenti saat kelembapan kembali stabil. Mekanisme otomatis ini membantu petani menghemat air hingga 40 persen, sekaligus memastikan tanaman memperoleh penyiraman yang optimal.
 
-“Kami tidak perlu lagi menyiram secara manual setiap hari. Sistem otomatis ini menyalakan pompa hanya saat dibutuhkan, dan karena energinya dari panel surya, kami juga hemat listrik,” ujar Sutrisno (45), petani sayuran asal Gamping, Sleman. 
+“Kami tidak perlu lagi menyiram secara manual setiap hari. Sistem otomatis ini menyalakan pompa hanya saat dibutuhkan, dan karena energinya dari panel surya, kami juga hemat listrik,” ujar Sutrisno (45), petani sayuran asal Gamping, Sleman.
 
 Selain efisiensi air, penggunaan panel surya juga menjadi langkah cerdas dalam menekan biaya operasional. Energi matahari yang diubah menjadi listrik mampu menghidupkan pompa air, sensor IoT, dan sistem kontrol tanpa bergantung pada jaringan listrik konvensional.`,
   },
@@ -333,7 +334,12 @@ const bgStyle = computed(() => ({
       </div>
   </div>
   </Transition>
+<<<<<<< HEAD
     
     
+=======
+
+
+>>>>>>> main
   </div>
 </template>

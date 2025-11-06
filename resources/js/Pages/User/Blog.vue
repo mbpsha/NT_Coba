@@ -1,11 +1,11 @@
 <script setup>
-import Header from '@/component/Header.vue'
-import Footer from '@/component/Footer.vue'
+import Header from '@/Components/User/Header.vue'
+import Footer from '@/Components/User/Footer.vue'
 import { Head } from '@inertiajs/vue3'
 </script>
 
 <template>
-  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
+  <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
     <Header />
     <Head title="Blog" />
 
@@ -13,13 +13,13 @@ import { Head } from '@inertiajs/vue3'
       class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
       style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-blog.jpg'); background-size: cover; background-position: center;"
     >
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow">Blog</h1>
+      <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-extrabold text-white md:text-5xl drop-shadow">Blog</h1>
       </div>
     </section>
 
-    <main class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 pb-16">
-      <div class="relative overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-200">
+    <main class="relative max-w-6xl px-4 pb-16 mx-auto -mt-10 sm:px-6 lg:px-8">
+      <div class="relative overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-3xl">
         <div
           class="absolute inset-0 pointer-events-none"
           style="background-image: url('/assets/dashboard/bg-blog.jpg'); background-size: cover; background-position: right center; opacity: 0.05; filter: blur(0.5px);"
@@ -51,11 +51,11 @@ import { Head } from '@inertiajs/vue3'
             </article>
 
             <aside class="space-y-6">
-              <figure class="overflow-hidden rounded-2xl shadow-md ring-1 ring-gray-200">
-                <img src="/assets/dashboard/KITAA.jpg" alt="Team" class="w-full h-64 md:h-full object-cover" />
+              <figure class="overflow-hidden shadow-md rounded-2xl ring-1 ring-gray-200">
+                <img src="/assets/dashboard/KITAA.jpg" alt="Team" class="object-cover w-full h-64 md:h-full" />
               </figure>
 
-              <div class="rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
+              <div class="p-6 border border-green-200 shadow-sm rounded-2xl bg-green-50">
                 <h4 class="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">Sistem Penyiraman Cerdas</h4>
                 <h3 class="mt-2 text-2xl font-bold text-green-700">NGUNDUR</h3>
                 <p class="mt-4 text-sm text-gray-700">
@@ -77,7 +77,7 @@ import { Head } from '@inertiajs/vue3'
               </p>
             </div>
 
-            <div class="relative rounded-xl bg-white/10 p-6 backdrop-blur">
+            <div class="relative p-6 rounded-xl bg-white/10 backdrop-blur">
               <p class="text-sm text-green-50">
                 Sistem mampu mengirim data ke dashboard monitoring, sehingga pengguna dapat memantau kondisi tanaman kapan saja.
                 Fitur jadwal pintar memungkinkan penyesuaian sesuai kebutuhan varietas tanaman yang berbeda.

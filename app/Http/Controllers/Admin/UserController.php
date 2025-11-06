@@ -19,7 +19,7 @@ class UserController extends Controller
     {
         $users = User::latest()->paginate(10);
 
-        return Inertia::render('UsersManagement', [
+        return Inertia::render('Admin/UsersManagement', [
             'users' => $users
         ]);
     }
@@ -31,11 +31,11 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'no_telp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
+            'alamat' => 'nullable|string|max:255',
             'role' => 'required|in:admin,user'
         ]);
 
@@ -59,7 +59,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id_user, 'id_user')],
             'password' => 'nullable|string|min:8',
             'no_telp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
+            'alamat' => 'nullable|string|max:255',
             'role' => 'required|in:admin,user'
         ]);
 

@@ -86,22 +86,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $isAdmin = $request->user() === 'Admin';
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
-    }
+        if ($isAdmin){
+            return redirect()->route('dashboard');
+        }
 
-    public function toko()
-    {
-        return Inertia::render('User/Toko');
-    }
-
-    public function berita()
-    {
-        return Inertia::render('User/Berita');
+        return redirect()->route('dashboard');
     }
 
     public function blog()
@@ -118,5 +114,11 @@ class AuthController extends Controller
     {
         return Inertia::render('User/Dashboard');
     }
+
+    public function berita()
+    {
+        return Inertia::render('User/Berita');
+    }
+
 
 }

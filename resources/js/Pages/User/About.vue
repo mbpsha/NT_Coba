@@ -15,7 +15,7 @@ const heroStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="font-inter text-gray-900">
+  <div class="text-gray-900 font-inter">
     <Header />
 
     <!-- HERO -->
@@ -24,26 +24,26 @@ const heroStyle = computed(() => ({
       :style="heroStyle"
     >
       <!-- jika belum punya gambar, cukup hapus url(...) di atas, gradient tetap tampil -->
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow">Profil</h1>
+      <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-extrabold text-white md:text-5xl drop-shadow">Profil</h1>
       </div>
     </section>
 
     <!-- TENTANG -->
     <section class="py-10">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="inline-block text-3xl md:text-4xl font-extrabold text-green-700 bg-green-100 rounded-full px-5 py-2">
+      <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
+        <h2 class="inline-block px-5 py-2 text-3xl font-extrabold text-green-700 bg-green-100 rounded-full md:text-4xl">
           Tentang NGUNDUR
         </h2>
 
         <p class="mt-4 text-sm text-gray-600">~IoT : Stech Smart Garden</p>
 
-        <h1 class="text-2xl md:text-4xl font-semibold text-green-700 px-5 py-2">
+        <h1 class="px-5 py-2 text-2xl font-semibold text-green-700 md:text-4xl">
           NGUNDUR
         </h1>
 
-        <div class="mt-6 grid md:grid-cols-3 gap-10">
-          <div class="md:col-span-2 space-y-4 leading-7 text-gray-700">
+        <div class="grid gap-10 mt-6 md:grid-cols-3">
+          <div class="space-y-4 leading-7 text-gray-700 md:col-span-2">
             <p>
               Ngundur Nguthik Tandur adalah sebuah inisiatif inovasi teknologi pertanian berbasis IoT yang berfokus pada penyiraman tanaman otomatis. Berlokasi di Jl. Ringroad Barat, Dowangan, Banyuraden, Gamping, Sleman, Daerah Istimewa Yogyakarta, brand ini hadir untuk mendukung pertanian modern yang lebih efisien, hemat air, dan ramah lingkungan.
             </p>
@@ -56,20 +56,20 @@ const heroStyle = computed(() => ({
           </div>
 
           <div class="flex items-start justify-center">
-            <img :src="Logo" alt="NGUNDUR" class="w-56 md:w-64 object-contain" />
+            <img :src="Logo" alt="NGUNDUR" class="object-contain w-56 md:w-64" />
           </div>
         </div>
 
         <!-- 3 KARTU -->
-        <div class="mt-10 grid md:grid-cols-3 gap-6">
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
+        <div class="grid gap-6 mt-10 md:grid-cols-3">
+          <div class="flex items-center justify-center h-56 shadow bg-green-50 rounded-xl">
+            <img :src="Profil" alt="" class="object-contain h-28 w-28" />
           </div>
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
+          <div class="flex items-center justify-center h-56 shadow bg-green-50 rounded-xl">
+            <img :src="Profil" alt="" class="object-contain h-28 w-28" />
           </div>
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
+          <div class="flex items-center justify-center h-56 shadow bg-green-50 rounded-xl">
+            <img :src="Profil" alt="" class="object-contain h-28 w-28" />
           </div>
         </div>
       </div>
@@ -77,8 +77,8 @@ const heroStyle = computed(() => ({
 
     <!-- VISI & MISI -->
     <section class="py-12 bg-green-50">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h3 class="text-3xl md:text-4xl font-extrabold text-green-700">VISI & MISI NGUNDUR</h3>
+      <div class="max-w-4xl px-4 mx-auto text-center sm:px-6 lg:px-8">
+        <h3 class="text-3xl font-extrabold text-green-700 md:text-4xl">VISI & MISI NGUNDUR</h3>
 
         <h4 class="mt-8 text-xl font-semibold text-gray-800">VISI NGUNDUR</h4>
         <p class="mt-2 text-gray-700">
@@ -87,7 +87,8 @@ const heroStyle = computed(() => ({
         </p>
 
         <h4 class="mt-10 text-xl font-semibold text-gray-800">MISI NGUNDUR</h4>
-  <ul class="mt-3 space-y-2 text-gray-700 text-justify max-w-2xl mx-auto list-decimal list-inside" style="text-align:justify;">
+
+        <ul class="max-w-2xl mx-auto mt-3 space-y-2 text-justify text-gray-700 list-decimal list-inside" style="text-align:justify;">
           <li>Menghadirkan solusi IoT yang efisien dan hemat sumber daya.</li>
           <li>Memberikan manfaat nyata bagi petani maupun penghobi berkebun.</li>
           <li>Mendorong teknologi ramah lingkungan untuk keberlanjutan pangan.</li>
