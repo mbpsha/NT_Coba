@@ -94,29 +94,14 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    public function toko()
-    {
-        return Inertia::render('User/Toko');
-    }
-
-    public function berita()
-    {
-        return Inertia::render('User/Berita');
-    }
-
-    public function blog()
-    {
-        return Inertia::render('User/Blog');
-    }
-
-    public function about()
-    {
-        return Inertia::render('User/About');
-    }
-
     public function dashboard()
     {
-        return Inertia::render('User/Dashboard');
+        return Inertia::render('User/Dashboard'); // pastikan file halamannya ada
     }
 
+    // opsional kalau punya halaman lain
+    public function toko()
+    {
+        return Inertia::render('User/Toko'); // jika pakai ShopController, abaikan method ini
+    }
 }

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Link, useForm, usePage } from '@inertiajs/vue3'
+import { Link, useForm, usePage, router } from '@inertiajs/vue3'
 import Logo from '*/dashboard/logo-ngundur.png'
 
 // Ambil user dari props Inertia (diset di HandleInertiaRequests)
@@ -12,6 +12,12 @@ const isAuthenticated = computed(() => !!user.value)
 const logoutForm = useForm({})
 function logout() {
   logoutForm.post(route('logout'))
+}
+
+const onLogout = () => {
+  router.post(route('logout'), {}, {
+    onSuccess: () => router.visit('/', { replace: true }) // kembali ke dashboard publik
+  })
 }
 
 const isRoute = (name) => route().current(name)                  // untuk route bernama
@@ -71,7 +77,7 @@ function toggleProfileMenu(){ profileMenuOpen.value = !profileMenuOpen.value }
                 <p v-if="user.email" class="text-gray-500 text-xs truncate">{{ user.email }}</p>
               </div>
               <Link @click="profileMenuOpen=false" href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil Saya</Link>
-              <button :disabled="logoutForm.processing" @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+              <button :disabled="logoutForm.processing" @click="onLogout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
                 Keluar
               </button>
             </div>

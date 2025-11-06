@@ -35,12 +35,32 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        // terima berbagai nilai, lalu normalisasi ke: pending|diproses|dikirim|selesai|dibatalkan
         $validated = $request->validate([
-            'status' => 'required|in:pending,diproses,dikirim,selesai,dibatalkan'
+            'status' => 'required|string'
         ]);
 
+        $raw = strtolower(trim($validated['status']));
+        $map = [
+            'production' => 'diproses',
+            'dalam produksi' => 'diproses',
+
+            'shipping' => 'dikirim',
+            'sedang dikirim' => 'dikirim',
+            'dalam pengiriman' => 'dikirim',
+
+            'done' => 'selesai',
+            'completed' => 'selesai',
+        ];
+        $status = $map[$raw] ?? $raw;
+
+        $allowed = ['pending','diproses','dikirim','selesai','dibatalkan'];
+        if (!in_array($status, $allowed, true)) {
+            return back()->withErrors(['status' => 'Status tidak valid.']);
+        }
+
         $order = Order::findOrFail($id);
-        $order->update(['status' => $validated['status']]);
+        $order->update(['status' => $status]);
 
         return redirect()->back()->with('success', 'Order status updated successfully!');
     }

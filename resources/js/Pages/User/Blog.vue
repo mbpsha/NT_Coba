@@ -50,20 +50,14 @@ import { Head } from '@inertiajs/vue3'
               </p>
             </article>
 
-            <aside class="space-y-6">
+            <aside class="space-y-6 mt-8 md:mt-16 lg:mt-24">
               <figure class="overflow-hidden rounded-2xl shadow-md ring-1 ring-gray-200">
                 <img src="/assets/dashboard/KITAA.jpg" alt="Team" class="w-full h-64 md:h-full object-cover" />
               </figure>
 
-              <div class="rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
-                <h4 class="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">Sistem Penyiraman Cerdas</h4>
-                <h3 class="mt-2 text-2xl font-bold text-green-700">NGUNDUR</h3>
-                <p class="mt-4 text-sm text-gray-700">
-                  Stech Smart Garden adalah sistem irigasi otomatis berbasis IoT yang memantau kelembaban tanah secara real-time
-                  dan mengaktifkan pompa hanya saat diperlukan. Hadir dengan varian panel surya, produk ini ramah lingkungan, hemat
-                  energi, dan siap mendukung pertanian modern maupun hobi berkebun Anda.
-                </p>
-              </div>
+             
+                
+             
             </aside>
           </div>
 
@@ -72,17 +66,21 @@ import { Head } from '@inertiajs/vue3'
               <span class="text-xs font-semibold uppercase tracking-[0.3em] text-green-100">Ngundur</span>
               <h3 class="text-3xl font-bold leading-snug">Smart Garden untuk Pertanian Modern</h3>
               <p class="text-sm md:text-base text-green-100/90">
-                Integrasi sensor, kontrol otomatis, dan manajemen energi terbarukan menghadirkan pengalaman berkebun yang praktis
-                sekaligus berkelanjutan. Solusi ini membantu mempertahankan kelembaban ideal dan meminimalkan penggunaan air.
+                 Stech Smart Garden adalah sistem irigasi otomatis berbasis IoT yang memantau kelembaban tanah secara real-time
+                  dan mengaktifkan pompa hanya saat diperlukan. Hadir dengan varian panel surya, produk ini ramah lingkungan, hemat
+                  energi, dan siap mendukung pertanian modern maupun hobi berkebun Anda.
               </p>
             </div>
 
-            <div class="relative rounded-xl bg-white/10 p-6 backdrop-blur">
-              <p class="text-sm text-green-50">
-                Sistem mampu mengirim data ke dashboard monitoring, sehingga pengguna dapat memantau kondisi tanaman kapan saja.
-                Fitur jadwal pintar memungkinkan penyesuaian sesuai kebutuhan varietas tanaman yang berbeda.
-              </p>
-            </div>
+            <div class="relative rounded-xl bg-white/10 p-6 backdrop-blur flex items-center justify-center">
+  
+    <img
+      src="/assets/dashboard/profil.png"
+      alt="Profil Ngundur"
+      class="h-40 w-auto object-contain"
+    />
+
+</div>
           </section>
         </div>
       </div>

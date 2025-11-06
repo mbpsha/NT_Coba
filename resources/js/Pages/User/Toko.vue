@@ -2,12 +2,27 @@
 import { router } from '@inertiajs/vue3'
 import Header from '@/component/Header.vue'
 import Footer from '@/component/Footer.vue'
+import { computed } from 'vue'
 
 const props = defineProps({
-  products: { type: Object, required: true } // paginated
+  products: { type: Object, required: true },
+  // kiriman backend: contoh 'paid','diproses','dalam produksi','shipping','sedang dikirim','dalam pengiriman','selesai','done'
+  orderStatus: { type: String, default: 'paid' }
 })
 
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
+
+// normalisasi + peta status -> index langkah
+const normalize = (s) => (s || '').toString().toLowerCase().trim()
+
+const statusIndex = {
+  'paid': 0, 'verified': 0, 'pembayaran terverifikasi': 0, 'pending': 0,
+  'diproses': 1, 'dalam produksi': 1, 'production': 1,
+  'dikirim': 2, 'sedang dikirim': 2, 'dalam pengiriman': 2, 'shipping': 2,
+  'selesai': 3, 'done': 3, 'completed': 3,
+}
+
+const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 0)
 </script>
 
 <template>
@@ -50,6 +65,81 @@ const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency:
           Berikutnya
         </button>
       </div>
+
+      <!-- Pesanan Saya -->
+      <section class="mt-12">
+        <h2 class="text-base font-semibold mb-4">Pesanan Saya</h2>
+
+        <div class="rounded-2xl bg-white/70 backdrop-blur ring-1 ring-gray-200 p-6 shadow-sm">
+          <p class="text-sm text-gray-500 mb-4">Status pesanan terakhir Anda</p>
+
+          <div class="grid grid-cols-4 gap-4">
+            <!-- Step 1: Pembayaran Terverifikasi -->
+            <div class="flex flex-col items-center text-center gap-2">
+              <div :class="[
+                    'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
+                    activeIndex >= 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  ]">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12l2 2 4-4M12 22a10 10 0 110-20 10 10 0 010 20z"/>
+                </svg>
+              </div>
+              <p :class="['text-xs', activeIndex >= 0 ? 'text-gray-800' : 'text-gray-400']">
+                Pembayaran Terverifikasi
+              </p>
+            </div>
+
+            <!-- Step 2: Dalam Produksi -->
+            <div class="flex flex-col items-center text-center gap-2">
+              <div :class="[
+                    'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
+                    activeIndex >= 1 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  ]">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        d="M9.75 3l.91 2.73M14.25 3l-.91 2.73M4 7h16M6 7l1.5 11h9L18 7M8 11h8"/>
+                </svg>
+              </div>
+              <p :class="['text-xs', activeIndex >= 1 ? 'text-gray-800' : 'text-gray-400']">
+                Dalam Produksi
+              </p>
+            </div>
+
+            <!-- Step 3: Dalam Pengiriman -->
+            <div class="flex flex-col items-center text-center gap-2">
+              <div :class="[
+                    'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
+                    activeIndex >= 2 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  ]">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 7h11v8H3zM14 10h4l3 3v2h-7v-5zM5 21a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z"/>
+                </svg>
+              </div>
+              <p :class="['text-xs', activeIndex >= 2 ? 'text-gray-800' : 'text-gray-400']">
+                Dalam Pengiriman
+              </p>
+            </div>
+
+            <!-- Step 4: Beri Penilaian -->
+            <div class="flex flex-col items-center text-center gap-2">
+              <div :class="[
+                    'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
+                    activeIndex >= 3 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  ]">
+                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+              </div>
+              <p :class="['text-xs', activeIndex >= 3 ? 'text-gray-800' : 'text-gray-400']">
+                Beri Penilaian
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </section>
 
     <Footer />

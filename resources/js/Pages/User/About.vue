@@ -1,100 +1,105 @@
 <script setup>
-import Header from '@/component/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
+import Header from '@/component/Header.vue'
 import Footer from '@/component/Footer.vue'
+import { Head } from '@inertiajs/vue3'
 
-import { computed } from 'vue'
+// gunakan aset yang sama seperti sebelumnya
 import Logo from '*/dashboard/logo-ngundur.png'
 import Profil from '*/dashboard/profil.png'
-
-// hero background with a soft gray overlay using public asset
-const heroStyle = computed(() => ({
-  backgroundImage: `linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg')`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-}))
 </script>
 
 <template>
-  <div class="font-inter text-gray-900">
+  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
     <Header />
+    <Head title="Profil" />
 
-    <!-- HERO -->
+    <!-- HERO (gaya seperti Blog.vue) -->
     <section
-      class="mt-16 h-[260px] md:h-[320px] relative flex items-center"
-      :style="heroStyle"
+      class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
+      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg'); background-size: cover; background-position: center;"
     >
-      <!-- jika belum punya gambar, cukup hapus url(...) di atas, gradient tetap tampil -->
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow">Profil</h1>
       </div>
     </section>
 
-    <!-- TENTANG -->
-    <section class="py-10">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="inline-block text-3xl md:text-4xl font-extrabold text-green-700 bg-green-100 rounded-full px-5 py-2">
-          Tentang NGUNDUR
-        </h2>
+    <!-- KONTEN UTAMA DALAM CARD (seperti Blog.vue) -->
+    <main class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 pb-16">
+      <div class="relative overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-200">
+        <!-- background samar -->
+        <div
+          class="absolute inset-0 pointer-events-none"
+          style="background-image: url('/assets/dashboard/bg-profil.jpg'); background-size: cover; background-position: right center; opacity: 0.05; filter: blur(0.5px);"
+        ></div>
 
-        <p class="mt-4 text-sm text-gray-600">~IoT : Stech Smart Garden</p>
+        <div class="relative z-10 p-6 sm:p-10 lg:p-14">
+          <div class="grid gap-10 md:grid-cols-[2fr_1fr] items-start">
+            <!-- Artikel: tetap memakai informasi About.vue -->
+            <article class="space-y-6 text-base leading-relaxed text-gray-700">
+              <header class="space-y-3">
+                <h2 class="inline-block text-3xl md:text-4xl font-extrabold text-green-700 bg-green-100 rounded-full px-5 py-2">
+                  Tentang NGUNDUR
+                </h2>
+                <p class="text-sm text-gray-500">~IoT : Stech Smart Garden</p>
+                <h3 class="text-2xl md:text-4xl font-semibold text-green-700 px-1">
+                  NGUNDUR
+                </h3>
+              </header>
 
-        <h1 class="text-2xl md:text-4xl font-semibold text-green-700 px-5 py-2">
-          NGUNDUR
-        </h1>
+              <p>
+                Ngundur Nguthik Tandur adalah sebuah inisiatif inovasi teknologi pertanian berbasis IoT yang berfokus pada penyiraman tanaman otomatis. Berlokasi di Jl. Ringroad Barat, Dowangan, Banyuraden, Gamping, Sleman, Daerah Istimewa Yogyakarta, brand ini hadir untuk mendukung pertanian modern yang lebih efisien, hemat air, dan ramah lingkungan.
+              </p>
+              <p>
+                Proyek ini lahir dari ide mahasiswa Universitas Sebelas Maret (UNS) yang menerima hibah untuk mengembangkan solusi nyata bagi kebutuhan pertanian. Melihat tantangan petani dan masyarakat perkotaan dalam mengatur kebutuhan air tanaman, tim mengembangkan perangkat IoT yang mampu mengotomatisasi proses penyiraman secara cerdas dan real-time.
+              </p>
+              <p>
+                Nama <b>Ngundur Nguthik Tandur</b> berasal dari bahasa Jawa yang berarti “mengairi tanaman”. Filosofi ini mencerminkan semangat untuk selalu dekat dengan alam, menjaga keberlanjutan, sekaligus menghadirkan sentuhan teknologi yang sederhana namun berdampak besar bagi kehidupan.
+              </p>
+            </article>
 
-        <div class="mt-6 grid md:grid-cols-3 gap-10">
-          <div class="md:col-span-2 space-y-4 leading-7 text-gray-700">
-            <p>
-              Ngundur Nguthik Tandur adalah sebuah inisiatif inovasi teknologi pertanian berbasis IoT yang berfokus pada penyiraman tanaman otomatis. Berlokasi di Jl. Ringroad Barat, Dowangan, Banyuraden, Gamping, Sleman, Daerah Istimewa Yogyakarta, brand ini hadir untuk mendukung pertanian modern yang lebih efisien, hemat air, dan ramah lingkungan.
-            </p>
-            <p>
-              Proyek ini lahir dari ide mahasiswa Universitas Sebelas Maret (UNS) yang menerima hibah untuk mengembangkan solusi nyata bagi kebutuhan pertanian. Melihat tantangan petani dan masyarakat perkotaan dalam mengatur kebutuhan air tanaman, tim mengembangkan perangkat IoT yang mampu mengotomatisasi proses penyiraman secara cerdas dan real-time.
-            </p>
-            <p>
-              Nama <b>Ngundur Nguthik Tandur</b> berasal dari bahasa Jawa yang berarti “mengairi tanaman”. Filosofi ini mencerminkan semangat untuk selalu dekat dengan alam, menjaga keberlanjutan, sekaligus menghadirkan sentuhan teknologi yang sederhana namun berdampak besar bagi kehidupan.
-            </p>
+            <!-- Aside: logo -->
+            <aside class="space-y-6">
+             
+                <img :src="Logo" alt="NGUNDUR" class="w-64 md:w-80 lg:w-96 object-contain mt-20 md:mt-60" />
+             
+            </aside>
           </div>
 
-          <div class="flex items-start justify-center">
-            <img :src="Logo" alt="NGUNDUR" class="w-56 md:w-64 object-contain" />
-          </div>
-        </div>
+          <!-- Bagian kedua (gaya gradient seperti Blog.vue) -->
+          <section class="mt-12 grid gap-8 rounded-2xl border border-green-100 bg-gradient-to-r from-green-700 via-green-600 to-green-500 p-8 text-white shadow-lg md:grid-cols-[1.2fr_0.8fr]">
+            <!-- VISI & MISI (konten sama persis) -->
+            <div class="space-y-4">
+              <h3 class="text-3xl md:text-4xl font-extrabold">VISI & MISI NGUNDUR</h3>
 
-        <!-- 3 KARTU -->
-        <div class="mt-10 grid md:grid-cols-3 gap-6">
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
-          </div>
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
-          </div>
-          <div class="bg-green-50 rounded-xl h-56 flex items-center justify-center shadow">
-            <img :src="Profil" alt="" class="h-28 w-28 object-contain" />
-          </div>
+              <h4 class="text-xl font-semibold">VISI NGUNDUR</h4>
+              <p class="text-green-100/90">
+                Menjadi pelopor teknologi penyiraman otomatis yang mendukung pertanian berkelanjutan
+                dan mudah diakses oleh semua kalangan.
+              </p>
+
+              <h4 class="mt-4 text-xl font-semibold">MISI NGUNDUR</h4>
+              <ul class="mt-2 space-y-2 text-green-50 max-w-2xl" style="text-align:justify;">
+                <li>1. Menghadirkan solusi IoT yang efisien dan hemat sumber daya.</li>
+                <li>2. Memberikan manfaat nyata bagi petani maupun penghobi berkebun.</li>
+                <li>3. Mendorong teknologi ramah lingkungan untuk keberlanjutan pangan.</li>
+                <li>4. Membangun kolaborasi antara akademik, industri, dan masyarakat.</li>
+              </ul>
+            </div>
+
+            <!-- 3 Kartu gambar profil (konten asli) -->
+            <div class="grid grid-cols-1 gap-4">
+              <div class="bg-white/10 rounded-xl h-40 flex items-center justify-center shadow ring-1 ring-white/20">
+                <img :src="Profil" alt="" class="h-20 w-20 object-contain" />
+              </div>
+              <div class="bg-white/10 rounded-xl h-40 flex items-center justify-center shadow ring-1 ring-white/20">
+                <img :src="Profil" alt="" class="h-20 w-20 object-contain" />
+              </div>
+             
+            </div>
+          </section>
         </div>
       </div>
-    </section>
-
-    <!-- VISI & MISI -->
-    <section class="py-12 bg-green-50">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h3 class="text-3xl md:text-4xl font-extrabold text-green-700">VISI & MISI NGUNDUR</h3>
-
-        <h4 class="mt-8 text-xl font-semibold text-gray-800">VISI NGUNDUR</h4>
-        <p class="mt-2 text-gray-700">
-          Menjadi pelopor teknologi penyiraman otomatis yang mendukung pertanian berkelanjutan
-          dan mudah diakses oleh semua kalangan.
-        </p>
-
-        <h4 class="mt-10 text-xl font-semibold text-gray-800">MISI NGUNDUR</h4>
-  <ul class="mt-3 space-y-2 text-gray-700 text-justify max-w-2xl mx-auto list-decimal list-inside" style="text-align:justify;">
-          <li>Menghadirkan solusi IoT yang efisien dan hemat sumber daya.</li>
-          <li>Memberikan manfaat nyata bagi petani maupun penghobi berkebun.</li>
-          <li>Mendorong teknologi ramah lingkungan untuk keberlanjutan pangan.</li>
-          <li>Membangun kolaborasi antara akademik, industri, dan masyarakat.</li>
-        </ul>
-      </div>
-    </section>
+    </main>
 
     <Footer />
   </div>

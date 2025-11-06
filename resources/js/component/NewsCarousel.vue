@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/vue3'
 import NewsLeft from '*/dashboard/berita-kiri.png'
 import NewsMid from '*/dashboard/berita-1.png'
 import NewsRight from '*/dashboard/berita-kanan.png'
-import NewsExtra from '*/dashboard/berita-4.jpg' // gambar baru
+import NewsExtra from '*/dashboard/berita-4.jpg' 
 
 const cards = [
   { title: 'Indonesia Dorong Pertanian Ramah Lingkungan dengan Teknologi IoT', image: NewsLeft, href: '#' },
