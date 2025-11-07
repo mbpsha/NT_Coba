@@ -27,7 +27,8 @@ Route::middleware('guest')->group(function () {
 
 // Public Dashboard route (accessible by guests and authenticated users)
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-Route::get('/berita', [AuthController::class, 'berita'])->name('berita');
+Route::get('/berita', [NewsController::class, 'index'])->name('berita');
+Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
 Route::get('/blog', [AuthController::class, 'blog'])->name('blog');
 Route::get('/about', [AuthController::class, 'about'])->name('about');
 

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
-import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
-import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
+import SidebarAdmin from '@/component/SidebarAdmin.vue'
+import HeaderAdmin from '@/component/HeaderAdmin.vue'
 
 const props = defineProps({
     news: Object

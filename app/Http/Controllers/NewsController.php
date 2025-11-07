@@ -14,7 +14,8 @@ class NewsController extends Controller
     {
         $news = News::published()
             ->latest()
-            ->paginate(4);
+            ->paginate(4)
+            ->withQueryString();
 
         return Inertia::render('User/Berita', [
             'news' => $news
@@ -54,7 +55,7 @@ class NewsController extends Controller
             'title' => 'required|string|max:255',
             'excerpt' => 'required|string|max:500',
             'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'is_published' => 'boolean',
         ]);
 

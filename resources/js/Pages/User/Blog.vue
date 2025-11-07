@@ -1,6 +1,6 @@
 <script setup>
-import Header from '@/Components/User/Header.vue'
-import Footer from '@/Components/User/Footer.vue'
+import Header from '@/component/Header.vue'    
+import Footer from '@/component/Footer.vue'
 import { Head } from '@inertiajs/vue3'
 </script>
 

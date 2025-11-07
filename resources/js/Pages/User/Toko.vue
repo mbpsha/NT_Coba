@@ -1,7 +1,7 @@
 <script setup>
 import { router } from '@inertiajs/vue3'
-import Header from '@/Components/User/Header.vue'
-import Footer from '@/Components/User/Footer.vue'
+import Header from '@/component/Header.vue'    
+import Footer from '@/component/Footer.vue'
 
 const props = defineProps({
   products: { type: Object, required: true } // paginated

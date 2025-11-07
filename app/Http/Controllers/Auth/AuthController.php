@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Models\News;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -112,13 +113,16 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        return Inertia::render('User/Dashboard');
+        $latestNews = News::published()->latest()->take(5)->get();
+        return Inertia::render('User/Dashboard', [
+            'latestNews' => $latestNews
+        ]);
     }
 
     public function berita()
     {
-        return Inertia::render('User/Berita');
+        return Inertia::render('User/Berita', [
+            'latestNews' => $latestNews
+        ]);
     }
-
-
 }

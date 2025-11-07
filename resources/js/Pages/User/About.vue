@@ -1,5 +1,5 @@
 <script setup>
-import Header from '@/component/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
+import Header from '@/component/Header.vue'    
 import Footer from '@/component/Footer.vue'
 
 import { computed } from 'vue'
