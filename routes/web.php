@@ -11,6 +11,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\TokoController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CartController;
 
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -24,20 +26,41 @@ Route::middleware('guest')->group(function () {
 });
 
 // Halaman publik
-Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+Route::get('/dashboard', function () {
+    return Inertia::render('User/Dashboard', [
+        'welcome' => 'Halo'
+    ]);
+})->name('dashboard');
+
+// Produk - detail publik
+Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
 
 // arahkan langsung ke komponen Inertia (tanpa method controller)
 Route::get('/berita', fn () => Inertia::render('User/Berita'))->name('berita');
 Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
 Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 
-// opsional: /toko redirect ke /shop (TokoController)
-Route::get('/toko', fn () => redirect()->route('shop'))->name('toko');
+// Toko
+Route::get('/toko', [TokoController::class, 'index'])->name('toko');
+// alias lama, aman jika masih ada pemanggilan 'shop'
+Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+
+// Checkout (butuh login)
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout');
+});
 
 // Protected
 Route::middleware(['auth'])->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/shop', [TokoController::class, 'index'])->name('shop');
+    // Profil
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Cart
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware

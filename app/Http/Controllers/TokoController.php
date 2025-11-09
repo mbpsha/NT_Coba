@@ -13,17 +13,14 @@ class TokoController extends Controller
     {
         $products = Product::select('id_produk','nama_produk','harga','gambar')
             ->latest('id_produk')
-            ->paginate(6)
-            ->through(fn ($p) => [
-                'id_produk'   => $p->id_produk,
-                'nama_produk' => $p->nama_produk,
-                'harga'       => (int) $p->harga,
-                'gambar'      => $p->gambar,
-            ]);
+            ->paginate(9);
 
-        $orderStatus = Auth::check()
-            ? (Order::where('id_user', Auth::id())->latest('created_at')->value('status') ?? 'paid')
-            : 'paid';
+        $orderStatus = null;
+        if (Auth::check()) {
+            $orderStatus = Order::where('id_user', Auth::id())
+                ->latest('created_at')
+                ->value('status');
+        }
 
         return Inertia::render('User/Toko', [
             'products'    => $products,

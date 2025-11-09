@@ -2,27 +2,12 @@
 import { router } from '@inertiajs/vue3'
 import Header from '@/component/Header.vue'
 import Footer from '@/component/Footer.vue'
-import { computed } from 'vue'
-
 const props = defineProps({
   products: { type: Object, required: true },
-  // kiriman backend: contoh 'paid','diproses','dalam produksi','shipping','sedang dikirim','dalam pengiriman','selesai','done'
-  orderStatus: { type: String, default: 'paid' }
+  orderStatus: { type: String, default: null }
 })
-
-const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n)
-
-// normalisasi + peta status -> index langkah
-const normalize = (s) => (s || '').toString().toLowerCase().trim()
-
-const statusIndex = {
-  'paid': 0, 'verified': 0, 'pembayaran terverifikasi': 0, 'pending': 0,
-  'diproses': 1, 'dalam produksi': 1, 'production': 1,
-  'dikirim': 2, 'sedang dikirim': 2, 'dalam pengiriman': 2, 'shipping': 2,
-  'selesai': 3, 'done': 3, 'completed': 3,
-}
-
-const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 0)
+const fmt = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
+function addToCart(p){ router.post(route('cart.add'), { id_produk: p.id_produk }, { preserveScroll: true }) }
 </script>
 
 <template>
@@ -35,23 +20,22 @@ const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <div v-for="p in products.data" :key="p.id_produk"
              class="rounded-2xl bg-green-100 shadow-[8px_8px_0_0_rgba(0,0,0,0.08)] p-4">
-          <div class="h-44 flex items-center justify-center">
+          <button
+            @click="router.visit(route('produk.show', p.id_produk))"
+            class="h-44 w-full flex items-center justify-center"
+          >
             <img :src="p.gambar || '/assets/dashboard/profil.png'" alt="" class="h-40 object-contain" />
-          </div>
-
+          </button>
           <p class="mt-2 text-[12px] text-center leading-4 line-clamp-2">
             {{ p.nama_produk }}
           </p>
-
           <p class="mt-2 text-center text-red-600 font-bold">
             {{ fmt(p.harga) }}
           </p>
-
-          <button class="mt-3 mx-auto grid place-items-center w-40 h-9 rounded-full bg-green-300 hover:bg-green-400 text-sm">
-            <svg class="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+          <button
+            @click="router.post(route('cart.add'), { id_produk: p.id_produk }, { preserveScroll: true })"
+            class="mt-3 w-full h-9 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm">
+            Tambah ke Keranjang
           </button>
         </div>
       </div>
@@ -76,7 +60,7 @@ const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 
           <div class="grid grid-cols-4 gap-4">
             <!-- Step 1: Pembayaran Terverifikasi -->
             <div class="flex flex-col items-center text-center gap-2">
-              <div :class="[
+              <div :class=" [
                     'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                     activeIndex >= 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                   ]">
@@ -92,7 +76,7 @@ const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 
 
             <!-- Step 2: Dalam Produksi -->
             <div class="flex flex-col items-center text-center gap-2">
-              <div :class="[
+              <div :class=" [
                     'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                     activeIndex >= 1 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                   ]">
@@ -108,7 +92,7 @@ const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 
 
             <!-- Step 3: Dalam Pengiriman -->
             <div class="flex flex-col items-center text-center gap-2">
-              <div :class="[
+              <div :class=" [
                     'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                     activeIndex >= 2 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                   ]">
@@ -124,7 +108,7 @@ const activeIndex = computed(() => statusIndex[normalize(props.orderStatus)] ?? 
 
             <!-- Step 4: Beri Penilaian -->
             <div class="flex flex-col items-center text-center gap-2">
-              <div :class="[
+              <div :class=" [
                     'w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                     activeIndex >= 3 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                   ]">

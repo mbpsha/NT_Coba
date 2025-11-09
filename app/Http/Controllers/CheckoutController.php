@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
 use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\Order;
@@ -9,6 +10,7 @@ use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
@@ -101,5 +103,53 @@ class CheckoutController extends Controller
         $order = Order::with(['orderDetails.product', 'payment', 'user'])
                      ->findOrFail($orderId);
         return response()->json($order);
+    }
+
+    public function show($id_produk, Request $request)
+    {
+        $qty = max(1, (int)$request->query('qty', 1));
+
+        $product = Product::where('id_produk', $id_produk)->firstOrFail();
+        $user = Auth::user();
+
+        // Wajib alamat
+        if (!filled($user->alamat)) {
+            return redirect()
+                ->route('profile.show', [
+                    'checkout'  => 1,
+                    'id_produk' => $product->id_produk,
+                    'qty'       => $qty,
+                ])
+                ->with('need_address', true);
+        }
+
+        $hargaProduk = (int)$product->harga;
+        $biayaAdmin  = 5000;
+        $biayaOngkir = 20000;
+        $subtotal    = $hargaProduk * $qty;
+        $total       = $subtotal + $biayaAdmin + $biayaOngkir;
+
+        return Inertia::render('User/Checkout', [
+            'user' => [
+                'nama'    => $user->nama ?? $user->username ?? '',
+                'email'   => $user->email ?? '',
+                'no_telp' => $user->no_telp ?? '',
+                'alamat'  => $user->alamat ?? '',
+            ],
+            'product' => [
+                'id_produk'   => $product->id_produk,
+                'nama_produk' => $product->nama_produk,
+                'deskripsi'   => $product->deskripsi,
+                'gambar'      => $product->gambar,
+                'harga'       => $hargaProduk,
+            ],
+            'qty' => $qty,
+            'summary' => [
+                'admin'    => $biayaAdmin,
+                'ongkir'   => $biayaOngkir,
+                'subtotal' => $subtotal,
+                'total'    => $total,
+            ],
+        ]);
     }
 }
