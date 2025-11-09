@@ -13,7 +13,7 @@ class ProfileController extends Controller
     {
         $u = $request->user();
 
-        return Inertia::render('User/ProfilePage', [
+        return Inertia::render('User/ProfilPage', [
             'user' => [
                 'id_user' => $u->id_user,
                 'nama'    => $u->nama,
