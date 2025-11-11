@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -47,7 +49,16 @@ Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
 
 // Checkout (butuh login)
 Route::middleware('auth')->group(function () {
+    // Checkout satu produk
     Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout');
+
+    // Alamat sementara untuk checkout (tidak mengubah profil)
+    Route::get('/checkout/{id_produk}/alamat', [CheckoutController::class, 'addressForm'])->name('checkout.address');
+    Route::post('/checkout/{id_produk}/alamat', [CheckoutController::class, 'saveAddress'])->name('checkout.address.save');
+
+    // konfirmasi pembayaran (upload bukti)
+    Route::post('/checkout/{id_produk}/confirm', [PaymentController::class, 'confirmFromCheckout'])
+        ->name('checkout.confirm');
 });
 
 // Protected
@@ -91,3 +102,11 @@ Route::middleware([
     Route::get('/payments', [PaymentController::class, 'indexAdmin'])->name('payments.index');
     Route::put('/payments/{id}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
 });
+
+// Logout
+Route::post('/logout', function (Request $request) {
+    Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('dashboard'); // arahkan ke dashboard setelah logout
+})->name('logout');

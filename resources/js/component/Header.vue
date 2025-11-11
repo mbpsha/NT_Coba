@@ -18,6 +18,14 @@ watch(()=> page.props.flash?.cart_added, v=>{
     setTimeout(()=> showToast.value = false, 2200)
   }
 })
+// tampilkan juga toast umum (mis. setelah konfirmasi pembayaran)
+watch(()=> page.props.flash?.toast, v=>{
+  if (v) {
+    toastMsg.value = v
+    showToast.value = true
+    setTimeout(()=> showToast.value = false, 2500)
+  }
+})
 
 const profileMenu = ref(false)
 function toggleProfile(){ profileMenu.value = !profileMenu.value }
@@ -78,10 +86,10 @@ function doLogout(){
                 <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
               </div>
               <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil</Link>
-              <button @click="doLogout" :disabled="logoutForm.processing"
-                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+              <Link method="post" :href="route('logout')" as="button"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
                 Keluar
-              </button>
+              </Link>
             </div>
           </div>
         </template>

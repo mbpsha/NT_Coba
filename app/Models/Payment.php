@@ -11,22 +11,18 @@ class Payment extends Model
 
     protected $primaryKey = 'id_payment';
 
-    // Only QRIS is allowed for 'metode_pembayaran'
     protected $fillable = [
         'id_order',
-        'metode_pembayaran', // Only QRIS
+        'metode_pembayaran',
         'jumlah',
         'status',
         'bukti_transfer',
+        'trx_id', // ditambahkan
     ];
 
-    protected $casts = [
-        'jumlah' => 'decimal:2',
-    ];
-
-    // Relations
     public function order()
     {
-        return $this->belongsTo(Order::class, 'id_order', 'id_order');
+        return $this->belongsTo(Order::class, 'id_order', 'id_order')
+            ->with(['user','orderDetails.product']);
     }
 }

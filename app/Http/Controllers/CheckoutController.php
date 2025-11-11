@@ -107,23 +107,39 @@ class CheckoutController extends Controller
 
     public function show($id_produk, Request $request)
     {
-        $qty = max(1, (int)$request->query('qty', 1));
+        $qty = max(1, (int) $request->query('qty', 1));
 
         $product = Product::where('id_produk', $id_produk)->firstOrFail();
         $user = Auth::user();
 
-        // Wajib alamat
-        if (!filled($user->alamat)) {
-            return redirect()
-                ->route('profile.show', [
-                    'checkout'  => 1,
-                    'id_produk' => $product->id_produk,
-                    'qty'       => $qty,
-                ])
-                ->with('need_address', true);
+        // Ambil alamat sementara dari session kalau ada dan sesuai produk
+        $temp = session('checkout.address');
+        if (!$temp || (int)($temp['product'] ?? 0) !== (int)$id_produk) {
+            $temp = null;
         }
 
-        $hargaProduk = (int)$product->harga;
+        // Jika tidak ada alamat profil dan juga tidak ada alamat sementara -> arahkan isi alamat sementara
+        if (!filled($user->alamat) && !$temp) {
+            return redirect()
+                ->route('checkout.address', ['id_produk' => $id_produk, 'qty' => $qty]);
+        }
+
+        // Build alamat yang dipakai saat ini (shipping)
+        $shipping = $temp
+            ? [
+                'name'  => $temp['nama'],
+                'phone' => $temp['phone'],
+                'text'  => trim($temp['prov_kab'] . "\n" . $temp['street'] . "\n" . ($temp['detail'] ?? '')),
+                'is_temp' => true,
+            ]
+            : [
+                'name'  => $user->nama ?? $user->username ?? '',
+                'phone' => $user->no_telp ?? '',
+                'text'  => $user->alamat ?? '',
+                'is_temp' => false,
+            ];
+
+        $hargaProduk = (int) $product->harga;
         $biayaAdmin  = 5000;
         $biayaOngkir = 20000;
         $subtotal    = $hargaProduk * $qty;
@@ -136,6 +152,7 @@ class CheckoutController extends Controller
                 'no_telp' => $user->no_telp ?? '',
                 'alamat'  => $user->alamat ?? '',
             ],
+            'shipping' => $shipping, // alamat yang dipakai checkout
             'product' => [
                 'id_produk'   => $product->id_produk,
                 'nama_produk' => $product->nama_produk,
@@ -151,5 +168,55 @@ class CheckoutController extends Controller
                 'total'    => $total,
             ],
         ]);
+    }
+
+    // Laman form alamat sementara
+    public function addressForm($id_produk, Request $request)
+    {
+        $qty = max(1, (int) $request->query('qty', 1));
+        $user = Auth::user();
+
+        $prefill = session('checkout.address') ?: [
+            'nama'   => $user->nama ?? $user->username ?? '',
+            'phone'  => $user->no_telp ?? '',
+            'prov_kab' => '',
+            'street' => '',
+            'detail' => '',
+        ];
+
+        return Inertia::render('User/CheckoutAddress', [
+            'id_produk' => (int) $id_produk,
+            'qty'       => $qty,
+            'prefill'   => $prefill,
+        ]);
+    }
+
+    // Simpan alamat sementara ke session (bukan ke profil)
+    public function saveAddress($id_produk, Request $request)
+    {
+        $data = $request->validate([
+            'nama'    => 'required|string|max:255',
+            'phone'   => 'required|string|max:30',
+            'prov_kab'=> 'required|string|max:255',
+            'street'  => 'required|string|max:255',
+            'detail'  => 'nullable|string|max:255',
+            'qty'     => 'nullable|integer|min:1',
+        ]);
+
+        $qty = max(1, (int)($data['qty'] ?? 1));
+
+        session([
+            'checkout.address' => [
+                'product' => (int) $id_produk,
+                'qty'     => $qty,
+                'nama'    => $data['nama'],
+                'phone'   => $data['phone'],
+                'prov_kab'=> $data['prov_kab'],
+                'street'  => $data['street'],
+                'detail'  => $data['detail'] ?? '',
+            ]
+        ]);
+
+        return redirect()->route('checkout', ['id_produk' => $id_produk, 'qty' => $qty]);
     }
 }

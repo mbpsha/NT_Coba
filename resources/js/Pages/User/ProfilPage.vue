@@ -101,10 +101,10 @@ function doLogout(){ logoutForm.post(route('logout'), { replace:true }) }
               {{ form.processing ? 'Menyimpan...' : 'Selesai' }}
             </button>
 
-            <button type="button" :disabled="logoutForm.processing" @click="doLogout"
-                    class="px-5 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white">
+            <Link method="post" :href="route('logout')" as="button"
+                  class="px-5 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white">
               Logout
-            </button>
+            </Link>
 
             <!-- Kembali ke Checkout -->
             <button

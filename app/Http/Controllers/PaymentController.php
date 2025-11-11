@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Order;
-use App\Http\Requests\PaymentRequest;
+use App\Models\OrderDetail;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -151,5 +155,76 @@ class PaymentController extends Controller
             'created_at' => $payment->created_at,
             'updated_at' => $payment->updated_at
         ]);
+    }
+
+    // Konfirmasi dari Checkout (buat order + payment)
+    public function confirmFromCheckout(Request $request, $id_produk)
+    {
+        $request->validate([
+            'qty'            => ['required','integer','min:1'],
+            'trx_id'         => ['nullable','string','max:100'],
+            'bukti_transfer' => ['required','image','mimes:jpg,jpeg,png','max:5120'],
+            'agree'          => ['accepted'],
+        ]);
+
+        $qty     = (int) $request->qty;
+        $product = Product::where('id_produk', $id_produk)->firstOrFail();
+        $user    = Auth::user();
+
+        // Alamat sementara bila ada
+        $temp = session('checkout.address');
+        $addressText = $temp && (int)($temp['product'] ?? 0) === (int)$id_produk
+            ? trim(($temp['nama'] ?? '')."\n".($temp['prov_kab'] ?? '')."\n".($temp['street'] ?? '')."\n".($temp['detail'] ?? ''))
+            : (string) ($user->alamat ?? '');
+
+        $hargaProduk = (int) $product->harga;
+        $biayaAdmin  = 5000;
+        $biayaOngkir = 20000;
+        $subtotal    = $hargaProduk * $qty;
+        $total       = $subtotal + $biayaAdmin + $biayaOngkir;
+
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'id_user'      => $user->id_user ?? $user->id ?? Auth::id(),
+                'total_harga'  => $total,
+                'status'       => 'diproses', // terlihat di OrdersManagement
+                'address_text' => $addressText,
+                'metode'       => 'QRIS',
+            ]);
+
+            OrderDetail::create([
+                'id_order'  => $order->id_order,
+                'id_produk' => $product->id_produk,
+                'jumlah'    => $qty,
+                'harga'     => $hargaProduk,
+            ]);
+
+            $path = $request->file('bukti_transfer')->store('payments', 'public');
+            $url  = Storage::url($path);
+
+            Payment::create([
+                'id_order'          => $order->id_order,
+                'metode_pembayaran' => 'QRIS',
+                'jumlah'            => $total,
+                'status'            => 'pending', // diverifikasi di PaymentVerification
+                'bukti_transfer'    => $url,
+                'trx_id'            => $request->trx_id,
+            ]);
+
+            if ($temp && (int)($temp['product'] ?? 0) === (int)$id_produk) {
+                session()->forget('checkout.address');
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['bukti_transfer' => 'Gagal menyimpan pembayaran.'])->withInput();
+        }
+
+        // Redirect ke toko + popup
+        return redirect()
+            ->route('toko')
+            ->with('toast', 'Pemesanan dan Pembayaranmu Sedang Diverivikasi');
     }
 }
