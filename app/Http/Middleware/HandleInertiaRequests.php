@@ -4,6 +4,9 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Auth;
+use App\Models\CartDetail;
+use App\Models\Cart;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,14 +38,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
             ],
+            'cartCount' => $request->user()
+                ? CartDetail::whereHas('cart', fn($q)=>$q->where('id_user',$request->user()->id))->sum('jumlah')
+                : 0,
             'flash' => [
-                'message' => fn () => $request->session()->get('message')
+                'cart_added' => session('cart_added'),
             ],
-        ];
+        ]);
     }
 }
