@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Order;
 use App\Http\Requests\PaymentRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -75,67 +76,6 @@ class PaymentController extends Controller
     }
 
     /**
-     * Upload payment proof (bukti pembayaran)
-     */
-    public function uploadPaymentProof(Request $request, $id)
-    {
-        $request->validate([
-            'bukti_pembayaran' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120' // Max 5MB
-        ]);
-
-        $payment = Payment::findOrFail($id);
-
-        // Upload file
-        $file = $request->file('bukti_pembayaran');
-        $filename = 'payment_proof_' . $payment->id_payment . '_' . time() . '.' . $file->extension();
-        $path = $file->storeAs('payment_proofs', $filename, 'public');
-
-        // Update payment record
-        $payment->update([
-            'bukti_transfer' => '/storage/' . $path,
-            'status' => 'pending', // Wait for admin verification
-        ]);
-
-        return response()->json([
-            'message' => 'Bukti pembayaran berhasil diupload',
-            'payment' => $payment,
-            'file_url' => asset('storage/' . $path)
-        ]);
-    }
-
-    /**
-     * Get QR Code and payment details for checkout
-     */
-    public function getQRCode($id)
-    {
-        $payment = Payment::with('order')->findOrFail($id);
-
-        // Generate QR code data untuk QRIS
-        $qrData = [
-            'merchant' => 'NGUNDUR',
-            'amount' => $payment->jumlah,
-            'transaction_id' => $payment->id_payment,
-            'payment_method' => 'QRIS'
-        ];
-
-        return response()->json([
-            'payment_details' => [
-                'id_payment' => $payment->id_payment,
-                'metode_pembayaran' => $payment->metode_pembayaran,
-                'jumlah' => $payment->jumlah,
-                'status' => $payment->status,
-                'tanggal' => $payment->created_at->format('d M Y'),
-                'payment_method' => 'QRIS'
-            ],
-            'qr_code_data' => base64_encode(json_encode($qrData)),
-            'merchant_info' => [
-                'name' => 'NGUNDUR',
-                'logo' => asset('images/logo.png')
-            ]
-        ]);
-    }
-
-    /**
      * Get payment status for tracking
      */
     public function getPaymentStatus($id)
@@ -151,5 +91,72 @@ class PaymentController extends Controller
             'created_at' => $payment->created_at,
             'updated_at' => $payment->updated_at
         ]);
+    }
+
+    /**
+     * Confirm Payment - CREATE Payment dengan Upload Bukti Transfer
+     * Payment baru dibuat saat user upload bukti, bukan saat order dibuat
+     * 
+     * TESTING MODE: Kalau order belum ada, auto create order dulu
+     */
+    public function confirmPayment(Request $request, $id_order)
+    {
+        $validated = $request->validate([
+            'trx_id' => 'nullable|string|max:100',
+            'bukti_transfer' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'agree' => 'required|accepted'
+        ]);
+
+        try {
+            // Cek apakah order ada, kalau belum ada (untuk testing) create dulu
+            $order = Order::find($id_order);
+            
+            if (!$order) {
+                // TESTING MODE: Auto create order jika belum ada
+                // Untuk production, uncomment validasi di frontend
+                $user = $request->user();
+                $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)
+                    ->where('is_default', true)
+                    ->first();
+                
+                if (!$defaultAddress) {
+                    $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)->first();
+                }
+                
+                if (!$defaultAddress) {
+                    return back()->withErrors(['error' => 'Alamat belum dilengkapi.']);
+                }
+                
+                $order = Order::create([
+                    'id_user' => $user->id_user,
+                    'id_alamat' => $defaultAddress->id_alamat,
+                    'total_harga' => 10025000, // dummy untuk testing
+                    'status' => 'pending'
+                ]);
+            }
+
+            // Upload bukti transfer
+            $buktiPath = null;
+            if ($request->hasFile('bukti_transfer')) {
+                $file = $request->file('bukti_transfer');
+                $filename = 'bukti_' . $order->id_order . '_' . time() . '.' . $file->extension();
+                $buktiPath = $file->storeAs('payment_proofs', $filename, 'public');
+            }
+
+            // CREATE payment record dengan bukti transfer
+            $payment = Payment::create([
+                'id_order' => $order->id_order,
+                'metode_pembayaran' => 'qris',
+                'jumlah' => $order->total_harga,
+                'status' => 'pending', // Menunggu verifikasi admin
+                'bukti_transfer' => $buktiPath ? '/storage/' . $buktiPath : null,
+                'keterangan' => $validated['trx_id'] ? "Ref: {$validated['trx_id']}" : null
+            ]);
+
+            return back()->with('payment_submitted', 'Bukti pembayaran berhasil diupload! Menunggu verifikasi admin.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
     }
 }

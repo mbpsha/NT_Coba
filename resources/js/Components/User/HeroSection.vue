@@ -41,7 +41,7 @@ defineEmits(['readMore'])
 
           <div class="flex flex-wrap items-center gap-3 mt-6">
             <a
-              href="#"
+              :href="route('shop')"
               class="px-6 py-2.5 rounded-full bg-green-500 hover:bg-green-600
                      text-white font-medium shadow transition"
             >

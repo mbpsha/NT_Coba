@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id('id_payment');
             $table->unsignedBigInteger('id_order');
-            $table->enum('metode_pembayaran', ['qris'])->default('qris'); // Only QRIS
+            $table->enum('metode_pembayaran', ['qris', 'transfer_bank', 'cod', 'ewallet', 'kartu_kredit'])->default('qris');
             $table->decimal('jumlah', 12, 2)->default(0);
             $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->string('bukti_transfer')->nullable(); // For payment proof upload
+            $table->string('keterangan')->nullable(); // For transaction reference
             $table->timestamps();
 
             // Foreign key constraint

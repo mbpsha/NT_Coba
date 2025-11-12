@@ -29,7 +29,7 @@ function logout() {
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.dashboard') }"
             >
-                📊 Dashboard
+                Dashboard
             </Link>
 
             <Link
@@ -37,7 +37,7 @@ function logout() {
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.users.index') }"
             >
-                👥 Users
+                Users
             </Link>
 
             <Link
@@ -45,7 +45,15 @@ function logout() {
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.products.index') }"
             >
-                📦 Products
+                Products
+            </Link>
+
+            <Link
+                :href="route('admin.payments.index')"
+                class="flex items-center px-6 py-3 transition hover:bg-green-500"
+                :class="{ 'bg-green-500': isActive('admin.payments.index') }"
+            >
+                Payments
             </Link>
 
             <Link
@@ -53,7 +61,7 @@ function logout() {
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.orders.index') }"
             >
-                🛒 Orders
+                Orders
             </Link>
 
             <Link
@@ -61,7 +69,7 @@ function logout() {
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.news.index') }"
             >
-                📰 News
+                News
             </Link>
 
             <!-- Logout Button -->
@@ -70,7 +78,7 @@ function logout() {
                 :disabled="logoutForm.processing"
                 class="flex items-center w-full px-6 py-3 mt-4 text-left transition hover:bg-red-500"
             >
-                🚪 {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
+                {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
             </button>
         </nav>
     </aside>

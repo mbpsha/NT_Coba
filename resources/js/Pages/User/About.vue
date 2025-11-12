@@ -1,5 +1,5 @@
 <script setup>
-import Header from '@/Components/User/Header.vue'     // per file yang Anda punya: header.vue (lowercase)
+import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 
 import { computed } from 'vue'
@@ -87,7 +87,8 @@ const heroStyle = computed(() => ({
         </p>
 
         <h4 class="mt-10 text-xl font-semibold text-gray-800">MISI NGUNDUR</h4>
-  <ul class="max-w-2xl mx-auto mt-3 space-y-2 text-justify text-gray-700 list-decimal list-inside" style="text-align:justify;">
+
+        <ul class="max-w-2xl mx-auto mt-3 space-y-2 text-justify text-gray-700 list-decimal list-inside" style="text-align:justify;">
           <li>Menghadirkan solusi IoT yang efisien dan hemat sumber daya.</li>
           <li>Memberikan manfaat nyata bagi petani maupun penghobi berkebun.</li>
           <li>Mendorong teknologi ramah lingkungan untuk keberlanjutan pangan.</li>

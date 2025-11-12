@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Models\News;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -86,16 +87,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $isAdmin = $request->user() === 'Admin';
+        $isAdmin = $request->user() && $request->user()->role === 'admin';
 
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        if ($isAdmin){
-            return redirect()->route('dashboard');
-        }
 
         return redirect()->route('dashboard');
     }
@@ -112,13 +109,17 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        return Inertia::render('User/Dashboard');
+        $latestNews = News::published()->latest()->take(5)->get();
+        return Inertia::render('User/Dashboard', [
+            'latestNews' => $latestNews
+        ]);
     }
 
     public function berita()
     {
-        return Inertia::render('User/Berita');
+        $latestNews = News::published()->latest()->take(5)->get();
+        return Inertia::render('User/Berita', [
+            'latestNews' => $latestNews
+        ]);
     }
-
-
 }

@@ -58,8 +58,11 @@ function handleFileChange(e) {
 // Submit form
 function submitForm() {
     if (isEdit.value) {
-        form.post(route('admin.news.update', selectedNews.value.id), {
-            _method: 'put',
+        // Gunakan form.post dengan forceFormData untuk support file upload
+        form.transform((data) => ({
+            ...data,
+            _method: 'PUT'
+        })).post(route('admin.news.update', selectedNews.value.id), {
             preserveScroll: true,
             onSuccess: () => closeModal()
         })
@@ -89,7 +92,10 @@ function togglePublished(article) {
         is_published: !article.is_published
     })
 
-    formData.put(route('admin.news.update', article.id), {
+    formData.transform((data) => ({
+        ...data,
+        _method: 'PUT'
+    })).post(route('admin.news.update', article.id), {
         preserveScroll: true
     })
 }
@@ -101,24 +107,24 @@ function togglePublished(article) {
         <HeaderAdmin />
 
         <!-- Main Content -->
-        <main class="ml-64 pt-16 p-8">
-            <div class="flex justify-between items-center mb-6">
+        <main class="p-8 pt-16 ml-64">
+            <div class="flex items-center justify-between mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">News Management</h1>
-                <button @click="openCreateModal" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                <button @click="openCreateModal" class="px-6 py-2 text-white transition-colors bg-green-500 rounded-lg hover:bg-green-600">
                     + Add News
                 </button>
             </div>
 
             <!-- News Table -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-hidden bg-white rounded-lg shadow-md">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Excerpt</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Title</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Excerpt</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -131,7 +137,7 @@ function togglePublished(article) {
                             </td>
                             <td class="px-6 py-4">
                                 <button @click="togglePublished(article)"
-                                    class="px-3 py-1 rounded-full text-xs font-medium cursor-pointer"
+                                    class="px-3 py-1 text-xs font-medium rounded-full cursor-pointer"
                                     :class="article.is_published
                                         ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
@@ -144,11 +150,11 @@ function togglePublished(article) {
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
                                     <button @click="openEditModal(article)"
-                                        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                        class="px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600">
                                         Edit
                                     </button>
                                     <button @click="deleteNews(article.id)"
-                                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                                        class="px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600">
                                         Delete
                                     </button>
                                 </div>
@@ -163,7 +169,7 @@ function togglePublished(article) {
                 </table>
 
                 <!-- Pagination -->
-                <div v-if="news.links && news.links.length > 3" class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center">
+                <div v-if="news.links && news.links.length > 3" class="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
                     <div class="text-sm text-gray-500">
                         Showing {{ news.from }} to {{ news.to }} of {{ news.total }} entries
                     </div>
@@ -171,7 +177,7 @@ function togglePublished(article) {
                         <a v-for="link in news.links" :key="link.label"
                            :href="link.url"
                            v-html="link.label"
-                           class="px-3 py-1 rounded border"
+                           class="px-3 py-1 border rounded"
                            :class="link.active
                                ? 'bg-green-500 text-white border-green-500'
                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
@@ -185,7 +191,7 @@ function togglePublished(article) {
         <!-- Modal Create/Edit -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closeModal">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
-                <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <div class="sticky top-0 flex items-center justify-between px-6 py-4 bg-white border-b">
                     <h2 class="text-xl font-semibold">{{ isEdit ? 'Edit News' : 'Add News' }}</h2>
                     <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,37 +203,37 @@ function togglePublished(article) {
                 <form @submit.prevent="submitForm" class="p-6 space-y-4">
                     <!-- Title -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Title</label>
                         <input v-model="form.title" type="text" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <p v-if="form.errors.title" class="text-sm text-red-600 mt-1">{{ form.errors.title }}</p>
+                        <p v-if="form.errors.title" class="mt-1 text-sm text-red-600">{{ form.errors.title }}</p>
                     </div>
 
                     <!-- Excerpt -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Excerpt (Ringkasan)</label>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Excerpt (Ringkasan)</label>
                         <textarea v-model="form.excerpt" rows="2" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             placeholder="Ringkasan singkat berita (max 500 karakter)"></textarea>
-                        <p v-if="form.errors.excerpt" class="text-sm text-red-600 mt-1">{{ form.errors.excerpt }}</p>
+                        <p v-if="form.errors.excerpt" class="mt-1 text-sm text-red-600">{{ form.errors.excerpt }}</p>
                     </div>
 
                     <!-- Content -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Content (Isi Berita)</label>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Content (Isi Berita)</label>
                         <textarea v-model="form.content" rows="8" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             placeholder="Tulis isi berita lengkap di sini..."></textarea>
-                        <p v-if="form.errors.content" class="text-sm text-red-600 mt-1">{{ form.errors.content }}</p>
+                        <p v-if="form.errors.content" class="mt-1 text-sm text-red-600">{{ form.errors.content }}</p>
                     </div>
 
                     <!-- Image -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                        <label class="block mb-1 text-sm font-medium text-gray-700">Image</label>
                         <input type="file" @change="handleFileChange" accept="image/*"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                        <p class="text-xs text-gray-500 mt-1">{{ isEdit ? 'Leave blank to keep current image' : 'Upload gambar berita' }}</p>
-                        <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
+                        <p class="mt-1 text-xs text-gray-500">{{ isEdit ? 'Leave blank to keep current image' : 'Upload gambar berita' }}</p>
+                        <p v-if="form.errors.image" class="mt-1 text-sm text-red-600">{{ form.errors.image }}</p>
                     </div>
 
                     <!-- Published Status -->
@@ -240,11 +246,11 @@ function togglePublished(article) {
                     <!-- Buttons -->
                     <div class="flex gap-3 pt-4">
                         <button type="submit" :disabled="form.processing"
-                            class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400">
+                            class="flex-1 px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:bg-gray-400">
                             {{ form.processing ? 'Saving...' : (isEdit ? 'Update' : 'Save') }}
                         </button>
                         <button type="button" @click="closeModal"
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
                             Cancel
                         </button>
                     </div>

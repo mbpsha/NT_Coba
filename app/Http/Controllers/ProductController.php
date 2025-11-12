@@ -16,10 +16,34 @@ class ProductController extends Controller
         return response()->json(Product::all());
     }
 
-    public function show($id)
+    public function show($id_produk)
     {
-        $product = Product::findOrFail($id);
-        return response()->json($product);
+        $product = Product::with(['reviews.user'])
+            ->where('id_produk', $id_produk)
+            ->firstOrFail();
+
+        $reviews = $product->reviews
+            ->sortByDesc('created_at')
+            ->map(fn($r) => [
+                'id'       => $r->id,
+                'nama'     => $r->user->name ?? 'Pengguna',
+                'tanggal'  => $r->created_at?->format('j F Y'),
+                'rating'   => (int) $r->rating,
+                'isi'      => $r->body ?? $r->komentar ?? '',
+            ])->values();
+
+        return Inertia::render('User/ProductDetail', [
+            'product' => [
+                'id_produk'   => $product->id_produk,
+                'nama_produk' => $product->nama_produk,
+                'deskripsi'   => $product->deskripsi,
+                'harga'       => (int) $product->harga,
+                'stok'        => (int) $product->stok,
+                'kategori'    => $product->kategori,
+                'gambar'      => $product->gambar,
+            ],
+            'reviews' => $reviews,
+        ]);
     }
 
     // Halaman Toko (User)

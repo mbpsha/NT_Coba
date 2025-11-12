@@ -1,36 +1,43 @@
 <script setup>
-import { Link, useForm, usePage } from '@inertiajs/vue3'
+import { Link, useForm, usePage, router } from '@inertiajs/vue3'
 import Logo from '*/dashboard/logo-ngundur.png'
 
 const page = usePage()
+const checkoutIntent = page.props.checkoutIntent
+const needAddress = page.props.needAddress
 const user = page.props.user ?? page.props.auth?.user ?? {}
 
 const form = useForm({
-    nama: user.nama || '',
-    username: user.username || '',
-    email: user.email || '',
-    no_telp: user.no_telp || '',
-    alamat: user.alamat || '',
+  nama: user.nama || '',
+  username: user.username || '',
+  email: user.email || '',
+  no_telp: user.no_telp || '',
+  alamat: user.alamat || '',
+  checkout_return: checkoutIntent ? 1 : 0,
+  checkout_product_id: checkoutIntent?.id_produk || null,
+  checkout_qty: checkoutIntent?.qty || 1,
 })
 
-function onPhoneInput(e) {
-    form.no_telp = (e.target.value || '').replace(/\D+/g, '')
+function onPhoneInput(e){ form.no_telp = (e.target.value || '').replace(/\D+/g,'') }
+function save(){
+  form.no_telp = (form.no_telp || '').replace(/\D+/g,'')
+  form.put(route('profile.update'), { preserveScroll: true })
 }
 
-function save() {
-    form.no_telp = (form.no_telp || '').replace(/\D+/g, '')
-    form.put(route('profile.update'), { preserveScroll: true })
+// Tombol kembali: pakai history jika ada, fallback ke berita
+function goBack(){
+    if (window.history.length > 1) {
+        window.history.back()
+    } else {
+        try { router.visit(route('berita')) } catch { router.visit('/berita') }
+    }
 }
 
-const logoutForm = useForm({})
-function doLogout() {
-    logoutForm.post(route('logout'), {
-        preserveState: false,
-        preserveScroll: false,
-        onSuccess: () =>{
-            window.location.href = route('dashboard')
-        }
-    })
+function backToCheckout(){
+    if (!form.alamat) return alert('Isi alamat terlebih dahulu.')
+    const pid = checkoutIntent.id_produk
+    const qty = checkoutIntent.qty || 1
+    router.visit(`/checkout/${pid}?qty=${qty}`)
 }
 </script>
 
@@ -40,28 +47,20 @@ function doLogout() {
         <Link :href="route('dashboard')" class="flex items-center gap-2">
             <img :src="Logo" alt="NGUNDUR" class="h-14" />
         </Link>
-        <Link :href="route('dashboard')" class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700">
-            Kembali ke Home
-        </Link>
         </header>
 
         <main class="flex-1 w-full max-w-3xl p-6 mx-auto">
         <h1 class="mb-6 text-2xl font-semibold text-center">Profil Saya</h1>
 
+        <div v-if="needAddress && checkoutIntent" class="px-4 py-3 mb-4 text-sm text-red-700 border border-red-300 rounded bg-red-50">
+            *Isikan alamat anda sebelum melakukan Checkout Produk
+        </div>
+
         <div v-if="$page.props.flash?.success" class="px-4 py-2 mb-4 text-green-800 bg-green-100 rounded">
-            {{$page.props.flash.success}}
+            {{ $page.props.flash.success }}
         </div>
 
         <div class="p-6 border border-green-200 shadow bg-green-50/70 rounded-xl">
-            <div class="flex flex-col items-center mb-6">
-            <div class="flex items-center justify-center w-24 h-24 text-green-700 bg-green-200 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 17a7 7 0 1114 0v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <p class="mt-2 font-medium text-gray-700">{{ form.username }}</p>
-            </div>
-
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
             <div>
                 <label class="block mb-1 text-sm">Username</label>
@@ -91,13 +90,24 @@ function doLogout() {
                 <p v-if="form.errors.alamat" class="mt-1 text-sm text-red-600">{{ form.errors.alamat }}</p>
             </div>
 
-            <div class="flex gap-3 mt-2">
-                <button type="submit" :disabled="form.processing" class="px-5 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
-                {{ form.processing ? 'Menyimpan...' : 'Selesai' }}
+            <div class="flex flex-wrap gap-3 mt-2">
+                <button type="submit" :disabled="form.processing"
+                        class="px-5 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
+                {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
                 </button>
-                <button type="button" :disabled="logoutForm.processing" @click="doLogout"
-                        class="px-5 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600">
-                Logout
+
+                <button @click="goBack"
+                class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
+                    Kembali
+                </button>
+
+                <button
+                v-if="checkoutIntent"
+                type="button"
+                @click="backToCheckout"
+                class="px-5 py-2 text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
+                :disabled="!form.alamat">
+                Kembali ke Checkout
                 </button>
             </div>
             </form>
