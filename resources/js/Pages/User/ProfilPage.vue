@@ -5,7 +5,6 @@ import Logo from '*/dashboard/logo-ngundur.png'
 const page = usePage()
 const checkoutIntent = page.props.checkoutIntent
 const needAddress = page.props.needAddress
-
 const user = page.props.user ?? page.props.auth?.user ?? {}
 
 const form = useForm({
@@ -14,29 +13,32 @@ const form = useForm({
   email: user.email || '',
   no_telp: user.no_telp || '',
   alamat: user.alamat || '',
-  // hidden jika dari checkout
   checkout_return: checkoutIntent ? 1 : 0,
   checkout_product_id: checkoutIntent?.id_produk || null,
   checkout_qty: checkoutIntent?.qty || 1,
 })
 
 function onPhoneInput(e){ form.no_telp = (e.target.value || '').replace(/\D+/g,'') }
-
 function save(){
   form.no_telp = (form.no_telp || '').replace(/\D+/g,'')
   form.put(route('profile.update'), { preserveScroll: true })
 }
 
-function backToCheckout(){
-  if (!form.alamat) return alert('Isi alamat terlebih dahulu.')
-  // langsung kunjungi checkout (kalau belum menyimpan perubahan)
-  const pid = checkoutIntent.id_produk
-  const qty = checkoutIntent.qty || 1
-  router.visit(`/checkout/${pid}?qty=${qty}`)
+// Tombol kembali: pakai history jika ada, fallback ke berita
+function goBack(){
+    if (window.history.length > 1) {
+        window.history.back()
+    } else {
+        try { router.visit(route('berita')) } catch { router.visit('/berita') }
+    }
 }
 
-const logoutForm = useForm({})
-function doLogout(){ logoutForm.post(route('logout'), { replace:true }) }
+function backToCheckout(){
+    if (!form.alamat) return alert('Isi alamat terlebih dahulu.')
+    const pid = checkoutIntent.id_produk
+    const qty = checkoutIntent.qty || 1
+    router.visit(`/checkout/${pid}?qty=${qty}`)
+}
 </script>
 
 <template>
@@ -45,17 +47,11 @@ function doLogout(){ logoutForm.post(route('logout'), { replace:true }) }
         <Link :href="route('dashboard')" class="flex items-center gap-2">
             <img :src="Logo" alt="NGUNDUR" class="h-14" />
         </Link>
-        <Link :href="route('dashboard')" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm">
-            Kembali ke Home
-        </Link>
         </header>
 
         <main class="flex-1 max-w-3xl mx-auto w-full p-6">
-        <h1 class="text-2xl font-semibold text-center mb-6">
-            Profil Saya
-        </h1>
+        <h1 class="text-2xl font-semibold text-center mb-6">Profil Saya</h1>
 
-        <!-- Pesan khusus jika dari checkout dan belum ada alamat -->
         <div v-if="needAddress && checkoutIntent" class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
             *Isikan alamat anda sebelum melakukan Checkout Produk
         </div>
@@ -94,19 +90,17 @@ function doLogout(){ logoutForm.post(route('logout'), { replace:true }) }
                 <p v-if="form.errors.alamat" class="text-sm text-red-600 mt-1">{{ form.errors.alamat }}</p>
             </div>
 
-            <!-- Tombol -->
             <div class="mt-2 flex flex-wrap gap-3">
                 <button type="submit" :disabled="form.processing"
                         class="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white">
-                {{ form.processing ? 'Menyimpan...' : 'Selesai' }}
+                {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
                 </button>
 
-                <button type="button" :disabled="logoutForm.processing" @click="doLogout"
-                        class="px-5 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white">
-                Logout
+                <button @click="goBack"
+                class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                    Kembali
                 </button>
 
-                <!-- Kembali ke Checkout -->
                 <button
                 v-if="checkoutIntent"
                 type="button"

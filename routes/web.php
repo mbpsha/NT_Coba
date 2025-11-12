@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\News;
+use App\Models\User;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -43,24 +44,17 @@ Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('pro
 // Berita Dinamis
 Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
 Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
-
-// arahkan langsung ke komponen Inertia (tanpa method controller)
 Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
 Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 
 // Toko
 Route::get('/toko', [TokoController::class, 'index'])->name('toko');
-// alias lama, aman jika masih ada pemanggilan 'shop'
 Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
 
-// Checkout (butuh login)
-Route::middleware('auth')->group(function () {
-    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout');
-});
-
 // Protected
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
     // Profil
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -69,6 +63,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout
+    Route::get('/checkout/{product}', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware
@@ -88,6 +86,14 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // News Management
+    Route::get('/news', [NewsController::class, 'indexAdmin'])->name('news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+    Route::get('/news/{id}/edit', [NewsController::class, 'edit'])->name('news.edit');
+    Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
+    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
 
     // Orders
     Route::get('/orders', [OrderController::class, 'indexAdmin'])->name('orders.index');

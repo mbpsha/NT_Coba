@@ -7,6 +7,19 @@ const props = defineProps({
   items: { type: Array, default: () => [] }
 })
 
+const FALLBACK = '/assets/dashboard/profil.png'
+
+// normalisasi path gambar
+const imgUrl = (g) => {
+  if (!g) return FALLBACK
+  let s = String(g).replaceAll('\\','/') 
+  if (/^https?:\/\//i.test(s)) return s          
+  if (s.startsWith('/storage/')) return s         
+  if (s.startsWith('storage/')) return '/'+s      
+  if (s.startsWith('/')) return s               
+  return '/storage/' + s                          
+}
+
 const currency = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
 
 function starArray(avg) {
@@ -44,9 +57,10 @@ function removeItem(item) {
           class="rounded-xl bg-green-50/70 border border-green-100 shadow-sm p-5 flex gap-5"
         >
           <img
-            :src="it.product.gambar ? (/^https?:/.test(it.product.gambar)? it.product.gambar : `/storage/${it.product.gambar}`) : '/assets/dashboard/profil.png'"
+            :src="imgUrl(it.product.gambar)"
             alt=""
             class="w-28 h-28 object-contain flex-shrink-0"
+            @error="$event.target.src = FALLBACK"
           />
 
           <div class="flex flex-col justify-between flex-1">

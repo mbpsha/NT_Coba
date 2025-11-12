@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use inertia\Inertia;
+use Inertia\Inertia;
 use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\Order;
@@ -92,27 +92,26 @@ class CheckoutController extends Controller
                 'order' => $order->load(['orderDetails.product', 'payment'])
             ], 201);
 
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['error' => 'Checkout gagal: ' . $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Checkout gagal: '.$e->getMessage()], 500);
         }
     }
 
     public function getOrderTracking($orderId)
     {
-        $order = Order::with(['orderDetails.product', 'payment', 'user'])
-                    ->findOrFail($orderId);
+        $order = Order::with(['orderDetails.product', 'payment', 'user'])->findOrFail($orderId);
         return response()->json($order);
     }
 
     public function show($id_produk, Request $request)
     {
-        $qty = max(1, (int)$request->query('qty', 1));
+        $qty = max(1, (int) $request->query('qty', 1));
 
         $product = Product::where('id_produk', $id_produk)->firstOrFail();
         $user = Auth::user();
 
-        // Wajib alamat
+        // Wajib punya alamat minimal (redirect ke profil bila kosong)
         if (!filled($user->alamat)) {
             return redirect()
                 ->route('profile.show', [
@@ -123,7 +122,15 @@ class CheckoutController extends Controller
                 ->with('need_address', true);
         }
 
-        $hargaProduk = (int)$product->harga;
+        // Normalisasi path gambar -> kirim URL final siap pakai
+        $raw = (string) ($product->gambar ?? '');
+        $clean = str_replace('\\', '/', trim($raw));
+        $clean = preg_replace('#^/?(public|storage)/#', '', $clean); // buang prefix "public/" atau "storage/"
+        $gambarUrl = $clean
+            ? (preg_match('#^https?://#i', $clean) ? $clean : asset('storage/'.$clean))
+            : asset('/assets/dashboard/profil.png');
+
+        $hargaProduk = (int) $product->harga;
         $biayaAdmin  = 5000;
         $biayaOngkir = 20000;
         $subtotal    = $hargaProduk * $qty;
@@ -131,17 +138,19 @@ class CheckoutController extends Controller
 
         return Inertia::render('User/Checkout', [
             'user' => [
-                'nama'    => $user->nama ?? $user->username ?? '',
-                'email'   => $user->email ?? '',
-                'no_telp' => $user->no_telp ?? '',
-                'alamat'  => $user->alamat ?? '',
+                'id_user'  => $user->id_user ?? $user->id ?? null,
+                'id_alamat'=> $user->id_alamat ?? null, // sesuaikan jika ID alamat tersimpan di properti lain
+                'nama'     => $user->nama ?? $user->username ?? '',
+                'email'    => $user->email ?? '',
+                'no_telp'  => $user->no_telp ?? '',
+                'alamat'   => $user->alamat ?? '',
             ],
             'product' => [
                 'id_produk'   => $product->id_produk,
                 'nama_produk' => $product->nama_produk,
                 'deskripsi'   => $product->deskripsi,
-                'gambar'      => $product->gambar,
                 'harga'       => $hargaProduk,
+                'gambar_url'  => $gambarUrl,
             ],
             'qty' => $qty,
             'summary' => [

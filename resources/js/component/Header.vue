@@ -23,8 +23,15 @@ const profileMenu = ref(false)
 function toggleProfile(){ profileMenu.value = !profileMenu.value }
 
 const logoutForm = useForm({})
-function doLogout(){
-  logoutForm.post(route('logout'))
+function logout() {
+  logoutForm.post(route('logout'),
+  {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = route('dashboard')
+        }
+    })
 }
 </script>
 
@@ -78,7 +85,7 @@ function doLogout(){
                 <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
               </div>
               <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil</Link>
-              <button @click="doLogout" :disabled="logoutForm.processing"
+              <button @click="logout" :disabled="logoutForm.processing"
                       class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
                 Keluar
               </button>

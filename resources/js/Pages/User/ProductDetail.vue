@@ -83,7 +83,7 @@ function starsArray(rating) {
 
               <button
                 class="px-5 h-10 rounded-md bg-green-100 hover:bg-green-200 text-green-700 text-sm font-medium"
-                @click="router.visit(route('checkout', { id_produk: product.id_produk }) + '?qty=1')"
+                @click="router.visit(route('checkout.show', { product: product.id_produk, qty: 1 }))"
               >
                 Beli Sekarang
               </button>
