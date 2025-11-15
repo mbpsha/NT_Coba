@@ -80,14 +80,34 @@ function logout() {
               </svg>
             </button>
             <div v-if="profileMenu" class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white rounded-md shadow ring-1 ring-black/5">
-              <div class="px-4 py-3 text-sm">
+              <div class="px-4 py-3 text-sm border-b">
                 <p class="font-medium text-gray-900 truncate">{{ user.nama || user.username }}</p>
                 <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
               </div>
-              <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil</Link>
+              <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  Profil
+                </span>
+              </Link>
+              <Link :href="route('orders.my')" class="block px-4 py-2 text-sm hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                  </svg>
+                  Pesanan Saya
+                </span>
+              </Link>
               <button @click="logout" :disabled="logoutForm.processing"
-                      class="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50">
-                Keluar
+                      class="w-full px-4 py-2 text-sm text-left text-red-600 border-t hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Keluar
+                </span>
               </button>
             </div>
           </div>

@@ -96,10 +96,10 @@ class PaymentController extends Controller
     /**
      * Confirm Payment - CREATE Payment dengan Upload Bukti Transfer
      * Payment baru dibuat saat user upload bukti, bukan saat order dibuat
-     * 
-     * TESTING MODE: Kalau order belum ada, auto create order dulu
+     *
+     * Menggunakan session untuk ambil order_id yang persistent
      */
-    public function confirmPayment(Request $request, $id_order)
+    public function confirmPayment(Request $request, $id_order = null)
     {
         $validated = $request->validate([
             'trx_id' => 'nullable|string|max:100',
@@ -108,31 +108,29 @@ class PaymentController extends Controller
         ]);
 
         try {
-            // Cek apakah order ada, kalau belum ada (untuk testing) create dulu
-            $order = Order::find($id_order);
-            
+            // Ambil order_id dari URL parameter, session, atau flash data
+            $orderId = $id_order ?? session('_order_id') ?? session('last_order_id');
+
+            if (!$orderId) {
+                return back()->withErrors(['error' => 'Session order tidak ditemukan. Silakan buat pesanan terlebih dahulu.']);
+            }
+
+            // Cek apakah order ada
+            $order = Order::find($orderId);
+
             if (!$order) {
-                // TESTING MODE: Auto create order jika belum ada
-                // Untuk production, uncomment validasi di frontend
-                $user = $request->user();
-                $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)
-                    ->where('is_default', true)
-                    ->first();
-                
-                if (!$defaultAddress) {
-                    $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)->first();
-                }
-                
-                if (!$defaultAddress) {
-                    return back()->withErrors(['error' => 'Alamat belum dilengkapi.']);
-                }
-                
-                $order = Order::create([
-                    'id_user' => $user->id_user,
-                    'id_alamat' => $defaultAddress->id_alamat,
-                    'total_harga' => 10025000, // dummy untuk testing
-                    'status' => 'pending'
-                ]);
+                return back()->withErrors(['error' => 'Order tidak ditemukan. Silakan buat pesanan baru.']);
+            }
+
+            // Validasi order milik user yang login
+            if ($order->id_user !== $request->user()->id_user) {
+                return back()->withErrors(['error' => 'Order tidak valid.']);
+            }
+
+            // Cek apakah payment sudah ada
+            $existingPayment = Payment::where('id_order', $order->id_order)->first();
+            if ($existingPayment) {
+                return back()->withErrors(['error' => 'Pembayaran untuk pesanan ini sudah pernah diupload. Status: ' . $existingPayment->status]);
             }
 
             // Upload bukti transfer
@@ -149,11 +147,26 @@ class PaymentController extends Controller
                 'metode_pembayaran' => 'qris',
                 'jumlah' => $order->total_harga,
                 'status' => 'pending', // Menunggu verifikasi admin
-                'bukti_transfer' => $buktiPath ? '/storage/' . $buktiPath : null,
+                'bukti_transfer' => $buktiPath ? 'payment_proofs/' . basename($buktiPath) : null,
                 'keterangan' => $validated['trx_id'] ? "Ref: {$validated['trx_id']}" : null
             ]);
 
-            return back()->with('payment_submitted', 'Bukti pembayaran berhasil diupload! Menunggu verifikasi admin.');
+            // Order status tetep 'pending' - nanti diupdate pas payment verified
+
+            // Clear session order_id setelah payment berhasil
+            session()->forget(['_order_id', 'last_order_id']);
+
+            // Return dengan notification data untuk FE handle pop-up
+            return back()->with([
+                'payment_submitted' => true,
+                'notification' => [
+                    'type' => 'success',
+                    'title' => 'Pembayaran Berhasil Diupload!',
+                    'message' => 'Bukti pembayaran Anda sedang diverifikasi oleh admin. Anda dapat melihat status pesanan di halaman Pesanan Saya.',
+                    'order_id' => $order->id_order,
+                    'payment_id' => $payment->id_payment
+                ]
+            ]);
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);

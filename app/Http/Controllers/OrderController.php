@@ -68,6 +68,58 @@ class OrderController extends Controller
     }
 
     /**
+     * Get user's orders (Pesanan Saya)
+     * Fetch semua pesanan user dengan detail product, payment status, dan address
+     */
+    public function myOrders(Request $request)
+    {
+        $user = $request->user();
+
+        $orders = Order::with([
+            'orderDetails.product',
+            'payment',
+            'address'
+        ])
+            ->where('id_user', $user->id_user)
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id_order' => $order->id_order,
+                    'tanggal' => $order->created_at->format('d M Y H:i'),
+                    'status' => $order->status,
+                    'total_harga' => $order->total_harga,
+                    'products' => $order->orderDetails->map(function ($detail) {
+                        return [
+                            'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
+                            'gambar' => $detail->product->gambar_url ?? '/assets/dashboard/profil.png',
+                            'harga' => $detail->harga,
+                            'jumlah' => $detail->jumlah,
+                            'subtotal' => $detail->harga * $detail->jumlah
+                        ];
+                    }),
+                    'payment_status' => $order->payment ? $order->payment->status : null,
+                    'payment_method' => $order->payment ? $order->payment->metode_pembayaran : null,
+                    'bukti_transfer' => $order->payment && $order->payment->bukti_transfer
+                        ? asset('storage/' . $order->payment->bukti_transfer)
+                        : null,
+                    'alamat' => $order->address ? [
+                        'nama_penerima' => $order->address->nama_penerima,
+                        'no_telp' => $order->address->no_telp_penerima,
+                        'alamat_lengkap' => $order->address->alamat_lengkap,
+                        'kota' => $order->address->kota,
+                        'provinsi' => $order->address->provinsi,
+                        'kode_pos' => $order->address->kode_pos,
+                    ] : null
+                ];
+            });
+
+        return Inertia::render('User/MyOrders', [
+            'orders' => $orders
+        ]);
+    }
+
+    /**
      * Create order from checkout page (User creates order before payment)
      */
     public function createFromCheckout(Request $request, $id_produk)

@@ -2,6 +2,7 @@
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { ref, computed, watch } from 'vue'
 import Qris from '*/dashboard/qrisNGUNDUR.jpg'
 
 const props = defineProps({
@@ -15,6 +16,27 @@ const props = defineProps({
 
 const page = usePage()
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+
+// Notification Pop-up State
+const showNotification = ref(false)
+const notification = ref(null)
+
+// Watch untuk notification dari backend
+watch(() => page.props.flash?.notification, (newNotif) => {
+  if (newNotif) {
+    notification.value = newNotif
+    showNotification.value = true
+  }
+}, { immediate: true })
+
+function closeNotification() {
+  showNotification.value = false
+  notification.value = null
+}
+
+function goToMyOrders() {
+  router.visit('/pesanan-saya')
+}
 
 function openAddressForm() {
   router.visit(route('checkout.address', { id_produk: props.product.id_produk }) + `?qty=${props.qty}`)
@@ -85,12 +107,66 @@ function submitPayment() {
       <div v-if="$page.props.flash?.message" class="px-4 py-2 mb-4 text-blue-800 bg-blue-100 rounded">
         {{ $page.props.flash.message }}
       </div>
-      <div v-if="$page.props.flash?.payment_submitted" class="px-4 py-2 mb-4 text-green-800 bg-green-100 rounded">
-        {{ $page.props.flash.payment_submitted }}
-      </div>
       <div v-if="$page.props.flash?.error" class="px-4 py-2 mb-4 text-red-800 bg-red-100 rounded">
         {{ $page.props.flash.error }}
       </div>
+
+      <!-- Notification Pop-up (Success Payment) -->
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="translate-y-4 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="translate-y-4 opacity-0"
+      >
+        <div v-if="showNotification && notification"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+             @click="closeNotification">
+          <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl" @click.stop>
+            <!-- Icon Success -->
+            <div class="flex justify-center mb-4">
+              <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Title & Message -->
+            <h3 class="mb-2 text-xl font-bold text-center text-gray-900">
+              {{ notification.title }}
+            </h3>
+            <p class="mb-6 text-sm text-center text-gray-600">
+              {{ notification.message }}
+            </p>
+
+            <!-- Order Info -->
+            <div class="p-3 mb-6 border rounded-lg bg-gray-50">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Order ID:</span>
+                <span class="font-semibold">#{{ notification.order_id }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Payment ID:</span>
+                <span class="font-semibold">#{{ notification.payment_id }}</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+              <button @click="closeNotification"
+                      class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                Tutup
+              </button>
+              <button @click="goToMyOrders"
+                      class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+                Lihat Pesanan Saya
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
 
       <div class="p-5 bg-white border shadow-sm rounded-2xl md:p-6">
         <div class="grid md:grid-cols-[1fr_300px] gap-6">
@@ -150,9 +226,16 @@ function submitPayment() {
             </button>
 
             <!-- Info Order (hanya muncul setelah order dibuat) -->
-            <div v-if="order_id || $page.props.flash?.order_created" class="px-3 py-2 mt-2 text-sm text-center text-blue-700 rounded-md bg-blue-50"> 
-              <br>
-              <span class="text-xs">Status: <strong>Menunggu Pembayaran</strong></span>
+            <div v-if="order_id || $page.props.flash?.order_created" class="px-4 py-3 mt-2 border-l-4 border-red-500 rounded-md bg-red-50">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                  <p class="text-sm font-semibold text-red-800">⚠️ Selesaikan Pembayaran</p>
+                  <p class="text-xs text-red-700">Status: <strong>Menunggu Pembayaran</strong></p>
+                </div>
+              </div>
             </div>
 
             <!-- Konfirmasi Pembayaran -->

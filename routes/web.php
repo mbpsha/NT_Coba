@@ -72,6 +72,9 @@ Route::middleware('auth')->group(function () {
     // Order & Payment
     Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
+
+    // User Orders (Pesanan Saya)
+    Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware
