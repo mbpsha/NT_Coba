@@ -169,12 +169,15 @@ class OrderController extends Controller
 
             Log::info('Transaction committed successfully - Order created without payment');
 
-            return back()->with([
-                'order_created' => true,
-                'order_id' => $order->id_order,
-                'total_harga' => $total, // Kirim total untuk payment nanti
-                'message' => 'Pesanan berhasil dibuat! Silakan upload bukti pembayaran.'
-            ]);
+            // Redirect ke halaman checkout dengan order_id di URL
+            return redirect()->route('checkout.show', ['id_produk' => $id_produk])
+                ->with([
+                    'order_created' => true,
+                    'order_id' => $order->id_order,
+                    'total_harga' => $total,
+                    'message' => 'Pesanan berhasil dibuat! Silakan upload bukti pembayaran.'
+                ])
+                ->with('_order_id', $order->id_order); // Simpan di session juga
 
         } catch (\Exception $e) {
             DB::rollBack();

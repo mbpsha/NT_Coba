@@ -147,7 +147,11 @@ class CheckoutController extends Controller
                 ->first();
         }
 
+        // Ambil order_id dari session kalau ada (setelah create order)
+        $orderId = $request->session()->get('_order_id');
+        
         return Inertia::render('User/Checkout', [
+            'order_id' => $orderId, // Pass order_id ke frontend
             'user' => [
                 'id_user'  => $user->id_user ?? $user->id ?? null,
                 'id_alamat'=> $defaultAddress ? $defaultAddress->id_alamat : null,

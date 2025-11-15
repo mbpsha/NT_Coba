@@ -5,6 +5,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3'
 import Qris from '*/dashboard/qrisNGUNDUR.jpg'
 
 const props = defineProps({
+  order_id: { type: Number, default: null }, // Order ID yang sudah dibuat (persistent)
   user: { type: Object, required: true },
   shipping: { type: Object, required: true },
   product: { type: Object, required: true },
@@ -49,9 +50,13 @@ function onFileChange(e) {
   payForm.bukti_transfer = e.target.files?.[0] || null
 }
 function submitPayment() {
-  // Untuk testing: bisa submit tanpa order dulu
-  // Nanti di production uncomment validasi ini
-  const orderId = page.props.flash?.order_id || props.product.id_produk // fallback ke product id untuk testing
+  // Gunakan order_id dari props (persistent) atau flash message
+  const orderId = props.order_id || page.props.flash?.order_id
+
+  if (!orderId) {
+    alert('Silakan buat pesanan terlebih dahulu dengan klik tombol "Buat Pesanan".')
+    return
+  }
 
   payForm.post(route('payment.confirm', { id_order: orderId }), {
     forceFormData: true,
@@ -139,14 +144,13 @@ function submitPayment() {
 
             <!-- Tombol Buat Pesanan / Selesaikan Pembayaran -->
             <button @click="createOrder"
-                    :disabled="orderForm.processing || $page.props.flash?.order_created"
+                    :disabled="orderForm.processing || order_id"
                     class="w-full h-10 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-              {{ orderForm.processing ? 'Memproses...' : ($page.props.flash?.order_created ? '✓ Pesanan Dibuat - Silakan Upload Bukti Pembayaran' : 'Buat Pesanan') }}
+              {{ orderForm.processing ? 'Memproses...' : (order_id ? '✓ Pesanan Dibuat - Silakan Upload Bukti Pembayaran' : 'Buat Pesanan') }}
             </button>
 
             <!-- Info Order (hanya muncul setelah order dibuat) -->
-            <div v-if="$page.props.flash?.order_created" class="px-3 py-2 mt-2 text-sm text-center text-blue-700 rounded-md bg-blue-50">
-              Order ID: <strong>#{{ $page.props.flash?.order_id }}</strong>
+            <div v-if="order_id || $page.props.flash?.order_created" class="px-3 py-2 mt-2 text-sm text-center text-blue-700 rounded-md bg-blue-50"> 
               <br>
               <span class="text-xs">Status: <strong>Menunggu Pembayaran</strong></span>
             </div>
