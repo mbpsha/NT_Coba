@@ -45,6 +45,12 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        // Check if email is verified (skip for admin)
+        if ($user->role !== 'admin' && !$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('message', 'Silakan verifikasi email Anda terlebih dahulu sebelum melanjutkan.');
+        }
+
         // Redirect based on user role
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')->with('message', 'Login successful!');
@@ -77,12 +83,11 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        // Redirect based on user role after registration
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard')->with('message', 'Registration successful!');
-        }
+        // Send email verification notification
+        $user->sendEmailVerificationNotification();
 
-        return redirect()->route('dashboard')->with('message', 'Registration successful!');
+        // Redirect to verification notice page
+        return redirect()->route('verification.notice')->with('message', 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.');
     }
 
     public function logout(Request $request)

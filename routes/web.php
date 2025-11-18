@@ -17,6 +17,8 @@ use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\Auth\VerificationController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -27,6 +29,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Email Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+        ->middleware(['signed'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.send');
 });
 
 // Halaman publik
@@ -51,10 +64,9 @@ Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 Route::get('/toko', [TokoController::class, 'index'])->name('toko');
 Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
 
-// Protected
-Route::middleware('auth')->group(function () {
+// Protected (require email verification for non-admin users)
+Route::middleware(['auth', 'verified'])->group(function () {
     // Profil
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -75,6 +87,11 @@ Route::middleware('auth')->group(function () {
 
     // User Orders (Pesanan Saya)
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+});
+
+// Logout (tidak perlu email verification)
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware
