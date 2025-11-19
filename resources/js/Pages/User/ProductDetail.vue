@@ -61,12 +61,6 @@ function starsArray(rating) {
             <p class="text-sm text-gray-700">
               Stok: <span class="font-medium">{{ product.stok }}</span>
             </p>
-            <p v-if="product.kategori" class="text-xs inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full">
-              {{ product.kategori }}
-            </p>
-            <p class="text-xs text-red-600 font-medium" v-if="product.stok === 0">
-              Pre-Order estimasi 15 Hari
-            </p>
           </div>
 
             <div class="flex gap-3">

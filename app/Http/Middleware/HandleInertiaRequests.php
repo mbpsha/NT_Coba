@@ -43,12 +43,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'cartCount' => $request->user()
-                ? \App\Models\CartDetail::whereHas('cart', fn($q)=>$q->where('id_user',$request->user()->id))->sum('jumlah')
+                ? CartDetail::whereHas('cart', fn($q)=>$q->where('id_user',$request->user()->id))->sum('jumlah')
                 : 0,
             'flash' => [
                 'cart_added' => session('cart_added'),
-                'toast' => $request->session()->get('toast'),
-                'payment_submitted' => $request->session()->get('payment_submitted'),
             ],
         ]);
     }

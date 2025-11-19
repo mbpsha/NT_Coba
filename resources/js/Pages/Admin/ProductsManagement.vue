@@ -17,7 +17,6 @@ const form = useForm({
     deskripsi: '',
     harga: '',
     stok: '',
-    kategori: '',
     gambar: null
 })
 
@@ -34,7 +33,6 @@ function openEditModal(product) {
     form.deskripsi = product.deskripsi
     form.harga = product.harga
     form.stok = product.stok
-    form.kategori = product.kategori
     showModal.value = true
 }
 
@@ -101,9 +99,7 @@ function deleteProduct(id) {
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Image</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Name</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Category</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Stock</th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
@@ -115,12 +111,8 @@ function deleteProduct(id) {
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ product.nama_produk }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">Rp {{ product.harga?.toLocaleString('id-ID') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ product.kategori }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ product.stok }} unit</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                                        Active
-                                    </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                     <button @click="openEditModal(product)" class="mr-3 text-green-600 hover:text-green-900">
@@ -137,24 +129,6 @@ function deleteProduct(id) {
                             </tr>
                         </tbody>
                     </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="flex items-center justify-between px-6 py-4 border-t">
-                    <div class="text-sm text-gray-700">
-                        Showing {{ products.from }} to {{ products.to }} of {{ products.total }} entries
-                    </div>
-                    <div class="flex gap-2">
-                        <button
-                            v-for="link in products.links"
-                            :key="link.label"
-                            @click="$inertia.visit(link.url)"
-                            :disabled="!link.url"
-                            class="px-3 py-1 rounded"
-                            :class="link.active ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
-                            v-html="link.label"
-                        ></button>
-                    </div>
                 </div>
             </div>
         </main>
@@ -185,11 +159,6 @@ function deleteProduct(id) {
                             <label class="block mb-1 text-sm font-medium text-gray-700">Stock</label>
                             <input v-model="form.stok" type="number" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Category</label>
-                        <input v-model="form.kategori" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
 
                     <div>
