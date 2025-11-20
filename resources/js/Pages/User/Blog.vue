@@ -12,7 +12,7 @@ const faqs = {
     {
       question: 'Apa itu Ngundur (Nguthik Tandur)?',
       answer:
-        'Ngundur adalah perangkat IoT penyiram tanaman otomatis yang bekerja menggunakan sensor kelembapan tanah untuk menentukan kapan tanaman membutuhkan air.'
+        'Ngundur adalah perangkat IoT penyiram tanaman otomatis yang bekerja menggunakan sensor kelembapan tanah untuk menentukan kapan tanaman memerlukan air.'
     },
     {
       question: 'Bagaimana cara kerja sistem penyiraman otomatis?',
