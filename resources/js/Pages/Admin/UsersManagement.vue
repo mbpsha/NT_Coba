@@ -10,6 +10,34 @@ const props = defineProps({
 
 const page = usePage()
 
+// === NEW: state filter & sort (ambil default dari query props kalau dikirim backend) ===
+const search = ref(page.props.filters?.search ?? '')
+const sortBy = ref(page.props.filters?.sortBy ?? 'nama')   // nama | email | role | created_at
+const sortDir = ref(page.props.filters?.sortDir ?? 'asc')   // asc | desc
+
+let searchTimer = null
+function onSearchInput() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => applyFilters(), 400) // debounce
+}
+function toggleSortDir() {
+  sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  applyFilters()
+}
+function applyFilters(url = null) {
+  const params = {
+    search: search.value || undefined,
+    sortBy: sortBy.value || undefined,
+    sortDir: sortDir.value || undefined
+  }
+  if (url) {
+    router.get(url, params, { preserveState: true, preserveScroll: true, replace: true })
+  } else {
+    router.get(route('admin.users.index'), params, { preserveState: true, preserveScroll: true, replace: true })
+  }
+}
+// === END NEW ===
+
 const showModal = ref(false)
 const editMode = ref(false)
 const selectedUser = ref(null)
@@ -84,16 +112,45 @@ const roleBadgeClass = (role) =>
 
     <main class="ml-64 pt-16 p-6">
       <!-- Banner judul -->
-      <div class="rounded-2xl border border-green-200 bg-green-50 px-6 py-5 mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-800">Pengguna</h1>
-        <div class="flex items-center gap-3">
-          <button @click="openCreateModal"
-                  class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Tambahkan Pengguna
-          </button>
+      <div class="rounded-2xl border border-green-200 bg-green-50 px-6 py-5 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h1 class="text-2xl font-bold text-gray-800">Pengguna</h1>
+
+          <!-- NEW: Search + Sort controls -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+              <input
+                v-model="search"
+                @input="onSearchInput"
+                type="text"
+                placeholder="Cari nama/username/email…"
+                class="w-64 md:w-72 rounded-md border px-9 py-2"
+              />
+              <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+              </svg>
+            </div>
+
+            <select v-model="sortBy" @change="applyFilters()" class="rounded-md border px-3 py-2">
+              <option value="nama">Nama</option>
+              <option value="email">Email</option>
+              <option value="role">Role</option>
+              <option value="created_at">Terbaru</option>
+            </select>
+
+            <button @click="toggleSortDir" class="px-3 py-2 rounded-md border text-gray-700 hover:bg-gray-50">
+              {{ sortDir === 'asc' ? 'A-Z ↑' : 'Z-A ↓' }}
+            </button>
+
+            <button @click="openCreateModal"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Tambahkan Pengguna
+            </button>
+          </div>
+          <!-- END NEW -->
         </div>
       </div>
 
@@ -151,8 +208,9 @@ const roleBadgeClass = (role) =>
             Menampilkan {{ users.from || 0 }}–{{ users.to || 0 }} dari {{ users.total || 0 }} data
           </div>
           <div class="flex gap-2">
+            <!-- NEW: gunakan applyFilters agar query tetap terbawa -->
             <button v-for="link in users.links" :key="link.label"
-                    @click="link.url && $inertia.visit(link.url)"
+                    @click="link.url && applyFilters(link.url)"
                     :disabled="!link.url"
                     class="px-3 py-1 rounded"
                     :class="link.active ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"

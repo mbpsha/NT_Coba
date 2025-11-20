@@ -24,12 +24,8 @@ function addToCart(p){
   router.post(route('cart.add'), { id_produk: p.id_produk }, { preserveScroll: true })
 }
 
-function goToReviews(){
-  if (activeIndex < 3) return
-  // Jika sudah ada nama rute backend:
-  // router.visit(route('reviews.index'))
-  // Dummy ke path (pastikan route backend mengarah ke ReviewsAndHistory.vue):
-  router.visit('/penilaian')
+function goToReviews() {
+  router.visit('/penilaian', { preserveScroll: true })
 }
 </script>
 
@@ -85,7 +81,6 @@ function goToReviews(){
             <div class="flex flex-col items-center text-center gap-2">
               <div :class="['w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                            activeIndex >= 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400']">
-                <!-- icon -->
                 <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                         d="M9 12l2 2 4-4M12 22a10 10 0 110-20 10 10 0 010 20z"/>
@@ -96,7 +91,7 @@ function goToReviews(){
               </p>
             </div>
 
-              <!-- Step 2 -->
+            <!-- Step 2 -->
             <div class="flex flex-col items-center text-center gap-2">
               <div :class="['w-14 h-14 grid place-items-center rounded-xl shadow-sm',
                            activeIndex >= 1 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400']">
@@ -124,24 +119,26 @@ function goToReviews(){
               </p>
             </div>
 
-            <!-- Step 4 (klik menuju penilaian) -->
-            <button
-              type="button"
-              @click="goToReviews"
-              :disabled="activeIndex < 3"
-              class="flex flex-col items-center text-center gap-2 focus:outline-none"
-            >
-              <div :class="['w-14 h-14 grid place-items-center rounded-xl shadow-sm transition',
-                           activeIndex >= 3 ? 'bg-green-100 text-green-600 cursor-pointer hover:scale-105' : 'bg-gray-100 text-gray-400 cursor-not-allowed']">
-                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-              </div>
-              <p :class="['text-xs', activeIndex >= 3 ? 'text-gray-800 font-medium underline' : 'text-gray-400']">
+            <!-- Step 4 (selalu aktif) -->
+            <div class="flex flex-col items-center text-center gap-2">
+              <button
+                type="button"
+                @click="goToReviews()"
+                class="group focus:outline-none"
+              >
+                <div class="w-14 h-14 grid place-items-center rounded-xl shadow-sm transition bg-green-100 text-green-600 group-hover:scale-105">
+                  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </div>
+              </button>
+              <p
+                @click="goToReviews()"
+                class="text-xs text-green-700 font-medium underline cursor-pointer"
+              >
                 Beri Penilaian
               </p>
-            </button>
+            </div>
           </div>
         </div>
       </section>

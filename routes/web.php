@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\News;
+use App\Models\User;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -13,8 +16,9 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\Auth\VerificationController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -27,42 +31,41 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
+// Email Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+        ->middleware(['signed'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.send');
+});
+
 // Halaman publik
 Route::get('/dashboard', function () {
+    $latestNews = News::published()->latest()->take(5)->get(); // kirim untuk carousel
     return Inertia::render('User/Dashboard', [
-        'welcome' => 'Halo'
+        'welcome'     => 'Halo',
+        'latestNews'  => $latestNews,
     ]);
 })->name('dashboard');
 
 // Produk - detail publik
 Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
 
-// arahkan langsung ke komponen Inertia (tanpa method controller)
-Route::get('/berita', fn () => Inertia::render('User/Berita'))->name('berita');
+// Berita Dinamis
+Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
+Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
 Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
 Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 
 // Toko
 Route::get('/toko', [TokoController::class, 'index'])->name('toko');
-// alias lama, aman jika masih ada pemanggilan 'shop'
 Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
 
-// Checkout (butuh login)
-Route::middleware('auth')->group(function () {
-    // Checkout satu produk
-    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout');
-
-    // Alamat sementara untuk checkout (tidak mengubah profil)
-    Route::get('/checkout/{id_produk}/alamat', [CheckoutController::class, 'addressForm'])->name('checkout.address');
-    Route::post('/checkout/{id_produk}/alamat', [CheckoutController::class, 'saveAddress'])->name('checkout.address.save');
-
-    // konfirmasi pembayaran (upload bukti)
-    Route::post('/checkout/{id_produk}/confirm', [PaymentController::class, 'confirmFromCheckout'])
-        ->name('checkout.confirm');
-});
-
-// Protected
-Route::middleware(['auth'])->group(function () {
+// Protected (require email verification for non-admin users)
+Route::middleware(['auth', 'verified'])->group(function () {
     // Profil
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -72,12 +75,27 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Checkout
+    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
+    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+
+    // Order & Payment
+    Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
+    Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
+
+    // User Orders (Pesanan Saya)
+    Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+});
+
+// Logout (tidak perlu email verification)
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware
-Route::middleware([
-    App\Http\Middleware\AdminMiddleware::class,
-])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Products
@@ -94,6 +112,14 @@ Route::middleware([
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
+    // News Management
+    Route::get('/news', [NewsController::class, 'indexAdmin'])->name('news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+    Route::get('/news/{id}/edit', [NewsController::class, 'edit'])->name('news.edit');
+    Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
+    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
+
     // Orders
     Route::get('/orders', [OrderController::class, 'indexAdmin'])->name('orders.index');
     Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
@@ -102,11 +128,3 @@ Route::middleware([
     Route::get('/payments', [PaymentController::class, 'indexAdmin'])->name('payments.index');
     Route::put('/payments/{id}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
 });
-
-// Logout
-Route::post('/logout', function (Request $request) {
-    Auth::guard('web')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect()->route('dashboard'); // arahkan ke dashboard setelah logout
-})->name('logout');

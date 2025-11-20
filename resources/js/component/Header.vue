@@ -18,34 +18,33 @@ watch(()=> page.props.flash?.cart_added, v=>{
     setTimeout(()=> showToast.value = false, 2200)
   }
 })
-// tampilkan juga toast umum (mis. setelah konfirmasi pembayaran)
-watch(()=> page.props.flash?.toast, v=>{
-  if (v) {
-    toastMsg.value = v
-    showToast.value = true
-    setTimeout(()=> showToast.value = false, 2500)
-  }
-})
 
 const profileMenu = ref(false)
 function toggleProfile(){ profileMenu.value = !profileMenu.value }
 
 const logoutForm = useForm({})
-function doLogout(){
-  logoutForm.post(route('logout'))
+function logout() {
+  logoutForm.post(route('logout'),
+  {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = route('dashboard')
+        }
+    })
 }
 </script>
 
 <template>
-  <header class="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur shadow-sm">
-    <nav class="h-16 max-w-7xl mx-auto px-4 flex items-center justify-between">
+  <header class="fixed inset-x-0 top-0 z-50 shadow-sm bg-white/90 backdrop-blur">
+    <nav class="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
       <div class="flex items-center gap-3">
         <Link :href="route('dashboard')" class="flex items-center gap-2">
           <img :src="Logo" alt="NGUNDUR" class="h-11" />
         </Link>
       </div>
 
-      <ul class="hidden md:flex items-center gap-6 text-sm">
+      <ul class="items-center hidden gap-6 text-sm md:flex">
         <li><Link :href="route('dashboard')" :class="route().current('dashboard')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Home</Link></li>
         <li><Link :href="route('toko')" :class="page.url.startsWith('/toko')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Toko</Link></li>
         <li><Link :href="route('berita')" :class="page.url.startsWith('/berita')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Berita</Link></li>
@@ -55,8 +54,8 @@ function doLogout(){
 
       <div class="flex items-center gap-3">
         <template v-if="!isAuth">
-          <Link :href="route('login')" class="px-4 py-2 rounded-full bg-green-600 text-white text-sm hover:bg-green-700">Masuk</Link>
-          <Link :href="route('register')" class="px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm hover:bg-green-200">Daftar</Link>
+          <Link :href="route('login')" class="px-4 py-2 text-sm text-white bg-green-600 rounded-full hover:bg-green-700">Masuk</Link>
+          <Link :href="route('register')" class="px-4 py-2 text-sm text-green-700 bg-green-100 rounded-full hover:bg-green-200">Daftar</Link>
         </template>
 
         <template v-else>
@@ -75,21 +74,41 @@ function doLogout(){
           <!-- Profil -->
           <div class="relative">
             <button @click="toggleProfile"
-                    class="h-10 w-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center hover:bg-green-200 ring-1 ring-green-300">
+                    class="flex items-center justify-center w-10 h-10 text-green-700 bg-green-100 rounded-full hover:bg-green-200 ring-1 ring-green-300">
               <svg class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
               </svg>
             </button>
-            <div v-if="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow ring-1 ring-black/5 overflow-hidden z-50">
-              <div class="px-4 py-3 text-sm">
+            <div v-if="profileMenu" class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white rounded-md shadow ring-1 ring-black/5">
+              <div class="px-4 py-3 text-sm border-b">
                 <p class="font-medium text-gray-900 truncate">{{ user.nama || user.username }}</p>
                 <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
               </div>
-              <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">Profil</Link>
-              <Link method="post" :href="route('logout')" as="button"
-                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
-                Keluar
+              <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  Profil
+                </span>
               </Link>
+              <Link :href="route('orders.my')" class="block px-4 py-2 text-sm hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                  </svg>
+                  Pesanan Saya
+                </span>
+              </Link>
+              <button @click="logout" :disabled="logoutForm.processing"
+                      class="w-full px-4 py-2 text-sm text-left text-red-600 border-t hover:bg-gray-50">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Keluar
+                </span>
+              </button>
             </div>
           </div>
         </template>
@@ -99,7 +118,7 @@ function doLogout(){
     <!-- Toast -->
     <transition name="fade">
       <div v-if="showToast"
-           class="fixed top-20 right-4 bg-green-600 text-white text-sm px-4 py-2 rounded-md shadow">
+            class="fixed px-4 py-2 text-sm text-white bg-green-600 rounded-md shadow top-20 right-4">
         {{ toastMsg }}
       </div>
     </transition>

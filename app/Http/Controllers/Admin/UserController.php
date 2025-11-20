@@ -13,14 +13,33 @@ use Inertia\Inertia;
 class UserController extends Controller
 {
     /**
-     * Display a listing of users
+     * Display a listing of users (search + sort + pagination)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $search  = $request->string('search')->toString();
+        $sortBy  = $request->input('sortBy', 'nama');   // nama|email|role|created_at
+        $sortDir = $request->input('sortDir', 'asc');   // asc|desc
 
-        return Inertia::render('UsersManagement', [
-            'users' => $users
+        $sortable = ['nama','email','role','created_at'];
+        if (!in_array($sortBy, $sortable)) $sortBy = 'nama';
+        if (!in_array($sortDir, ['asc','desc'])) $sortDir = 'asc';
+
+        $users = User::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy($sortBy, $sortDir)
+            ->paginate(10)
+            ->withQueryString();
+
+        return Inertia::render('Admin/UsersManagement', [
+            'users'   => $users,
+            'filters' => compact('search','sortBy','sortDir'),
         ]);
     }
 

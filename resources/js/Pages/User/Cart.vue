@@ -1,7 +1,8 @@
 <script setup>
 import Header from '@/component/Header.vue'
 import Footer from '@/component/Footer.vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
   items: { type: Array, default: () => [] }
@@ -23,6 +24,38 @@ function changeQty(item, delta) {
 function removeItem(item) {
   router.delete(route('cart.remove', item.id_detail_keranjang), { preserveScroll: true })
 }
+
+// === NEW: badge jumlah & checkout all ===
+const totalItems = computed(() => props.items.reduce((s, it) => s + (it.qty || 0), 0))
+const totalPrice = computed(() => props.items.reduce((s, it) => s + ((it.product?.harga || 0) * (it.qty || 0)), 0))
+
+const checkoutForm = useForm({
+  items: []
+})
+
+function checkoutAll() {
+  if (!props.items.length) return
+  if (!confirm('Checkout semua produk di keranjang?')) return
+
+  // persiapkan payload sederhana: id_produk + qty
+  checkoutForm.items = props.items.map(it => ({
+    id_produk: it.product.id_produk,
+    qty: it.qty
+  }))
+
+  // POST ke route backend (sesuaikan nama route jika berbeda)
+  checkoutForm.post(route('cart.checkoutAll'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      // contoh redirect setelah sukses: kembali ke toko
+      router.visit(route('toko'))
+    },
+    onError: () => {
+      // fallback: tetap di halaman dan tampilkan error via backend
+    }
+  })
+}
+// === END NEW ===
 </script>
 
 <template>
@@ -31,7 +64,26 @@ function removeItem(item) {
     <Head title="Keranjang" />
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-      <h1 class="text-xl font-semibold mb-6">Keranjang</h1>
+      <div class="flex items-center gap-4 mb-6">
+        <h1 class="text-xl font-semibold">Keranjang</h1>
+
+        <!-- lencana jumlah produk -->
+        <div v-if="totalItems > 0" class="ml-2">
+          <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white bg-red-500 rounded-full">
+            {{ totalItems }}
+          </span>
+        </div>
+
+        <!-- tombol Checkout All -->
+        <div class="ml-auto">
+          <button v-if="items.length"
+                  @click="checkoutAll"
+                  :disabled="checkoutForm.processing"
+                  class="text-sm px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60">
+            {{ checkoutForm.processing ? 'Memproses...' : 'Checkout All' }}
+          </button>
+        </div>
+      </div>
 
       <div v-if="!items.length" class="bg-white rounded-xl p-8 text-center shadow">
         <p class="text-gray-600">Keranjang Anda masih kosong.</p>
