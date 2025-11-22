@@ -13,27 +13,51 @@ class CartController extends Controller
 {
     public function index()
     {
-        $cart = Cart::with(['cartDetails.product'])
-            ->where('id_user', Auth::id())
-            ->first();
+        $user = Auth::user();
+        $cart = Cart::where('id_user', $user->id_user)->first();
 
-        $items = $cart
-            ? $cart->cartDetails->map(fn($d) => [
-                'id_detail_keranjang' => $d->id_detail_keranjang,
-                'qty'        => (int)$d->jumlah,
-                'added_at'   => optional($d->created_at)->format('d M Y'),
-                'avg_rating' => 0,
-                'product'    => [
-                    'id_produk'   => $d->product->id_produk,
-                    'nama_produk' => $d->product->nama_produk,
-                    'deskripsi'   => $d->product->deskripsi,
-                    'harga'       => (int)$d->harga_satuan,
-                    'gambar'      => $d->product->gambar,
-                ],
-            ])->values()
-            : collect([]);
+        $items = [];
+        if ($cart) {
+            $items = CartDetail::where('id_keranjang', $cart->id_keranjang)
+                ->with('product')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'id_detail_keranjang' => $row->id_detail_keranjang,
+                        'id_produk'           => $row->id_produk,
+                        'qty'                 => $row->jumlah,
+                        'product'             => [
+                            'id_produk'   => $row->product->id_produk,
+                            'nama_produk' => $row->product->nama_produk,
+                            'deskripsi'   => $row->product->deskripsi,
+                            'harga'       => (int)$row->product->harga,
+                            'gambar'      => $row->product->gambar,
+                        ],
+                    ];
+                });
+        }
 
-        return Inertia::render('User/Cart', ['items' => $items]);
+        $subtotal = collect($items)->reduce(fn($s,$it)=> $s + ($it['product']['harga'] * $it['qty']), 0);
+        $admin    = 5000;    // sesuaikan kalau ada aturan lain
+        $ongkir   = 20000;   // sesuaikan kalau dinamis
+        $total    = $subtotal + $admin + $ongkir;
+
+        return Inertia::render('User/Cart', [
+            'user'     => [
+                'id_user' => $user->id_user,
+                'nama'    => $user->nama ?? $user->username ?? '',
+            ],
+            'items'    => $items,
+            'shipping' => ['name'=>'','text'=>'','phone'=>'','is_temp'=>false],
+            'summary'  => [
+                'admin'    => $admin,
+                'ongkir'   => $ongkir,
+                'subtotal' => $subtotal,
+                'total'    => $total,
+            ],
+            'product'  => null,
+            'qty'      => 1,
+        ]);
     }
 
     public function add(Request $request)

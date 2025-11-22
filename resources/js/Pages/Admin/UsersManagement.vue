@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useForm, usePage } from '@inertiajs/vue3'
+import { useForm, usePage, router } from '@inertiajs/vue3'   
 import SidebarAdmin from '@/component/SidebarAdmin.vue'
 import HeaderAdmin from '@/component/HeaderAdmin.vue'
 
@@ -160,9 +160,24 @@ const roleBadgeClass = (role) =>
           <table class="w-full text-sm">
             <thead>
               <tr class="text-left bg-gray-50 text-gray-600">
-                <th class="px-6 py-3 font-semibold">Nama</th>
-                <th class="px-6 py-3 font-semibold">Email</th>
-                <th class="px-6 py-3 font-semibold">Role</th>
+                <th class="px-6 py-3 font-semibold">
+                  <button @click="sortBy='nama'; toggleSortDir()" class="flex items-center gap-1">
+                    Nama
+                    <span v-if="sortBy==='nama'">{{ sortDir==='asc' ? '↑' : '↓' }}</span>
+                  </button>
+                </th>
+                <th class="px-6 py-3 font-semibold">
+                  <button @click="sortBy='email'; toggleSortDir()" class="flex items-center gap-1">
+                    Email
+                    <span v-if="sortBy==='email'">{{ sortDir==='asc' ? '↑' : '↓' }}</span>
+                  </button>
+                </th>
+                <th class="px-6 py-3 font-semibold">
+                  <button @click="sortBy='role'; toggleSortDir()" class="flex items-center gap-1">
+                    Role
+                    <span v-if="sortBy==='role'">{{ sortDir==='asc' ? '↑' : '↓' }}</span>
+                  </button>
+                </th>
                 <th class="px-6 py-3 font-semibold text-center">Aksi</th>
               </tr>
             </thead>

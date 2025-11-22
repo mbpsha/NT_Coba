@@ -76,22 +76,73 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
 
-    // Checkout
-    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
-    Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
+    // BULK CHECKOUT (letakkan sebelum route dinamis)
+    Route::get('/checkout/cart', [CheckoutController::class, 'cartCheckout'])
+        ->name('checkout.cart');
+    Route::post('/checkout/cart/confirm', [CheckoutController::class, 'confirmCart'])->name('checkout.confirmCart');
+
+    // SINGLE CHECKOUT
+    Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])
+        ->whereNumber('id_produk')
+        ->name('checkout');
+
+    // FORM ALAMAT
+    Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])
+        ->whereNumber('id_produk')
+        ->name('checkout.address');
+
+    // PROSES (API)
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 
     // Order & Payment
     Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
-    // User Orders (Pesanan Saya)
+    // Pesanan Saya
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+
+    // Penilaian
+    Route::get('/penilaian', fn () => Inertia::render('User/ReviewsAndHistory'))->name('reviews.index');
 });
 
 // Logout (tidak perlu email verification)
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Admin (protected) — hanya auth + AdminMiddleware
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Products
+    Route::get('/products', [ProductController::class, 'indexAdmin'])->name('products.index');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+    // Users
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // News Management
+    Route::get('/news', [NewsController::class, 'indexAdmin'])->name('news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
+    Route::post('/news', [NewsController::class, 'store'])->name('news.store');
+    Route::get('/news/{id}/edit', [NewsController::class, 'edit'])->name('news.edit');
+    Route::put('/news/{id}', [NewsController::class, 'update'])->name('news.update');
+    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->name('news.destroy');
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'indexAdmin'])->name('orders.index');
+    Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+
+    // Payments
+    Route::get('/payments', [PaymentController::class, 'indexAdmin'])->name('payments.index');
+    Route::put('/payments/{id}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
 });
 
 // Admin (protected) — hanya auth + AdminMiddleware

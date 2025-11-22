@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Link, usePage, useForm, router } from '@inertiajs/vue3'
-import Logo from '*/dashboard/logo-ngundur.png'
+import Logo from '*/dashboard/logo-tandur.png'
 
 const page = usePage()
 const user = computed(()=> page.props.auth?.user || null)
@@ -33,6 +33,10 @@ function logout() {
         }
     })
 }
+
+function goCart() {
+  router.visit(route('cart.index'))
+}
 </script>
 
 <template>
@@ -49,7 +53,7 @@ function logout() {
         <li><Link :href="route('toko')" :class="page.url.startsWith('/toko')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Toko</Link></li>
         <li><Link :href="route('berita')" :class="page.url.startsWith('/berita')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Berita</Link></li>
         <li><Link :href="route('about')" :class="route().current('about')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Tentang</Link></li>
-        <li><Link :href="route('blog')" :class="page.url.startsWith('/blog')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Blog</Link></li>
+        <li><Link :href="route('blog')" :class="page.url.startsWith('/blog')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">FAQ</Link></li>
       </ul>
 
       <div class="flex items-center gap-3">
@@ -70,6 +74,7 @@ function logout() {
                 {{ cartCount }}
               </span>
             </Link>
+
 
           <!-- Profil -->
           <div class="relative">

@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin;  
 
 use App\Http\Controllers\Controller;
+use Inertia\Inertia;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 class UserController extends Controller
 {
@@ -17,29 +17,29 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $search  = $request->string('search')->toString();
-        $sortBy  = $request->input('sortBy', 'nama');   // nama|email|role|created_at
-        $sortDir = $request->input('sortDir', 'asc');   // asc|desc
+        $search  = trim($request->get('search',''));
+        $sortBy  = in_array($request->get('sortBy'), ['nama','email','role','created_at']) ? $request->get('sortBy') : 'nama';
+        $sortDir = $request->get('sortDir') === 'desc' ? 'desc' : 'asc';
 
-        $sortable = ['nama','email','role','created_at'];
-        if (!in_array($sortBy, $sortable)) $sortBy = 'nama';
-        if (!in_array($sortDir, ['asc','desc'])) $sortDir = 'asc';
+        $q = User::query();
+        if ($search !== '') {
+            $q->where(function($qq) use ($search) {
+                $qq->where('nama','like',"%{$search}%")
+                   ->orWhere('username','like',"%{$search}%")
+                   ->orWhere('email','like',"%{$search}%");
+            });
+        }
+        $q->orderBy($sortBy,$sortDir);
 
-        $users = User::query()
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('username', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy($sortBy, $sortDir)
-            ->paginate(10)
-            ->withQueryString();
+        $users = $q->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/UsersManagement', [
-            'users'   => $users,
-            'filters' => compact('search','sortBy','sortDir'),
+            'users' => $users,
+            'filters' => [
+                'search'  => $search,
+                'sortBy'  => $sortBy,
+                'sortDir' => $sortDir,
+            ],
         ]);
     }
 

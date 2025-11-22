@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import SidebarAdmin from '@/component/SidebarAdmin.vue'
-import HeaderAdmin from '@/component/HeaderAdmin.vue'
+import SidebarAdmin from '@/component/SidebarAdmin.vue'   // FIX path (hapus /Admin/)
+import HeaderAdmin from '@/component/HeaderAdmin.vue'     // Pastikan file ini juga bukan di /Admin/
 
 const props = defineProps({
     payments: Object
@@ -109,6 +109,24 @@ function getStatusColor(status) {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t flex justify-between items-center">
+                    <div class="text-sm text-gray-700">
+                        Showing {{ payments.from }} to {{ payments.to }} of {{ payments.total }} entries
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            v-for="link in payments.links"
+                            :key="link.label"
+                            @click="$inertia.visit(link.url)"
+                            :disabled="!link.url"
+                            class="px-3 py-1 rounded"
+                            :class="link.active ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                            v-html="link.label"
+                        ></button>
+                    </div>
                 </div>
             </div>
         </main>

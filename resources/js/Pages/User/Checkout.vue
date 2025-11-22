@@ -1,171 +1,233 @@
 <script setup>
 import Header from '@/component/Header.vue'
 import Footer from '@/component/Footer.vue'
-import { Head, router, useForm, usePage } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import Qris from '*/dashboard/qrisNGUNDUR.jpg'
 
 const props = defineProps({
   user: { type: Object, required: true },
   shipping: { type: Object, required: true },
-  product: { type: Object, required: true },
+  product: { type: Object, default: null },
   qty: { type: Number, default: 1 },
-  summary: { type: Object, required: true }
+  summary: { type: Object, required: true },
+  items: { type: Array, default: () => [] }
 })
 
-const page = usePage()
-const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+const isBulk = computed(() => (props.items?.length || 0) > 0)
+const fmt = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
 
 function openAddressForm() {
-  router.visit(route('checkout.address', { id_produk: props.product.id_produk }) + `?qty=${props.qty}`)
+  if (isBulk.value) {
+    const firstId = props.items[0]?.id_produk ?? props.items[0]?.product?.id_produk
+    if (!firstId) return
+    router.visit(route('checkout.address', { id_produk: firstId }) + '?qty=1&from=cart')
+  } else {
+    router.visit(route('checkout.address', { id_produk: props.product.id_produk }) + `?qty=${props.qty}`)
+  }
 }
 
-// FORM KONFIRMASI
 const payForm = useForm({
-  qty: props.qty,
+  id_alamat: props.user?.id_alamat || null,
+  metode_pembayaran: 'transfer_bank', // default, sesuaikan jika ada selector
   trx_id: '',
   bukti_transfer: null,
-  agree: false,
+  agree: false
 })
-function onFileChange(e) {
-  payForm.bukti_transfer = e.target.files?.[0] || null
-}
-function submitPayment() {
-  payForm.post(route('checkout.confirm', { id_produk: props.product.id_produk }), {
-    forceFormData: true,
-    preserveScroll: true,
-    onSuccess: () => {
-      payForm.reset('trx_id', 'bukti_transfer', 'agree')
-    }
-  })
+function onFileChange(e){ payForm.bukti_transfer = e.target.files?.[0] || null }
+
+const canSubmit = computed(() => payForm.agree && payForm.bukti_transfer)
+
+function submitPayment(){
+  if(!payForm.agree) return
+  const options = { forceFormData: true }
+  if(isBulk.value){
+    payForm.post(route('checkout.confirmCart'), options)
+  } else {
+    payForm.post(route('order.create', { id_produk: props.product.id_produk }), options)
+  }
 }
 </script>
 
 <template>
-  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
+  <div class="font-inter text-gray-900 bg-white min-h-screen"> 
     <Header />
-    <Head title="Check Out" />
-
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="text-lg font-semibold">Check Out</h1>
-        <button @click="router.visit('/toko')" class="px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700">
-          Kembali
-        </button>
-      </div>
-
-      <div v-if="$page.props.flash?.payment_submitted" class="mb-4 rounded bg-green-100 text-green-800 px-4 py-2">
-        {{ $page.props.flash.payment_submitted }}
-      </div>
-
-      <div class="bg-white rounded-2xl border shadow-sm p-5 md:p-6">
-        <div class="grid md:grid-cols-[1fr_300px] gap-6">
-
-          <!-- kiri: produk + alamat + ringkasan + konfirmasi -->
-          <div class="space-y-4">
-            <!-- Produk -->
-            <div class="flex gap-4">
-              <img :src="product.gambar ? (/^https?:/.test(product.gambar)? product.gambar : `/storage/${product.gambar}`) : '/assets/dashboard/profil.png'"
-                   class="w-24 h-24 object-contain rounded-md border" alt="produk" />
-              <div class="flex-1">
-                <p class="font-semibold leading-snug">{{ product.nama_produk }}</p>
-                <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ product.deskripsi }}</p>
-                <div class="mt-2 text-red-600 font-bold">{{ fmt(product.harga) }}</div>
-                <div class="text-xs text-gray-600 mt-1">Jumlah: <span class="font-medium">{{ qty }}</span></div>
-                <div class="text-xs text-gray-600">Estimasi Tiba: <span class="font-medium">± 15 hari</span></div>
-              </div>
+    <Head :title="isBulk ? 'Checkout Keranjang' : 'Checkout Produk'" />
+    <!-- AREA UTAMA DIBERI WARNA #DBF8D1 -->
+    <main class="pt-24 pb-16">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="rounded-3xl p-6 md:p-7" style="background:#DBF8D1;">
+          <!-- card konten tetap putih -->
+          <div class="bg-green-50 rounded-2xl border shadow-sm p-5 md:p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h1 class="text-lg font-semibold">
+                {{ isBulk ? 'Checkout Semua Barang' : 'Check Out' }}
+              </h1>
+              <button @click="router.visit('/toko')" class="px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700">
+                Kembali
+              </button>
             </div>
 
-            <!-- Alamat untuk pesanan ini -->
-            <div class="rounded-lg bg-green-50 border border-green-100 p-4">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-sm font-semibold">
-                    {{ shipping.is_temp ? 'Alamat Pengiriman (Sementara)' : 'Alamat Saya' }}
-                  </p>
-                  <p class="text-xs text-gray-700 mt-1 whitespace-pre-line">
-                    {{ shipping.name }}<br>
-                    {{ shipping.text }}
-                  </p>
-                  <p class="text-[11px] text-gray-500 mt-1">
-                    Telp: {{ shipping.phone || '-' }}
-                  </p>
+            <div class="grid md:grid-cols-[1fr_300px] gap-6">
+              <!-- KIRI -->
+              <div class="space-y-5">
+                <!-- Single -->
+                <div v-if="!isBulk" class="flex gap-4">
+                  <img :src="product.gambar ? (/^https?:/.test(product.gambar)? product.gambar : `/storage/${product.gambar}`) : '/assets/dashboard/profil.png'"
+                       class="w-24 h-24 object-contain rounded-md border" />
+                  <div class="flex-1">
+                    <p class="font-semibold text-sm">{{ product.nama_produk }}</p>
+                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ product.deskripsi }}</p>
+                    <p class="text-xs mt-2">
+                      Jumlah: <span class="font-medium">{{ qty }}</span> |
+                      Harga Satuan: {{ fmt(product.harga) }}
+                    </p>
+                    <p class="text-sm font-semibold text-green-700 mt-1">
+                      Total Produk: {{ fmt(product.harga * qty) }}
+                    </p>
+                  </div>
                 </div>
-                <button class="text-xs px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
-                        @click="openAddressForm">
-                  + Tambah Alamat Baru
+
+                <!-- Bulk -->
+                <div v-else class="space-y-3">
+                  <h2 class="text-sm font-semibold flex items-center gap-2">
+                    Produk dalam Keranjang
+                    <span class="px-2 py-0.5 bg-green-600 text-white rounded text-xs">{{ items.length }} item</span>
+                  </h2>
+                  <div v-for="it in items" :key="it.id_detail_keranjang"
+                       class="flex gap-3 p-3 rounded-lg border bg-white">
+                    <img :src="it.product.gambar ? (/^https?:/.test(it.product.gambar)? it.product.gambar : `/storage/${it.product.gambar}`) : '/assets/dashboard/profil.png'"
+                         class="w-16 h-16 object-contain rounded border" />
+                    <div class="flex-1">
+                      <p class="text-xs font-semibold">{{ it.product.nama_produk }}</p>
+                      <p class="text-[11px] text-gray-500 line-clamp-2">{{ it.product.deskripsi }}</p>
+                      <p class="text-[11px] mt-1">
+                        {{ it.qty }} x {{ fmt(it.product.harga) }}
+                        = <span class="font-medium text-green-700">{{ fmt(it.product.harga * it.qty) }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Alamat -->
+                <div class="rounded-lg bg-green-50 border border-green-100 p-4 text-xs">
+                  <div class="flex justify-between items-start mb-1">
+                    <p class="font-semibold">Alamat Pengiriman<span v-if="shipping.is_temp"> (Sementara)</span></p>
+                    <button @click="openAddressForm"
+                            class="px-3 py-1 text-[11px] rounded-md bg-green-600 text-white hover:bg-green-700">
+                      + Tambah Alamat Baru
+                    </button>
+                  </div>
+                  <pre class="whitespace-pre-line leading-relaxed text-[11px] font-medium text-gray-700">{{ shipping.text }}</pre>
+                  <p class="mt-1 text-[11px] text-gray-500">Telp: {{ shipping.phone || '-' }}</p>
+                </div>
+
+                <!-- Ringkasan -->
+                <div class="rounded-lg bg-gray-50 border p-4 text-xs space-y-1">
+                  <div class="flex justify-between" v-if="isBulk">
+                    <span>Subtotal Semua Produk</span><span>{{ fmt(summary.subtotal) }}</span>
+                  </div>
+                  <div class="flex justify-between" v-else>
+                    <span>Subtotal Produk</span><span>{{ fmt(product.harga * qty) }}</span>
+                  </div>
+                  <div class="flex justify-between"><span>Biaya Admin</span><span>{{ fmt(summary.admin) }}</span></div>
+                  <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summary.ongkir) }}</span></div>
+                  <div class="border-t pt-1 flex justify-between font-semibold">
+                    <span>Total Harga</span><span>{{ fmt(summary.total) }}</span>
+                  </div>
+                </div>
+
+                <!-- CTA (placeholder) -->
+                <button class="w-full h-10 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
+                  Selesaikan Pembayaranmu
                 </button>
               </div>
-            </div>
 
-            <!-- Ringkasan -->
-            <div class="rounded-lg bg-gray-50 border p-4 text-sm">
-              <div class="flex justify-between"><span>Harga Produk</span><span>{{ fmt(product.harga * qty) }}</span></div>
-              <div class="flex justify-between"><span>Biaya Admin</span><span>{{ fmt(summary.admin) }}</span></div>
-              <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summary.ongkir) }}</span></div>
-              <div class="border-t my-2"></div>
-              <div class="flex justify-between font-semibold"><span>Total Harga</span><span>{{ fmt(summary.total) }}</span></div>
-            </div>
-
-            <button class="w-full h-10 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-medium">
-              Selesaikan Pembayaranmu
-            </button>
-
-            <!-- Konfirmasi Pembayaran -->
-            <div class="mt-6">
-              <div class="rounded-t-lg bg-green-800 text-white px-4 py-2 text-sm font-semibold">
-                Konfirmasi Pembayaranmu
-              </div>
-              <div class="rounded-b-lg border border-t-0 p-4 space-y-4">
-                <div>
-                  <label class="block text-sm font-medium mb-1">ID Transaksional (Opsional)</label>
-                  <input v-model="payForm.trx_id" type="text"
-                         class="w-full rounded-md border px-3 py-2 bg-gray-50 focus:bg-white" placeholder="Nomor referensi transfer" />
-                  <p v-if="payForm.errors.trx_id" class="text-xs text-red-600 mt-1">{{ payForm.errors.trx_id }}</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-1">Bukti Pembayaran <span class="text-red-500">*</span></label>
-                  <input type="file" accept=".jpg,.jpeg,.png" @change="onFileChange"
-                         class="block w-full text-sm file:mr-3 file:px-4 file:py-2 file:rounded-md file:bg-green-600 file:text-white file:hover:bg-green-700 file:border-0" />
-                  <ul class="mt-2 text-[11px] text-gray-600 list-disc ml-4">
-                    <li>Format: JPG, JPEG, PNG</li>
-                    <li>Maksimal ukuran: 5 MB</li>
-                    <li>Pastikan bukti pembayaran jelas dan dapat dibaca</li>
-                  </ul>
-                  <p v-if="payForm.errors.bukti_transfer" class="text-xs text-red-600 mt-1">{{ payForm.errors.bukti_transfer }}</p>
-                </div>
-
-                <label class="flex items-start gap-2 text-xs text-gray-700">
-                  <input type="checkbox" v-model="payForm.agree" class="mt-0.5">
-                  <span>Saya menyetujui bahwa informasi yang saya berikan adalah benar dan saya telah melakukan pembayaran sesuai dengan jumlah yang tertera</span>
-                </label>
-                <p v-if="payForm.errors.agree" class="text-xs text-red-600 -mt-2">{{ payForm.errors.agree }}</p>
-
-                <div class="flex gap-3">
-                  <button type="button" @click="submitPayment"
-                          :disabled="payForm.processing || !payForm.bukti_transfer || !payForm.agree"
-                          class="flex-1 h-10 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm">
-                    {{ payForm.processing ? 'Mengirim...' : 'Konfirmasi Pembayaran' }}
-                  </button>
-                  <button type="button" @click="router.reload({ only: ['shipping','summary'] })"
-                          class="flex-1 h-10 rounded-md bg-red-500/90 hover:bg-red-600 text-white text-sm">
-                    Reset Form
-                  </button>
-                </div>
-              </div>
+              <!-- KANAN: QRIS -->
+              <aside class="rounded-xl border p-4">
+                <p class="text-sm font-semibold text-center mb-2">QRIS</p>
+                <img :src="Qris" alt="QRIS" class="w-full rounded-md object-contain" />
+                <p class="text-[11px] text-gray-500 text-center mt-2">Scan QRIS untuk melakukan pembayaran</p>
+              </aside>
             </div>
           </div>
 
-          <!-- kanan: QRIS -->
-          <aside class="rounded-xl border p-4">
-            <p class="text-sm font-semibold text-center mb-2">QRIS</p>
-            <img :src="Qris" alt="QRIS" class="w-full rounded-md object-contain" />
-            <p class="text-[11px] text-gray-500 text-center mt-2">Scan QRIS untuk melakukan pembayaran</p>
-          </aside>
+          <section class="mt-6 rounded-xl border bg-green-50 p-5">
+            <h3 class="text-sm font-semibold mb-4">Konfirmasi Pembayaran</h3>
+
+            <div class="space-y-4">
+
+              <!-- ID Transaksional (Opsional) -->
+              <div>
+                <label class="block text-xs font-semibold mb-1">ID Transaksional (Opsional)</label>
+                <input
+                  v-model="payForm.trx_id"
+                  type="text"
+                  placeholder="Nomor referensi membantu verifikasi pembayaran lebih cepat"
+                  class="w-full rounded-md border border-green-200 bg-green-100/60 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-green-400"
+                />
+                <p class="mt-1 text-[11px] text-green-700">
+                  Nomor referensi membantu verifikasi pembayaran lebih cepat
+                </p>
+              </div>
+
+              <!-- Bukti Pembayaran -->
+              <div class="space-y-1">
+                <label class="block text-xs font-semibold mb-1">
+                  Bukti Pembayaran <span class="text-red-600">*</span>
+                </label>
+                <label class="flex items-center gap-3 w-full rounded-md border border-green-200 bg-green-100/60 px-3 py-2 text-xs cursor-pointer">
+                  <input ref="proof" type="file" class="hidden" accept="image/*" @change="onFileChange" />
+                  <button type="button"
+                          @click="$refs.proof.click()"
+                          class="px-3 py-1.5 rounded border border-green-300 bg-white text-green-700 text-[11px] font-medium">
+                    Choose File
+                  </button>
+                  <span class="truncate text-[11px] text-gray-700" v-if="payForm.bukti_transfer">
+                    {{ payForm.bukti_transfer.name }}
+                  </span>
+                  <span v-else class="text-[11px] text-gray-500">Belum ada file</span>
+                </label>
+                <ul class="mt-2 ml-1 space-y-1 text-[10px] text-gray-600">
+                  <li>Format JPG, PNG, JPEG</li>
+                  <li>Maksimal ukuran: 5 MB</li>
+                  <li>Pastikan bukti pembayaran jelas dan dapat dibaca</li>
+                </ul>
+              </div>
+
+              <!-- Checkbox Persetujuan -->
+              <label class="flex items-start gap-2 text-[11px]">
+                <input type="checkbox" v-model="payForm.agree" class="mt-[2px]" />
+                <span class="text-red-600 font-medium leading-tight">
+                  Saya menyetujui bahwa informasi yang saya berikan adalah benar dan saya
+                  telah melakukan pembayaran sesuai dengan jumlah yang tertera
+                </span>
+              </label>
+
+              <!-- Tombol Aksi -->
+              <div class="space-y-3">
+                <button
+                  @click="submitPayment"
+                  :disabled="payForm.processing || !canSubmit"
+                  class="w-full h-10 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Konfirmasi Pembayaran
+                </button>
+
+                <button
+                  type="button"
+                  @click="() => { payForm.reset(); }"
+                  class="w-full h-10 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+                >
+                  Konfirmasi Pembayaran
+                </button>
+              </div>
+            </div>
+          </section>
+
         </div>
       </div>
     </main>
-
     <Footer />
   </div>
 </template>
