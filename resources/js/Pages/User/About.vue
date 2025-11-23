@@ -1,27 +1,22 @@
 <script setup>
 import Header from '@/component/Header.vue'    
 import Footer from '@/component/Footer.vue'
+import { Head } from '@inertiajs/vue3'
 
-import { computed } from 'vue'
+// gunakan aset yang sama seperti sebelumnya
 import Logo from '*/dashboard/logo-ngundur.png'
 import Profil from '*/dashboard/profil.png'
-
-// hero background with a soft gray overlay using public asset
-const heroStyle = computed(() => ({
-  backgroundImage: `linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg')`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-}))
 </script>
 
 <template>
   <div class="text-gray-900 font-inter">
     <Header />
+    <Head title="Profil" />
 
-    <!-- HERO -->
+    <!-- HERO (gaya seperti Blog.vue) -->
     <section
-      class="mt-16 h-[260px] md:h-[320px] relative flex items-center"
-      :style="heroStyle"
+      class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
+      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg'); background-size: cover; background-position: center;"
     >
       <!-- jika belum punya gambar, cukup hapus url(...) di atas, gradient tetap tampil -->
       <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
@@ -80,11 +75,11 @@ const heroStyle = computed(() => ({
       <div class="max-w-4xl px-4 mx-auto text-center sm:px-6 lg:px-8">
         <h3 class="text-3xl font-extrabold text-green-700 md:text-4xl">VISI & MISI NGUNDUR</h3>
 
-        <h4 class="mt-8 text-xl font-semibold text-gray-800">VISI NGUNDUR</h4>
-        <p class="mt-2 text-gray-700">
-          Menjadi pelopor teknologi penyiraman otomatis yang mendukung pertanian berkelanjutan
-          dan mudah diakses oleh semua kalangan.
-        </p>
+              <h4 class="text-xl font-semibold">VISI NGUNDUR</h4>
+              <p class="text-green-100/90">
+                Menjadi pelopor teknologi penyiraman otomatis yang mendukung pertanian berkelanjutan
+                dan mudah diakses oleh semua kalangan.
+              </p>
 
         <h4 class="mt-10 text-xl font-semibold text-gray-800">MISI NGUNDUR</h4>
 

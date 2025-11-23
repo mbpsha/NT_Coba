@@ -5,6 +5,8 @@ import Logo from '*/dashboard/logo-ngundur.png'
 const page = usePage()
 const checkoutIntent = page.props.checkoutIntent
 const needAddress = page.props.needAddress
+const checkoutIntent = page.props.checkoutIntent
+const needAddress = page.props.needAddress
 const user = page.props.user ?? page.props.auth?.user ?? {}
 
 const form = useForm({
@@ -16,8 +18,20 @@ const form = useForm({
   checkout_return: checkoutIntent ? 1 : 0,
   checkout_product_id: checkoutIntent?.id_produk || null,
   checkout_qty: checkoutIntent?.qty || 1,
+  nama: user.nama || '',
+  username: user.username || '',
+  email: user.email || '',
+  no_telp: user.no_telp || '',
+  alamat: user.alamat || '',
+  checkout_return: checkoutIntent ? 1 : 0,
+  checkout_product_id: checkoutIntent?.id_produk || null,
+  checkout_qty: checkoutIntent?.qty || 1,
 })
 
+function onPhoneInput(e){ form.no_telp = (e.target.value || '').replace(/\D+/g,'') }
+function save(){
+  form.no_telp = (form.no_telp || '').replace(/\D+/g,'')
+  form.put(route('profile.update'), { preserveScroll: true })
 function onPhoneInput(e){ form.no_telp = (e.target.value || '').replace(/\D+/g,'') }
 function save(){
   form.no_telp = (form.no_telp || '').replace(/\D+/g,'')
@@ -38,12 +52,26 @@ function backToCheckout(){
     const pid = checkoutIntent.id_produk
     const qty = checkoutIntent.qty || 1
     router.visit(`/checkout/${pid}?qty=${qty}`)
+// Tombol kembali: pakai history jika ada, fallback ke berita
+function goBack(){
+    if (window.history.length > 1) {
+        window.history.back()
+    } else {
+        try { router.visit(route('berita')) } catch { router.visit('/berita') }
+    }
+}
+
+function backToCheckout(){
+    if (!form.alamat) return alert('Isi alamat terlebih dahulu.')
+    const pid = checkoutIntent.id_produk
+    const qty = checkoutIntent.qty || 1
+    router.visit(`/checkout/${pid}?qty=${qty}`)
 }
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col bg-slate-50">
-        <header class="h-16 flex items-center justify-between px-4 bg-white/80 backdrop-blur shadow-sm">
+    <div class="flex flex-col min-h-screen bg-slate-50">
+        <header class="flex items-center justify-between h-16 px-4 shadow-sm bg-white/80 backdrop-blur">
         <Link :href="route('dashboard')" class="flex items-center gap-2">
             <img :src="Logo" alt="NGUNDUR" class="h-14" />
         </Link>
@@ -63,31 +91,31 @@ function backToCheckout(){
         <div class="bg-green-50/70 rounded-xl border border-green-200 p-6 shadow">
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
             <div>
-                <label class="block text-sm mb-1">Username</label>
-                <input v-model="form.username" class="w-full rounded-md bg-white/80 border border-green-200 px-3 py-2" />
-                <p v-if="form.errors.username" class="text-sm text-red-600 mt-1">{{ form.errors.username }}</p>
+                <label class="block mb-1 text-sm">Username</label>
+                <input v-model="form.username" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" />
+                <p v-if="form.errors.username" class="mt-1 text-sm text-red-600">{{ form.errors.username }}</p>
             </div>
             <div>
-                <label class="block text-sm mb-1">Nama</label>
-                <input v-model="form.nama" class="w-full rounded-md bg-white/80 border border-green-200 px-3 py-2" placeholder="Opsional" />
-                <p v-if="form.errors.nama" class="text-sm text-red-600 mt-1">{{ form.errors.nama }}</p>
+                <label class="block mb-1 text-sm">Nama</label>
+                <input v-model="form.nama" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" placeholder="Opsional" />
+                <p v-if="form.errors.nama" class="mt-1 text-sm text-red-600">{{ form.errors.nama }}</p>
             </div>
             <div>
-                <label class="block text-sm mb-1">Email</label>
-                <input v-model="form.email" type="email" class="w-full rounded-md bg-white/80 border border-green-200 px-3 py-2" />
-                <p v-if="form.errors.email" class="text-sm text-red-600 mt-1">{{ form.errors.email }}</p>
+                <label class="block mb-1 text-sm">Email</label>
+                <input v-model="form.email" type="email" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" />
+                <p v-if="form.errors.email" class="mt-1 text-sm text-red-600">{{ form.errors.email }}</p>
             </div>
             <div>
-                <label class="block text-sm mb-1">Nomor Telepon</label>
+                <label class="block mb-1 text-sm">Nomor Telepon</label>
                 <input v-model="form.no_telp" inputmode="numeric" pattern="[0-9]*" maxlength="20"
                     @input="onPhoneInput"
-                    class="w-full rounded-md bg-white/80 border border-green-200 px-3 py-2" />
-                <p v-if="form.errors.no_telp" class="text-sm text-red-600 mt-1">{{ form.errors.no_telp }}</p>
+                    class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" />
+                <p v-if="form.errors.no_telp" class="mt-1 text-sm text-red-600">{{ form.errors.no_telp }}</p>
             </div>
             <div>
-                <label class="block text-sm mb-1">Alamat</label>
-                <input v-model="form.alamat" class="w-full rounded-md bg-white/80 border border-green-200 px-3 py-2" />
-                <p v-if="form.errors.alamat" class="text-sm text-red-600 mt-1">{{ form.errors.alamat }}</p>
+                <label class="block mb-1 text-sm">Alamat</label>
+                <input v-model="form.alamat" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" />
+                <p v-if="form.errors.alamat" class="mt-1 text-sm text-red-600">{{ form.errors.alamat }}</p>
             </div>
 
             <div class="mt-2 flex flex-wrap gap-3">

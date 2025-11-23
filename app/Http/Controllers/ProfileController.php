@@ -29,8 +29,14 @@ class ProfileController extends Controller
             'nama'     => ['nullable','string','max:255'],
             'username' => ['nullable','string','max:255'],
             'email'    => ['nullable','email','max:255'],
+            'username' => ['nullable','string','max:255'],
+            'email'    => ['nullable','email','max:255'],
             'no_telp'  => ['nullable','string','max:20'],
             'alamat'   => ['nullable','string','max:255'],
+            // hidden (opsional, tidak divalidasi khusus)
+            'checkout_return'   => ['nullable'],
+            'checkout_product_id'=> ['nullable','integer'],
+            'checkout_qty'       => ['nullable','integer'],
             // hidden (opsional, tidak divalidasi khusus)
             'checkout_return'   => ['nullable'],
             'checkout_product_id'=> ['nullable','integer'],

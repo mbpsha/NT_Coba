@@ -33,11 +33,6 @@ function addToCart(p){ router.post(route('cart.add'), { id_produk: p.id_produk }
           <p class="mt-2 text-center text-red-600 font-bold">
             {{ fmt(p.harga) }}
           </p>
-          <button
-            @click="router.post(route('cart.add'), { id_produk: p.id_produk }, { preserveScroll: true })"
-            class="mt-3 w-full h-9 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm">
-            Tambah ke Keranjang
-          </button>
         </div>
       </div>
 

@@ -14,10 +14,11 @@ class CartController extends Controller
     public function index()
     {
         $cart = Cart::with(['cartDetails.product'])
-        ->where('id_user', Auth::id())
-        ->first();
+            ->where('id_user', Auth::id())
+            ->first();
 
-        $items = $cart ? $cart->cartDetails->map(fn($d) => [
+        $items = $cart
+            ? $cart->cartDetails->map(fn($d) => [
                 'id_detail_keranjang' => $d->id_detail_keranjang,
                 'qty'        => (int)$d->jumlah,
                 'added_at'   => optional($d->created_at)->format('d M Y'),
@@ -29,8 +30,9 @@ class CartController extends Controller
                     'harga'       => (int)$d->harga_satuan,
                     'gambar'      => $d->product->gambar,
                 ],
-            ])->values() : collect([]);
-            
+            ])->values()
+            : collect([]);
+
         return Inertia::render('User/Cart', ['items' => $items]);
     }
 

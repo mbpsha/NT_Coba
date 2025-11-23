@@ -1,8 +1,20 @@
 <script setup>
 import { Link, useForm } from '@inertiajs/vue3'
+import { Link, useForm } from '@inertiajs/vue3'
 
 const isActive = (routeName) => {
     return route().current(routeName)
+}
+
+const logoutForm = useForm({})
+function logout() {
+    logoutForm.post(route('logout'), {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = route('dashboard')
+        }
+    })
 }
 
 const logoutForm = useForm({})
@@ -19,6 +31,7 @@ function logout() {
 
 <template>
     <aside class="fixed top-0 left-0 w-64 h-screen text-white shadow-xl bg-gradient-to-b from-green-600 to-green-700">
+    <aside class="fixed top-0 left-0 w-64 h-screen text-white shadow-xl bg-gradient-to-b from-green-600 to-green-700">
         <div class="p-6">
             <h1 class="text-2xl font-bold">ADMIN PANEL</h1>
         </div>
@@ -26,6 +39,7 @@ function logout() {
         <nav class="mt-6">
             <Link
                 :href="route('admin.dashboard')"
+                class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.dashboard') }"
             >
@@ -60,10 +74,18 @@ function logout() {
                 :href="route('admin.news.index')"
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.news.index') }"
+                :href="route('admin.news.index')"
+                class="flex items-center px-6 py-3 transition hover:bg-green-500"
+                :class="{ 'bg-green-500': isActive('admin.news.index') }"
             >
                 📰 News
             </Link>
 
+            <!-- Logout Button -->
+            <button
+                @click="logout"
+                :disabled="logoutForm.processing"
+                class="flex items-center w-full px-6 py-3 mt-4 text-left transition hover:bg-red-500"
             <!-- Logout Button -->
             <button
                 @click="logout"

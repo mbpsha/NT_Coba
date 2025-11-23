@@ -2,19 +2,99 @@
 import Header from '@/component/Header.vue'    
 import Footer from '@/component/Footer.vue'
 import { Head } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+
+const activeTab = ref('produk')
+const openedIndex = ref(null)
+
+const faqs = {
+  produk: [
+    {
+      question: 'Apa itu Ngundur (Nguthik Tandur)?',
+      answer:
+        'Ngundur adalah perangkat IoT penyiram tanaman otomatis yang bekerja menggunakan sensor kelembapan tanah untuk menentukan kapan tanaman memerlukan air.'
+    },
+    {
+      question: 'Bagaimana cara kerja sistem penyiraman otomatis?',
+      answer:
+        'Sensor akan membaca tingkat kelembapan tanah. Jika tanah terlalu kering, sistem akan mengaktifkan pompa air secara otomatis. Jika sudah cukup lembap, pompa akan berhenti.'
+    },
+    {
+      question: 'Apakah alat ini bisa digunakan untuk berbagai jenis tanaman?',
+      answer:
+        'Ya, Ngundur dapat digunakan untuk berbagai jenis tanaman, baik skala rumah tangga, urban farming, hingga pertanian kecil'
+    },
+    {
+      question: 'Apakah alat Ngundur membutuhkan listrik untuk bekerja?',
+      answer: `Ya, Ngundur membutuhkan sumber energi. Terdapat dua pilihan jenis alat:
+• Tipe Panel Surya  – cocok untuk lokasi jauh dari listrik.
+• Tipe Listrik Langsung  - cocok untuk indoor atau area akses listrik stabil.`
+    },
+    {
+      question: 'Apakah Ngundur bisa tetap bekerja saat cuaca mendung jika menggunakan panel surya?',
+      answer:
+        'Ya, Ngundur tetap bisa bekerja karena panel surya menyimpan daya pada baterai internal. Namun durasi operasional bergantung pada intensitas cahaya matahari.'
+    }
+  ],
+
+  pembelian: [
+    {
+      question: 'Bagaimana cara membeli produk Ngundur “Nguthik Tandur”??',
+      answer:
+        'Anda dapat memilih produk pada halaman Toko Online, menambahkannya ke keranjang atau langsung klik Beli Sekarang, lalu menyelesaikan pembelian melalui proses checkout yang telah disediakan.'
+    },
+    {
+      question: ' Metode pembayaran apa yang tersedia?',
+      answer:
+        'Pembayaran dapat dilakukan melalui  scan barcode QRIS yang telah disediakan.  Setelah pembayaran dilakukan, sistem admin akan memverifikasi transaksi Anda.'
+    },
+    {
+      question: 'Apakah produk IoT tersedia ready stock atau pre-order?',
+      answer:
+        'Perangkat IoT Ngundur tersedia dalam sistem pre-order (PO) dengan estimasi waktu perakitan dan kalibrasi selama ±15 hari sebelum dikirimkan.'
+    },
+    {
+      question: 'Bagaimana cara melacak status pesanan saya?',
+      answer:
+        'Anda dapat memantau status pesanan melalui akun Anda di menu Tracking Pesanan, mulai dari “Pembayaran Terverifikasi”, “Dalam Produksi”, “Dalam Pengiriman”, hingga “Beri Penilaian” setelah pesanan diterima.'
+    },
+    {
+      question: 'Apakah produk memiliki garansi dan dukungan purna jual?',
+      answer:
+        'Ya. Produk mendapat garansi 30 hari untuk penggantian unit cacat dan 6 bulan garansi servis. Anda juga dapat menghubungi tim melalui kontak website untuk bantuan instalasi atau troubleshooting.'
+    }
+  ]
+}
+
+const visibleFaqs = computed(() => faqs[activeTab.value])
+
+function setTab(tab) {
+  activeTab.value = tab
+  openedIndex.value = null // tutup semua ketika ganti tab
+}
+
+function toggle(idx) {
+  openedIndex.value = openedIndex.value === idx ? null : idx
+}
 </script>
 
 <template>
   <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
     <Header />
-    <Head title="Blog" />
+    <Head title="FAQ" />
 
     <section
-      class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
-      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-blog.jpg'); background-size: cover; background-position: center;"
+      class="relative w-full flex items-center justify-center bg-cover"
+  style="
+    background-image:
+    linear-gradient(to bottom, rgba(255,255,255,0.0), rgba(255,255,255,0.0)),
+    url('/assets/dashboard/blogfaq.png');
+    height: 400px;
+    background-position: center -0.1000px;  /* 🔥 ini yang memangkas gambar ke bawah */
+  "
     >
       <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-extrabold text-white md:text-5xl drop-shadow">Blog</h1>
+        <h1 class="text-4xl font-extrabold text-white md:text-5xl drop-shadow">FAQ</h1>
       </div>
     </section>
 
@@ -67,14 +147,54 @@ import { Head } from '@inertiajs/vue3'
             </aside>
           </div>
 
-          <section class="mt-12 grid gap-8 rounded-2xl border border-green-100 bg-gradient-to-r from-green-700 via-green-600 to-green-500 p-8 text-white shadow-lg md:grid-cols-[1.2fr_0.8fr]">
-            <div class="space-y-3">
-              <span class="text-xs font-semibold uppercase tracking-[0.3em] text-green-100">Ngundur</span>
-              <h3 class="text-3xl font-bold leading-snug">Smart Garden untuk Pertanian Modern</h3>
-              <p class="text-sm md:text-base text-green-100/90">
-                Integrasi sensor, kontrol otomatis, dan manajemen energi terbarukan menghadirkan pengalaman berkebun yang praktis
-                sekaligus berkelanjutan. Solusi ini membantu mempertahankan kelembaban ideal dan meminimalkan penggunaan air.
-              </p>
+          <!-- FAQ LIST -->
+          <div class="space-y-6">
+            <!-- Tabs -->
+            <div class="flex gap-3">
+              <button
+                type="button"
+                @click="setTab('produk')"
+                :class="['px-4 py-2 rounded-full text-sm font-medium transition', activeTab === 'produk' ? 'bg-green-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50']"
+              >Produk</button>
+              <button
+                type="button"
+                @click="setTab('pembelian')"
+                :class="['px-4 py-2 rounded-full text-sm font-medium transition', activeTab === 'pembelian' ? 'bg-green-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50']"
+              >Pembelian</button>
+            </div>
+
+            <!-- Accordion Items -->
+            <div
+              v-for="(item, idx) in visibleFaqs"
+              :key="idx"
+              class="relative rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
+            >
+
+
+              <button
+                class="w-full px-6 py-5 flex items-center justify-between text-left"
+                @click="toggle(idx)"
+                :aria-expanded="openedIndex === idx ? 'true' : 'false'"
+                :aria-controls="'faq-panel-' + idx"
+                type="button"
+              >
+                <h3 class="font-semibold text-[16px]">
+                  {{ item.question }}
+                </h3>
+                <span class="text-xl text-gray-500">
+                  {{ openedIndex === idx ? '−' : '+' }}
+                </span>
+              </button>
+
+              <transition name="accordion">
+                <div
+                  v-if="openedIndex === idx"
+                  :id="'faq-panel-' + idx"
+                  class="px-6 pt-6 pb-6 bg-[#E2F2DA] border-t border-green-100 text-sm text-gray-700 whitespace-pre-line"
+                >
+                  {{ item.answer }}
+                </div>
+              </transition>
             </div>
 
             <div class="relative p-6 rounded-xl bg-white/10 backdrop-blur">
@@ -83,7 +203,7 @@ import { Head } from '@inertiajs/vue3'
                 Fitur jadwal pintar memungkinkan penyesuaian sesuai kebutuhan varietas tanaman yang berbeda.
               </p>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </main>
@@ -91,3 +211,26 @@ import { Head } from '@inertiajs/vue3'
     <Footer />
   </div>
 </template>
+
+<style scoped>
+.accordion-enter-active,
+.accordion-leave-active {
+  overflow: hidden;
+  /* atur kecepatan di sini */
+  transition:
+    max-height 0.35s ease,
+    opacity 0.35s ease;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.accordion-enter-to,
+.accordion-leave-from {
+  max-height: 500px; /* cukup besar untuk isi jawaban */
+  opacity: 1;
+}
+</style>
