@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import HeroSection from '@/Components/User/HeroSection.vue'
@@ -12,6 +13,27 @@ import Band3 from '*/dashboard/bawah3.png'
 import FooterLogo from '*/dashboard/footer-logo.png'
 import Profil from '*/dashboard/profil.png'
 
+const page = usePage()
+
+// Flash message handling
+const showFlash = ref(false)
+const flashMessage = ref('')
+const flashType = ref('info')
+
+watch(() => [page.props.flash?.message, page.props.flash?.warning], ([msg, warn]) => {
+  if (msg) {
+    flashMessage.value = msg
+    flashType.value = 'success'
+    showFlash.value = true
+    setTimeout(() => showFlash.value = false, 4000)
+  } else if (warn) {
+    flashMessage.value = warn
+    flashType.value = 'warning'
+    showFlash.value = true
+    setTimeout(() => showFlash.value = false, 6000)
+  }
+}, { immediate: true })
+
 function scrollToNews() {
     const el = document.getElementById('news-section')
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -23,6 +45,32 @@ onMounted(() => window.scrollTo({ top: 0 }))
     <div class="text-gray-900 font-inter">
         <!-- NAVBAR -->
         <Header />
+
+    <!-- Flash Message Toast -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="translate-y-2 opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-2 opacity-0"
+    >
+      <div v-if="showFlash" class="fixed z-50 px-4 py-3 rounded-lg shadow-lg top-20 right-4"
+           :class="{
+             'bg-green-100 text-green-800 border border-green-200': flashType === 'success',
+             'bg-yellow-100 text-yellow-800 border border-yellow-200': flashType === 'warning'
+           }">
+        <div class="flex items-center gap-2">
+          <svg v-if="flashType === 'success'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg v-if="flashType === 'warning'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span class="text-sm font-medium">{{ flashMessage }}</span>
+        </div>
+      </div>
+    </Transition>
 
     <!-- HERO -->
     <section class="mt-16">

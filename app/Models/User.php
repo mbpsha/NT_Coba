@@ -78,4 +78,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Address::class, 'id_user', 'id_user')
             ->where('is_default', true);
     }
+
+    /**
+     * Send the email verification notification using custom notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\CustomVerifyEmail);
+    }
 }

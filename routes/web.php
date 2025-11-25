@@ -64,28 +64,31 @@ Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 Route::get('/toko', [TokoController::class, 'index'])->name('toko');
 Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
 
-// Protected (require email verification for non-admin users)
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Profil
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    // Cart
+// Protected - No verification required (browsing, cart, etc)
+Route::middleware('auth')->group(function () {
+    // Cart (bebas akses tanpa verifikasi)
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
+});
 
-    // Checkout
+// Protected - Require email verification (profil & checkout/order)
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Profil - WAJIB VERIFIKASI EMAIL
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Checkout & Order - WAJIB VERIFIKASI EMAIL
     Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 
-    // Order & Payment
+    // Order & Payment - WAJIB VERIFIKASI EMAIL
     Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
-    // User Orders (Pesanan Saya)
+    // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
 });
 

@@ -50,7 +50,7 @@ function resendEmail() {
             </div>
 
             <!-- Success Message -->
-            <div v-if="status === 'verification-link-sent' || $page.props.flash?.message" 
+            <div v-if="status === 'verification-link-sent' || $page.props.flash?.message"
                  class="p-3 mb-4 text-sm text-green-800 bg-green-100 border border-green-200 rounded-lg">
                 <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -60,7 +60,7 @@ function resendEmail() {
 
             <!-- Actions -->
             <div class="flex flex-col gap-3">
-                <button @click="resendEmail" 
+                <button @click="resendEmail"
                         :disabled="isResending || form.processing"
                         class="w-full px-4 py-3 text-sm font-semibold text-white transition bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg v-if="isResending || form.processing" class="inline w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@ function resendEmail() {
                     {{ isResending || form.processing ? 'Mengirim...' : 'Kirim Ulang Email Verifikasi' }}
                 </button>
 
-                <Link :href="route('dashboard')" 
+                <Link :href="route('dashboard')"
                       class="w-full px-4 py-3 text-sm font-medium text-center text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200">
                     Kembali ke Dashboard
                 </Link>

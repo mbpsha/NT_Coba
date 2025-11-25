@@ -36,8 +36,18 @@ function logout() {
 </script>
 
 <template>
-  <header class="fixed inset-x-0 top-0 z-50 shadow-sm bg-white/90 backdrop-blur">
-    <nav class="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
+  <header class="fixed inset-x-0 top-0 z-50 bg-white shadow-sm">
+    <!-- Email Verification Warning Banner -->
+    <div v-if="isAuth && user && !user.email_verified_at"
+         class="px-4 py-2 text-sm text-center text-yellow-900 bg-yellow-100 border-b border-yellow-200">
+      <span class="font-medium">⚠️ Email belum diverifikasi.</span>
+      <span class="hidden sm:inline">Verifikasi diperlukan untuk akses profil dan membuat pesanan.</span>
+      <Link :href="route('verification.notice')" class="ml-2 font-semibold underline hover:text-yellow-800">
+        Verifikasi Sekarang →
+      </Link>
+    </div>
+
+    <nav class="flex items-center justify-between h-16 px-4 mx-auto bg-white/90 backdrop-blur max-w-7xl">
       <div class="flex items-center gap-3">
         <Link :href="route('dashboard')" class="flex items-center gap-2">
           <img :src="Logo" alt="NGUNDUR" class="h-11" />

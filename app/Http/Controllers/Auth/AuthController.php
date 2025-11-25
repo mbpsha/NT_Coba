@@ -48,7 +48,7 @@ class AuthController extends Controller
         // Check if email is verified (skip for admin)
         if ($user->role !== 'admin' && !$user->hasVerifiedEmail()) {
             return redirect()->route('verification.notice')
-                ->with('message', 'Silakan verifikasi email Anda terlebih dahulu sebelum melanjutkan.');
+                ->with('message', 'Silakan verifikasi email Anda untuk dapat mengakses fitur Profil dan Pemesanan. Cek inbox email Anda.');
         }
 
         // Redirect based on user role
