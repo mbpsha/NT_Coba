@@ -25,7 +25,7 @@ function submit() {
 }
 
 function backToCheckout() {
-  router.visit(route('checkout', { id_produk: props.id_produk }) + `?qty=${props.qty}`)
+  router.visit(route('checkout.show', { id_produk: props.id_produk }) + `?qty=${props.qty}`)
 }
 </script>
 

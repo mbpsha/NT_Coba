@@ -13,8 +13,12 @@ class Address extends Model
         'label',
         'nama_penerima',
         'no_telp_penerima',
+        'nama_jalan',
+        'no_rumah',
         'alamat_lengkap',
-        'kota',
+        'kelurahan_desa',
+        'kecamatan',
+        'kabupaten',
         'provinsi',
         'kode_pos',
         'is_default'

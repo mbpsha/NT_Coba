@@ -161,6 +161,18 @@ function getStatusColor(status) {
                             <p class="font-medium">{{ new Date(selectedPayment.created_at).toLocaleString('id-ID') }}</p>
                         </div>
                         <div>
+                            <p class="text-sm text-gray-600">Shipping</p>
+                            <p class="font-medium">
+                                {{ selectedPayment.order?.shipping_courier
+                                    ? `${selectedPayment.order.shipping_courier} ${selectedPayment.order.shipping_service || ''}`
+                                    : 'Belum dihitung' }}
+                            </p>
+                            <p v-if="selectedPayment.order?.shipping_cost" class="text-xs text-gray-500">
+                                Ongkir: Rp {{ selectedPayment.order.shipping_cost?.toLocaleString('id-ID') }}
+                                <span v-if="selectedPayment.order?.shipping_etd">• ETD {{ selectedPayment.order.shipping_etd }} hari</span>
+                            </p>
+                        </div>
+                        <div>
                             <p class="text-sm text-gray-600">Status</p>
                             <span
                                 class="px-3 py-1 rounded-full text-xs font-semibold inline-block"

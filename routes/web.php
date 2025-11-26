@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Checkout & Order - WAJIB VERIFIKASI EMAIL
     Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
+    Route::post('/checkout/{id_produk}/address', [CheckoutController::class, 'saveAddress'])->name('checkout.address.save');
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 
     // Order & Payment - WAJIB VERIFIKASI EMAIL

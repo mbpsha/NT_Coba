@@ -26,7 +26,7 @@ class PaymentController extends Controller
     // Admin methods
     public function indexAdmin()
     {
-        $payments = Payment::with(['order.user', 'order.orderDetails.product'])
+        $payments = Payment::with(['order.user', 'order.orderDetails.product', 'order.address'])
             ->latest()
             ->paginate(10);
 
@@ -80,7 +80,7 @@ class PaymentController extends Controller
      */
     public function getPaymentStatus($id)
     {
-        $payment = Payment::findOrFail($id);
+        $payment = Payment::with('order')->findOrFail($id);
 
         return response()->json([
             'id_payment' => $payment->id_payment,
@@ -89,7 +89,13 @@ class PaymentController extends Controller
             'metode_pembayaran' => $payment->metode_pembayaran,
             'bukti_transfer' => $payment->bukti_transfer ? asset('storage/' . $payment->bukti_transfer) : null,
             'created_at' => $payment->created_at,
-            'updated_at' => $payment->updated_at
+            'updated_at' => $payment->updated_at,
+            'shipping' => $payment->order ? [
+                'cost' => $payment->order->shipping_cost,
+                'courier' => $payment->order->shipping_courier,
+                'service' => $payment->order->shipping_service,
+                'etd' => $payment->order->shipping_etd,
+            ] : null,
         ]);
     }
 

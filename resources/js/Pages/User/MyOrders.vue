@@ -156,6 +156,15 @@ const paymentStatusText = (status) => {
                   <p>{{ order.alamat.nama_penerima }} ({{ order.alamat.no_telp }})</p>
                   <p class="line-clamp-2">{{ order.alamat.alamat_lengkap }}, {{ order.alamat.kota }}, {{ order.alamat.provinsi }} {{ order.alamat.kode_pos }}</p>
                 </div>
+                <div v-if="order.shipping" class="pt-2 mt-2 text-xs text-gray-600 border-t">
+                  <p class="font-semibold">Detail Pengiriman</p>
+                  <p>
+                    {{ [order.shipping.courier, order.shipping.service].filter(Boolean).join(' ') || 'Kurir belum ditentukan' }}
+                    <span v-if="order.shipping.etd">• ETD {{ order.shipping.etd }} hari</span>
+                  </p>
+                  <p>Ongkir: <span class="font-semibold">{{ fmt(order.shipping.cost || 0) }}</span></p>
+                  <p v-if="order.shipping.is_estimated" class="text-[11px] text-orange-600">Estimasi ongkir otomatis</p>
+                </div>
               </div>
 
               <!-- Total Harga -->

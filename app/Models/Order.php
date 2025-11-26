@@ -16,10 +16,22 @@ class Order extends Model
         'status',
         'total_harga',
         'id_alamat',
+        'shipping_cost',
+        'admin_fee',
+        'shipping_weight',
+        'shipping_destination_city_id',
+        'shipping_courier',
+        'shipping_service',
+        'shipping_etd',
+        'shipping_is_estimated',
     ];
 
     protected $casts = [
         'total_harga' => 'decimal:2',
+        'shipping_cost' => 'decimal:2',
+        'admin_fee' => 'decimal:2',
+        'shipping_weight' => 'integer',
+        'shipping_is_estimated' => 'boolean',
     ];
 
     // Relations

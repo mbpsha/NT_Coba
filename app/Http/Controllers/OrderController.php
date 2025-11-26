@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Address;
 use App\Http\Requests\OrderRequest;
+use App\Services\ShippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +13,16 @@ use Inertia\Inertia;
 
 class OrderController extends Controller
 {
+    protected ShippingService $shippingService;
+    protected int $adminFee;
+    protected int $defaultItemWeight;
+
+    public function __construct(ShippingService $shippingService)
+    {
+        $this->shippingService   = $shippingService;
+        $this->adminFee          = (int) config('services.rajaongkir.admin_fee', 5000);
+        $this->defaultItemWeight = (int) config('services.rajaongkir.default_item_weight', 1000);
+    }
     // Public API methods
     public function index()
     {
@@ -89,6 +101,15 @@ class OrderController extends Controller
                     'tanggal' => $order->created_at->format('d M Y H:i'),
                     'status' => $order->status,
                     'total_harga' => $order->total_harga,
+                    'admin_fee' => $order->admin_fee,
+                    'shipping' => [
+                        'cost' => $order->shipping_cost,
+                        'courier' => $order->shipping_courier,
+                        'service' => $order->shipping_service,
+                        'etd' => $order->shipping_etd,
+                        'weight' => $order->shipping_weight,
+                        'is_estimated' => $order->shipping_is_estimated,
+                    ],
                     'products' => $order->orderDetails->map(function ($detail) {
                         return [
                             'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
@@ -141,19 +162,17 @@ class OrderController extends Controller
             $product = \App\Models\Product::findOrFail($id_produk);
             $qty = $validated['qty'];
             $hargaProduk = (int) $product->harga;
-            $biayaAdmin = 5000;
-            $biayaOngkir = 20000;
-            $total = ($hargaProduk * $qty) + $biayaAdmin + $biayaOngkir;
+            $subtotal = $hargaProduk * $qty;
 
-            Log::info('Product found and total calculated', ['product_id' => $product->id_produk, 'total' => $total]);
+            Log::info('Product found', ['product_id' => $product->id_produk, 'qty' => $qty]);
 
             // Get user's default address
-            $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)
+            $defaultAddress = Address::where('id_user', $user->id_user)
                 ->where('is_default', true)
                 ->first();
 
             if (!$defaultAddress) {
-                $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)->first();
+                $defaultAddress = Address::where('id_user', $user->id_user)->first();
             }
 
             Log::info('Address check', ['has_address' => !!$defaultAddress]);
@@ -162,7 +181,7 @@ class OrderController extends Controller
             if (!$defaultAddress && !empty($user->alamat)) {
                 Log::info('Creating address from user.alamat', ['alamat' => $user->alamat]);
 
-                $defaultAddress = \App\Models\Address::create([
+                $defaultAddress = Address::create([
                     'id_user' => $user->id_user,
                     'label' => 'Rumah',
                     'nama_penerima' => $user->nama ?? $user->username,
@@ -181,6 +200,19 @@ class OrderController extends Controller
                 Log::warning('No address found and user.alamat is empty', ['user_id' => $user->id_user]);
                 return back()->withErrors(['error' => 'Alamat belum dilengkapi. Silakan lengkapi alamat di halaman profil terlebih dahulu.']);
             }
+
+            $shippingQuote = $this->shippingService->quote($defaultAddress, max(1, $qty) * $this->defaultItemWeight);
+            $biayaAdmin    = $this->adminFee;
+            $biayaOngkir   = $shippingQuote['cost'];
+            $total         = $subtotal + $biayaAdmin + $biayaOngkir;
+
+            Log::info('Shipping quote prepared', [
+                'address_id' => $defaultAddress->id_alamat,
+                'courier' => $shippingQuote['courier'],
+                'cost' => $biayaOngkir,
+                'admin_fee' => $biayaAdmin,
+                'total' => $total,
+            ]);
         } catch (\Exception $e) {
             Log::error('Error in createFromCheckout before transaction', [
                 'message' => $e->getMessage(),
@@ -199,6 +231,14 @@ class OrderController extends Controller
                 'id_user' => $user->id_user,
                 'id_alamat' => $defaultAddress->id_alamat,
                 'total_harga' => $total,
+                'shipping_cost' => $biayaOngkir,
+                'admin_fee' => $biayaAdmin,
+                'shipping_weight' => $shippingQuote['weight'],
+                'shipping_destination_city_id' => $shippingQuote['destination_city_id'],
+                'shipping_courier' => $shippingQuote['courier'],
+                'shipping_service' => $shippingQuote['service'],
+                'shipping_etd' => $shippingQuote['etd'],
+                'shipping_is_estimated' => $shippingQuote['is_estimated'],
                 'status' => 'pending' // Status pending, menunggu konfirmasi pembayaran
             ]);
 

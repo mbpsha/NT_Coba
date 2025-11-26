@@ -16,6 +16,20 @@ const props = defineProps({
 
 const page = usePage()
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+const formatWeight = (weight) => {
+  if (!weight) return ''
+  const kg = weight / 1000
+  return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(kg)
+}
+const shippingQuoteText = computed(() => {
+  const quote = props.shipping?.quote
+  if (!quote) return 'Estimasi ongkir sementara'
+  const courier = quote.courier ? `${quote.courier}${quote.service ? ' ' + quote.service : ''}` : null
+  const etd = quote.etd ? `ETD ${quote.etd} hari` : null
+  const suffix = quote.is_estimated ? ' (estimasi)' : ''
+  const base = [courier, etd].filter(Boolean)
+  return (base.length ? base.join(' • ') : 'Estimasi ongkir') + suffix
+})
 
 // Notification Pop-up State
 const showNotification = ref(false)
@@ -201,6 +215,13 @@ function submitPayment() {
                   <p class="text-[11px] text-gray-500 mt-1">
                     Telp: {{ shipping.phone || '-' }}
                   </p>
+                  <div class="pt-3 mt-3 text-xs text-gray-600 border-t border-green-100">
+                    <p class="font-semibold text-gray-700">Info Pengiriman</p>
+                    <p>{{ shippingQuoteText }}</p>
+                    <p v-if="shipping.quote && shipping.quote.weight" class="text-[11px] text-gray-500">
+                      Berat dihitung: {{ formatWeight(shipping.quote.weight) }} kg
+                    </p>
+                  </div>
                 </div>
                 <button class="text-xs px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
                         @click="openAddressForm">
@@ -214,6 +235,11 @@ function submitPayment() {
               <div class="flex justify-between"><span>Harga Produk</span><span>{{ fmt(product.harga * qty) }}</span></div>
               <div class="flex justify-between"><span>Biaya Admin</span><span>{{ fmt(summary.admin) }}</span></div>
               <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summary.ongkir) }}</span></div>
+              <p v-if="summary.courier || summary.service || summary.etd" class="mt-1 text-[11px] text-right text-gray-500">
+                {{ [summary.courier, summary.service].filter(Boolean).join(' ') }}
+                <span v-if="summary.etd">• ETD {{ summary.etd }} hari</span>
+                <span v-if="summary.is_shipping_estimated" class="text-orange-600"> (estimasi)</span>
+              </p>
               <div class="my-2 border-t"></div>
               <div class="flex justify-between font-semibold"><span>Total Harga</span><span>{{ fmt(summary.total) }}</span></div>
             </div>

@@ -18,7 +18,11 @@ return new class extends Migration
             $table->string('nama_penerima');
             $table->string('no_telp_penerima');
             $table->text('alamat_lengkap');
-            $table->string('kota');
+            $table->string('nama_jalan')->nullable();
+            $table->string('no_rumah')->nullable();
+            $table->string('kelurahan_desa')->nullable();
+            $table->string('kecamatan');
+            $table->string('kabupaten');
             $table->string('provinsi');
             $table->string('kode_pos', 10);
             $table->boolean('is_default')->default(false);

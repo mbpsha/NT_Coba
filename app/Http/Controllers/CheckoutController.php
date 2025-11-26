@@ -3,18 +3,40 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
+use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Payment;
+use App\Services\ShippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
+    protected ShippingService $shippingService;
+    protected int $adminFee;
+    protected int $defaultItemWeight;
+
+    public function __construct(ShippingService $shippingService)
+    {
+        $this->shippingService   = $shippingService;
+        $this->adminFee          = (int) config('rajaongkir.admin_fee', 5000);
+        $this->defaultItemWeight = (int) config('rajaongkir.default_item_weight', 1000);
+    }
+
+    protected function buildShippingQuote(?Address $address, int $itemCount): array
+    {
+        $weight = max(1, $itemCount) * max(1, $this->defaultItemWeight);
+        $quote  = $this->shippingService->quote($address, $weight);
+        $quote['weight'] = $weight;
+
+        return $quote;
+    }
+
     public function processCheckout(Request $request)
     {
         $request->validate([
@@ -26,63 +48,67 @@ class CheckoutController extends Controller
         try {
             DB::beginTransaction();
 
-            // Ambil keranjang user
-            $cart = Cart::where('id_user', $request->id_user)->first();
+            $cart = Cart::where('id_user', $request->id_user)
+                ->with('cartDetails.product')
+                ->first();
             if (!$cart) {
                 return response()->json(['error' => 'Keranjang tidak ditemukan'], 404);
             }
 
-            // Ambil item keranjang
-            $cartItems = CartDetail::where('id_keranjang', $cart->id_keranjang)
-                                ->with('product')
-                                ->get();
-
+            $cartItems = $cart->cartDetails;
             if ($cartItems->isEmpty()) {
                 return response()->json(['error' => 'Keranjang kosong'], 400);
             }
 
-            // Validasi stok dan hitung total
-            $totalHarga = 0;
+            $subtotal = 0;
+            $totalItems = 0;
             foreach ($cartItems as $item) {
                 if ($item->product->stok < $item->jumlah) {
                     return response()->json([
                         'error' => "Stok {$item->product->nama} tidak mencukupi"
                     ], 400);
                 }
-                $totalHarga += $item->jumlah * $item->harga_satuan;
+                $subtotal   += $item->jumlah * $item->harga_satuan;
+                $totalItems += $item->jumlah;
             }
 
-            // Buat order
+            $address       = Address::findOrFail($request->id_alamat);
+            $shippingQuote = $this->buildShippingQuote($address, $totalItems);
+            $grandTotal    = $subtotal + $this->adminFee + $shippingQuote['cost'];
+
             $order = Order::create([
                 'id_user' => $request->id_user,
                 'status' => 'pending',
-                'total_harga' => $totalHarga,
-                'id_alamat' => $request->id_alamat
+                'total_harga' => $grandTotal,
+                'id_alamat' => $address->id_alamat,
+                'shipping_cost' => $shippingQuote['cost'],
+                'admin_fee' => $this->adminFee,
+                'shipping_weight' => $shippingQuote['weight'],
+                'shipping_destination_city_id' => $shippingQuote['destination_city_id'],
+                'shipping_courier' => $shippingQuote['courier'],
+                'shipping_service' => $shippingQuote['service'],
+                'shipping_etd' => $shippingQuote['etd'],
+                'shipping_is_estimated' => $shippingQuote['is_estimated'],
             ]);
 
-            // Buat order detail dan kurangi stok
             foreach ($cartItems as $item) {
                 OrderDetail::create([
-                    'id_pemesanan' => $order->id_pemesanan,
+                    'id_order' => $order->id_order,
                     'id_produk' => $item->id_produk,
                     'jumlah' => $item->jumlah,
-                    'harga_satuan' => $item->harga_satuan,
-                    'subtotal' => $item->jumlah * $item->harga_satuan
+                    'harga' => $item->harga_satuan,
                 ]);
 
-                // Kurangi stok produk
                 $item->product->decrement('stok', $item->jumlah);
             }
 
-            // Buat payment record
             $payment = Payment::create([
-                'id_pemesanan' => $order->id_pemesanan,
+                'id_order' => $order->id_order,
                 'metode_pembayaran' => $request->metode_pembayaran,
-                'jumlah' => $totalHarga,
-                'status_pembayaran' => 'pending'
+                'jumlah' => $grandTotal,
+                'status' => 'pending'
             ]);
 
-            // Hapus item dari keranjang
             CartDetail::where('id_keranjang', $cart->id_keranjang)->delete();
 
             DB::commit();
@@ -131,21 +157,21 @@ class CheckoutController extends Controller
             : asset('/assets/dashboard/profil.png');
 
         $hargaProduk = (int) $product->harga;
-        $biayaAdmin  = 5000;
-        $biayaOngkir = 20000;
         $subtotal    = $hargaProduk * $qty;
-        $total       = $subtotal + $biayaAdmin + $biayaOngkir;
 
-        // Cek apakah user punya alamat default di table addresses
-        $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)
+        $defaultAddress = Address::where('id_user', $user->id_user)
             ->where('is_default', true)
             ->first();
 
-        // Kalau ga ada, cari alamat pertama
+        // Cek apakah user punya alamat default di table addresses
         if (!$defaultAddress) {
-            $defaultAddress = \App\Models\Address::where('id_user', $user->id_user)
-                ->first();
+            $defaultAddress = Address::where('id_user', $user->id_user)->first();
         }
+
+        $shippingQuote = $this->buildShippingQuote($defaultAddress, $qty);
+        $biayaAdmin    = $this->adminFee;
+        $biayaOngkir   = $shippingQuote['cost'];
+        $total         = $subtotal + $biayaAdmin + $biayaOngkir;
 
         // Ambil order_id dari session kalau ada (setelah create order)
         $orderId = $request->session()->get('_order_id');
@@ -167,12 +193,13 @@ class CheckoutController extends Controller
                     ? $defaultAddress->nama_penerima
                     : ($user->nama ?? $user->username ?? ''),
                 'text' => $defaultAddress
-                    ? "{$defaultAddress->alamat_lengkap}\n{$defaultAddress->kota}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
+                    ? $defaultAddress->alamat_lengkap
                     : ($user->alamat ?? 'Belum ada alamat'),
                 'phone' => $defaultAddress
                     ? $defaultAddress->no_telp_penerima
                     : ($user->no_telp ?? ''),
                 'is_temp' => !$defaultAddress, // true jika pakai alamat sementara dari user.alamat
+                'quote' => $shippingQuote,
             ],
             'product' => [
                 'id_produk'   => $product->id_produk,
@@ -187,6 +214,11 @@ class CheckoutController extends Controller
                 'ongkir'   => $biayaOngkir,
                 'subtotal' => $subtotal,
                 'total'    => $total,
+                'weight'   => $shippingQuote['weight'],
+                'courier'  => $shippingQuote['courier'],
+                'service'  => $shippingQuote['service'],
+                'etd'      => $shippingQuote['etd'],
+                'is_shipping_estimated' => $shippingQuote['is_estimated'],
             ],
         ]);
     }
@@ -195,12 +227,138 @@ class CheckoutController extends Controller
     {
         $qty = max(1, (int) $request->query('qty', 1));
         $product = Product::findOrFail($id_produk);
+        $user    = Auth::user();
+
+        $prefill = [
+            'nama'   => $user->nama ?? $user->username ?? '',
+            'phone'  => $user->no_telp ?? '',
+            'prov_kab' => '',
+            'street' => '',
+            'detail' => '',
+        ];
+
+        $defaultAddress = Address::where('id_user', $user->id_user)
+            ->where('is_default', true)
+            ->first();
+
+        if ($defaultAddress) {
+            $prefill['nama']    = $defaultAddress->nama_penerima;
+            $prefill['phone']   = $defaultAddress->no_telp_penerima;
+            
+            // Format: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
+            $parts = [$defaultAddress->provinsi, $defaultAddress->kabupaten];
+            if ($defaultAddress->kecamatan) $parts[] = $defaultAddress->kecamatan;
+            if ($defaultAddress->kelurahan_desa) $parts[] = $defaultAddress->kelurahan_desa;
+            $parts[] = $defaultAddress->kode_pos;
+            
+            $prefill['prov_kab'] = implode(', ', $parts);
+            
+            // Format street: Nama Jalan, No Rumah (bukan alamat_lengkap!)
+            $streetParts = [];
+            if ($defaultAddress->nama_jalan) $streetParts[] = $defaultAddress->nama_jalan;
+            if ($defaultAddress->no_rumah) $streetParts[] = $defaultAddress->no_rumah;
+            $prefill['street'] = implode(', ', $streetParts);
+        }
 
         return Inertia::render('User/CheckoutAddress', [
             'product' => $product,
             'qty' => $qty,
-            'user' => Auth::user(),
+            'id_produk' => (int) $id_produk,
+            'prefill' => $prefill,
         ]);
+    }
+
+    public function saveAddress(Request $request, $id_produk)
+    {
+        $qty  = max(1, (int) $request->input('qty', 1));
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'prov_kab' => 'required|string|max:255',
+            'street' => 'required|string|max:255',
+            'detail' => 'nullable|string|max:255',
+            'qty' => 'nullable|integer|min:1',
+        ]);
+
+        // Parse: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
+        $parts = array_values(array_filter(array_map('trim', explode(',', $validated['prov_kab']))));
+        $provinsi      = $parts[0] ?? 'Tidak diketahui';
+        $kabupaten     = $parts[1] ?? 'Tidak diketahui';
+        $kecamatan     = $parts[2] ?? null;
+        $kelurahanDesa = $parts[3] ?? null;
+        $kodePos       = $parts[4] ?? '00000';
+
+        // Parse street: Nama Jalan, No/Gedung, Detail lainnya (dipisah koma)
+        $streetParts = array_values(array_filter(array_map('trim', explode(',', $validated['street']))));
+        $namaJalan = $streetParts[0] ?? null;
+        $noRumah   = $streetParts[1] ?? null;
+        $detailLain = array_slice($streetParts, 2); // sisa nya jadi detail
+        
+        // Format alamat lengkap yang rapi (Jl, No, Detail, Kel., Kec., Kab., Prov.)
+        $alamatParts = [];
+        
+        // Nama Jalan
+        if ($namaJalan) {
+            $alamatParts[] = $namaJalan;
+        }
+        
+        // No Rumah/Gedung
+        if ($noRumah) {
+            $alamatParts[] = $noRumah;
+        }
+        
+        // Detail lainnya (RT/RW, Blok, dll)
+        if (!empty($detailLain)) {
+            $alamatParts[] = implode(', ', $detailLain);
+        }
+        
+        // Detail tambahan dari field terpisah
+        if (!empty($validated['detail'])) {
+            $alamatParts[] = $validated['detail'];
+        }
+        
+        // Kelurahan/Desa
+        if ($kelurahanDesa) {
+            $alamatParts[] = "Kel. {$kelurahanDesa}";
+        }
+        
+        // Kecamatan
+        if ($kecamatan) {
+            $alamatParts[] = "Kec. {$kecamatan}";
+        }
+        
+        // Kabupaten
+        $alamatParts[] = $kabupaten;
+        
+        // Provinsi dan Kode Pos
+        $alamatParts[] = "{$provinsi} {$kodePos}";
+        
+        $alamatLengkap = implode(', ', $alamatParts);
+
+        // Jadikan alamat baru sebagai default (alamat lain otomatis nonaktif)
+        Address::where('id_user', $user->id_user)->update(['is_default' => false]);
+
+        Address::create([
+            'id_user' => $user->id_user,
+            'label' => 'Alamat Checkout',
+            'nama_penerima' => $validated['nama'],
+            'no_telp_penerima' => $validated['phone'],
+            'nama_jalan' => $namaJalan,
+            'no_rumah' => $noRumah,
+            'alamat_lengkap' => $alamatLengkap,
+            'kelurahan_desa' => $kelurahanDesa,
+            'kecamatan' => $kecamatan,
+            'kabupaten' => $kabupaten,
+            'provinsi' => $provinsi,
+            'kode_pos' => $kodePos ?: '00000',
+            'is_default' => true,
+        ]);
+
+        return redirect()
+            ->route('checkout.show', ['id_produk' => $id_produk, 'qty' => $qty])
+            ->with('message', 'Alamat berhasil disimpan! Silakan lanjutkan checkout.');
     }
 
     /**
