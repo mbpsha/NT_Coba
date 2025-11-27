@@ -51,7 +51,7 @@ function backToCheckout() {
           </div>
 
           <div>
-            <label class="block mb-1 text-sm">Provinsi, Kota, Kecamatan, Kode pos</label>
+            <label class="block mb-1 text-sm">Provinsi, Kota, Kecamatan, Kelurahan, Kode pos</label>
             <input v-model="form.prov_kab" class="w-full px-3 py-2 bg-white border rounded-md" />
             <p v-if="form.errors.prov_kab" class="mt-1 text-xs text-red-600">{{ form.errors.prov_kab }}</p>
           </div>

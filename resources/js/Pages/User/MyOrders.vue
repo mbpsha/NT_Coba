@@ -80,7 +80,7 @@ const paymentStatusText = (status) => {
       <!-- Orders List -->
       <div v-else class="space-y-4">
         <div v-for="order in orders" :key="order.id_order"
-             class="overflow-hidden bg-white border rounded-lg shadow-sm">
+            class="overflow-hidden bg-white border rounded-lg shadow-sm">
 
           <!-- Order Header -->
           <div class="flex items-center justify-between px-5 py-3 border-b bg-gray-50">
@@ -107,11 +107,11 @@ const paymentStatusText = (status) => {
             <!-- Products -->
             <div class="space-y-3">
               <div v-for="(product, idx) in order.products" :key="idx"
-                   class="flex gap-4 pb-3 border-b last:border-b-0">
+                  class="flex gap-4 pb-3 border-b last:border-b-0">
                 <img :src="product.gambar"
-                     @error="$event.target.src='/assets/dashboard/profil.png'"
-                     class="object-contain w-20 h-20 border rounded-md"
-                     alt="produk" />
+                    @error="$event.target.src='/assets/dashboard/profil.png'"
+                    class="object-contain w-20 h-20 border rounded-md"
+                    alt="produk" />
                 <div class="flex-1">
                   <p class="font-semibold line-clamp-2">{{ product.nama }}</p>
                   <div class="flex items-center gap-2 mt-1">
@@ -145,7 +145,7 @@ const paymentStatusText = (status) => {
                 <!-- Bukti Transfer -->
                 <div v-if="order.bukti_transfer" class="mt-2">
                   <a :href="order.bukti_transfer" target="_blank"
-                     class="text-xs text-blue-600 underline hover:text-blue-800">
+                    class="text-xs text-blue-600 underline hover:text-blue-800">
                     Lihat Bukti Transfer
                   </a>
                 </div>

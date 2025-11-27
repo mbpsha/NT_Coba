@@ -26,7 +26,6 @@ class ProductRequest extends FormRequest
             'deskripsi'   => 'nullable|string',
             'harga'       => 'required|numeric|min:0',
             'stok'        => 'required|integer|min:0',
-            'kategori'    => 'nullable|string|max:100',
             'gambar'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ];
     }

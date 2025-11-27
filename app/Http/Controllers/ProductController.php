@@ -39,7 +39,6 @@ class ProductController extends Controller
                 'deskripsi'   => $product->deskripsi,
                 'harga'       => (int) $product->harga,
                 'stok'        => (int) $product->stok,
-                'kategori'    => $product->kategori,
                 'gambar'      => $product->gambar,
             ],
             'reviews' => $reviews,
@@ -81,7 +80,6 @@ class ProductController extends Controller
             'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'kategori' => 'required|string|max:255',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
         ]);
 
@@ -113,7 +111,6 @@ class ProductController extends Controller
             'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'kategori' => 'required|string|max:255',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
         ]);
 

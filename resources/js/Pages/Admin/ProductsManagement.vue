@@ -1,73 +1,102 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
 import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
 
 const props = defineProps({
-    products: Object
+  products: Object,
+  product: { type: Object, default: null } // jika edit single lewat controller
 })
 
 const showModal = ref(false)
 const editMode = ref(false)
 const selectedProduct = ref(null)
+const imagePreview = ref(null)
 
 const form = useForm({
+    id: null,
     nama_produk: '',
     deskripsi: '',
     harga: '',
     stok: '',
-    kategori: '',
-    gambar: null
+    gambar: null,
+    gambar_existing: ''
 })
 
+// WAJIB terisi (sesuaikan)
+const requiredFields = ['nama_produk','deskripsi','harga','stok']
+const isFormComplete = computed(() =>
+  requiredFields.every(f => {
+    const v = form[f]
+    return v !== null && v !== '' && !(typeof v === 'number' && isNaN(v))
+  })
+)
+
 function openCreateModal() {
-    editMode.value = false
-    form.reset()
-    showModal.value = true
+  editMode.value = false
+  selectedProduct.value = null
+  form.reset()
+  imagePreview.value = null
+  showModal.value = true
 }
 
 function openEditModal(product) {
-    editMode.value = true
-    selectedProduct.value = product
-    form.nama_produk = product.nama_produk
-    form.deskripsi = product.deskripsi
-    form.harga = product.harga
-    form.stok = product.stok
-    form.kategori = product.kategori
-    showModal.value = true
+  editMode.value = true
+  selectedProduct.value = product
+
+  form.id              = product.id_produk
+  form.nama_produk     = product.nama_produk
+  form.deskripsi       = product.deskripsi
+  form.harga           = product.harga
+  form.stok            = product.stok
+  form.gambar          = null
+  form.gambar_existing = product.gambar || ''
+
+  imagePreview.value   = product.gambar || null
+
+  showModal.value = true
 }
 
 function closeModal() {
-    showModal.value = false
-    form.reset()
+  showModal.value = false
 }
 
-function handleFileUpload(event) {
-    form.gambar = event.target.files[0]
+function handleFileUpload(e) {
+  const file = e.target.files?.[0] || null
+  form.gambar = file
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (ev) => { imagePreview.value = ev.target.result }
+    reader.readAsDataURL(file)
+  } else {
+    // kembali ke gambar lama jika batal
+    imagePreview.value = form.gambar_existing || null
+  }
 }
 
 function submitForm() {
-    if (editMode.value) {
-        form.transform((data) => ({...data, _method: 'PUT'}))
-        form.post(route('admin.products.update', selectedProduct.value.id_produk), {
-            onSuccess: () => closeModal(),
-            forceFormData: true
-        })
-    } else {
-        form.post(route('admin.products.store'), {
-            onSuccess: () => closeModal(),
-            forceFormData: true
-        })
+  if (!isFormComplete.value) return
+
+  const url = editMode.value
+    ? route('admin.products.update', selectedProduct.value.id_produk)
+    : route('admin.products.store')
+
+  const method = editMode.value ? form.put : form.post
+
+  method(url, {
+    forceFormData: true,
+    onSuccess: () => {
+      showModal.value = false
     }
+  })
 }
 
 function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        form.delete(route('admin.products.destroy', id), {
-            onSuccess: () => form.reset()
-        })
-    }
+  if (!confirm('Hapus produk ini?')) return
+  form.delete(route('admin.products.destroy', { id: id }), {
+    onSuccess: () => {}
+  })
 }
 </script>
 
@@ -102,10 +131,8 @@ function deleteProduct(id) {
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Image</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Name</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Category</th>
                                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Stock</th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
+                                <th class="px-6 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -116,95 +143,82 @@ function deleteProduct(id) {
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ product.nama_produk }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">Rp {{ product.harga?.toLocaleString('id-ID') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ product.kategori }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ product.stok }} unit</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                                        Active
-                                    </span>
-                                </td>
+                                <!-- Actions -->
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                    <button @click="openEditModal(product)" class="mr-3 text-green-600 hover:text-green-900">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                    </button>
-                                    <button @click="deleteProduct(product.id_produk)" class="text-red-600 hover:text-red-900">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                    </button>
+                                    <div class="flex items-center justify-center gap-4">
+                                        <button @click="openEditModal(product)" class="text-green-600 hover:text-green-900" aria-label="Edit">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteProduct(product.id_produk)" class="text-red-600 hover:text-red-900" aria-label="Delete">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div class="flex items-center justify-between px-6 py-4 border-t">
-                    <div class="text-sm text-gray-700">
-                        Showing {{ products.from }} to {{ products.to }} of {{ products.total }} entries
-                    </div>
-                    <div class="flex gap-2">
-                        <button
-                            v-for="link in products.links"
-                            :key="link.label"
-                            @click="$inertia.visit(link.url)"
-                            :disabled="!link.url"
-                            class="px-3 py-1 rounded"
-                            :class="link.active ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
-                            v-html="link.label"
-                        ></button>
-                    </div>
-                </div>
             </div>
         </main>
 
         <!-- Modal -->
-        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <h2 class="mb-4 text-2xl font-bold text-gray-800">{{ editMode ? 'Edit Product' : 'Add New Product' }}</h2>
+        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div class="w-full max-w-lg p-6 bg-white rounded-xl shadow">
+              <h2 class="mb-4 text-lg font-semibold">
+                {{ editMode ? 'Edit Produk' : 'Tambah Produk' }}
+              </h2>
 
-                <form @submit.prevent="submitForm" class="space-y-4">
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Product Name</label>
-                        <input v-model="form.nama_produk" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
+              <form @submit.prevent="submitForm" class="space-y-4">
+                <div>
+                  <label class="text-xs font-medium">Nama Produk</label>
+                  <input v-model="form.nama_produk" type="text" class="w-full mt-1 border rounded px-3 py-2 text-sm" required>
+                </div>
+                <div>
+                  <label class="text-xs font-medium">Deskripsi</label>
+                    <textarea v-model="form.deskripsi" class="w-full mt-1 border rounded px-3 py-2 text-sm" rows="3" required />
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="text-xs font-medium">Harga</label>
+                    <input v-model="form.harga" type="number" min="0" class="w-full mt-1 border rounded px-3 py-2 text-sm" required>
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">Stok</label>
+                    <input v-model="form.stok" type="number" min="0" class="w-full mt-1 border rounded px-3 py-2 text-sm" required>
+                  </div>
+                </div>
 
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Description</label>
-                        <textarea v-model="form.deskripsi" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
-                    </div>
+                <div>
+                  <label class="text-xs font-medium">Gambar Produk</label>
+                  <input type="file" accept="image/*" @change="handleFileUpload"
+                         class="w-full mt-1 border rounded px-3 py-2 text-sm">
+                  <input type="hidden" :value="form.gambar_existing" name="gambar_existing">
+                  <div v-if="imagePreview" class="mt-3">
+                    <img :src="imagePreview" class="object-cover w-40 h-40 border rounded" alt="Preview">
+                    <p v-if="!form.gambar" class="mt-1 text-[11px] text-gray-500">
+                    </p>
+                  </div>
+                </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Price (Rp)</label>
-                            <input v-model="form.harga" type="number" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                        </div>
-
-                        <div>
-                            <label class="block mb-1 text-sm font-medium text-gray-700">Stock</label>
-                            <input v-model="form.stok" type="number" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Category</label>
-                        <input v-model="form.kategori" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
-
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Product Image</label>
-                        <input name="gambar" @change="handleFileUpload" type="file" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <p class="mt-1 text-xs text-gray-500">{{ editMode ? 'Leave blank to keep current image' : 'Upload product image' }}</p>
-                    </div>
-
-                    <div class="flex gap-3 mt-6">
-                        <button type="submit" :disabled="form.processing" class="flex-1 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">
-                            {{ form.processing ? 'Saving...' : 'Save' }}
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="closeModal"
+                                class="px-4 py-2 text-sm rounded border bg-white hover:bg-gray-50">
+                            Batal
                         </button>
-                        <button type="button" @click="closeModal" class="flex-1 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400">
-                            Cancel
+
+                        <button type="submit"
+                                :disabled="form.processing || !isFormComplete"
+                                class="px-5 py-2 text-sm font-medium text-white rounded
+                                        bg-green-600 hover:bg-green-700
+                                        disabled:opacity-50 disabled:cursor-not-allowed">
+                            {{ editMode ? 'Simpan Perubahan' : 'Simpan' }}
                         </button>
                     </div>
                 </form>

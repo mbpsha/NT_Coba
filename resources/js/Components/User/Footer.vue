@@ -1,4 +1,3 @@
-
 <script setup>
 import FooterBg from '*/dashboard/footer-logo.png'
 </script>

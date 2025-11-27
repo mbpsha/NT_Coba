@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('nama_jalan')->nullable();
             $table->string('no_rumah')->nullable();
             $table->string('kelurahan_desa')->nullable();
-            $table->string('kecamatan');
+            $table->string('kecamatan')->nullable();
             $table->string('kabupaten');
             $table->string('provinsi');
             $table->string('kode_pos', 10);

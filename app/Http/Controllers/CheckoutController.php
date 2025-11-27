@@ -154,7 +154,7 @@ class CheckoutController extends Controller
         $clean = preg_replace('#^/?(public|storage)/#', '', $clean); // buang prefix "public/" atau "storage/"
         $gambarUrl = $clean
             ? (preg_match('#^https?://#i', $clean) ? $clean : asset('storage/'.$clean))
-            : asset('/assets/dashboard/profil.png');
+            : asset('assets/dashboard/profil.png');
 
         $hargaProduk = (int) $product->harga;
         $subtotal    = $hargaProduk * $qty;
@@ -367,7 +367,7 @@ class CheckoutController extends Controller
     private function getProductImageUrl($gambar)
     {
         if (!$gambar) {
-            return asset('/assets/dashboard/profil.png');
+            return asset('assets/dashboard/profil.png');
         }
 
         // Normalisasi path
