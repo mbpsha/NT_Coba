@@ -44,7 +44,7 @@ class OrderPaymentSeeder extends Seeder
                         'nama_penerima' => $u->nama ?? 'Customer '.$u->id_user,
                         'no_telp_penerima' => '08123456789',
                         'alamat_lengkap' => 'Jl. Contoh No. '.$u->id_user,
-                        'kota' => 'Bandung',
+                        'kabupaten' => 'Bandung',
                         'provinsi' => 'Jawa Barat',
                         'kode_pos' => '40112',
                         'is_default' => true,

@@ -128,7 +128,7 @@ class OrderController extends Controller
                         'nama_penerima' => $order->address->nama_penerima,
                         'no_telp' => $order->address->no_telp_penerima,
                         'alamat_lengkap' => $order->address->alamat_lengkap,
-                        'kota' => $order->address->kota,
+                        'kota' => $order->address->kabupaten,
                         'provinsi' => $order->address->provinsi,
                         'kode_pos' => $order->address->kode_pos,
                     ] : null
@@ -187,7 +187,7 @@ class OrderController extends Controller
                     'nama_penerima' => $user->nama ?? $user->username,
                     'no_telp_penerima' => $user->no_telp ?? '',
                     'alamat_lengkap' => $user->alamat,
-                    'kota' => 'Tidak diketahui',
+                    'kabupaten' => 'Tidak diketahui',
                     'provinsi' => 'Tidak diketahui',
                     'kode_pos' => '00000',
                     'is_default' => true,

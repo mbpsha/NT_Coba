@@ -78,18 +78,21 @@ function handleFileUpload(e) {
 function submitForm() {
   if (!isFormComplete.value) return
 
-  const url = editMode.value
-    ? route('admin.products.update', selectedProduct.value.id_produk)
-    : route('admin.products.store')
-
-  const method = editMode.value ? form.put : form.post
-
-  method(url, {
-    forceFormData: true,
-    onSuccess: () => {
-      showModal.value = false
-    }
-  })
+  if (editMode.value) {
+    form.put(route('admin.products.update', selectedProduct.value.id_produk), {
+      forceFormData: true,
+      onSuccess: () => {
+        showModal.value = false
+      }
+    })
+  } else {
+    form.post(route('admin.products.store'), {
+      forceFormData: true,
+      onSuccess: () => {
+        showModal.value = false
+      }
+    })
+  }
 }
 
 function deleteProduct(id) {

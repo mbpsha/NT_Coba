@@ -154,7 +154,7 @@ class CheckoutController extends Controller
         $clean = preg_replace('#^/?(public|storage)/#', '', $clean); // buang prefix "public/" atau "storage/"
         $gambarUrl = $clean
             ? (preg_match('#^https?://#i', $clean) ? $clean : asset('storage/'.$clean))
-            : asset('assets/dashboard/profil.png');
+            : asset('/assets/dashboard/profil.png');
 
         $hargaProduk = (int) $product->harga;
         $subtotal    = $hargaProduk * $qty;
@@ -185,7 +185,7 @@ class CheckoutController extends Controller
                 'email'    => $user->email ?? '',
                 'no_telp'  => $user->no_telp ?? '',
                 'alamat'   => $defaultAddress
-                    ? "{$defaultAddress->alamat_lengkap}, {$defaultAddress->kota}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
+                    ? "{$defaultAddress->alamat_lengkap}, {$defaultAddress->kabupaten}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
                     : ($user->alamat ?? ''),
             ],
             'shipping' => [
@@ -367,7 +367,7 @@ class CheckoutController extends Controller
     private function getProductImageUrl($gambar)
     {
         if (!$gambar) {
-            return asset('assets/dashboard/profil.png');
+            return asset('/assets/dashboard/profil.png');
         }
 
         // Normalisasi path

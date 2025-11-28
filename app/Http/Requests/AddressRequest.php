@@ -27,7 +27,7 @@ class AddressRequest extends FormRequest
             'nama_penerima' => 'required|string|max:255',
             'no_telp_penerima' => 'required|string|max:20',
             'alamat_lengkap' => 'required|string',
-            'kota' => 'required|string|max:100',
+            'kabupaten' => 'required|string|max:100',
             'provinsi' => 'required|string|max:100',
             'kode_pos' => 'required|string|max:10',
             'is_default' => 'boolean',
