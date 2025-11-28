@@ -106,6 +106,8 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        \Log::info('Product update payload', $request->all());
+
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
             'deskripsi' => 'required|string',

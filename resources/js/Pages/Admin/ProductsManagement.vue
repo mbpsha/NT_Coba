@@ -48,7 +48,9 @@ function openEditModal(product) {
   form.id              = product.id_produk
   form.nama_produk     = product.nama_produk
   form.deskripsi       = product.deskripsi
-  form.harga           = product.harga
+  form.harga           = typeof product.harga === 'number'
+    ? product.harga
+    : normalizeNumber(product.harga)
   form.stok            = product.stok
   form.gambar          = null
   form.gambar_existing = product.gambar || ''
@@ -75,16 +77,61 @@ function handleFileUpload(e) {
   }
 }
 
+function normalizeNumber(value) {
+  if (value === null || value === undefined) return value
+  if (typeof value === 'number') return value
+
+  const raw = String(value).replace(/\s+/g, '')
+  if (raw === '') return value
+
+  let normalized = raw
+
+  if (raw.includes(',')) {
+    // Indonesian style (2.500,00) -> strip thousand dot, swap comma to decimal point
+    normalized = raw.replace(/\./g, '').replace(',', '.')
+  } else if (raw.includes('.')) {
+    // Detect thousand separator using dot when no comma present,
+    // e.g. "2.500" or "1.000.000"
+    const parts = raw.split('.')
+    const lastSegment = parts[parts.length - 1]
+    const looksLikeThousands =
+      lastSegment.length === 3 && parts.slice(0, -1).every(seg => seg.length <= 3)
+
+    if (looksLikeThousands) {
+      normalized = raw.replace(/\./g, '')
+    }
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : value
+}
+
+function prepareNumericFields() {
+  form.harga = normalizeNumber(form.harga)
+  const stokParsed = parseInt(form.stok ?? 0, 10)
+  form.stok = Number.isFinite(stokParsed) ? Math.max(0, stokParsed) : 0
+}
+
 function submitForm() {
   if (!isFormComplete.value) return
 
+  prepareNumericFields()
+
   if (editMode.value) {
-    form.put(route('admin.products.update', selectedProduct.value.id_produk), {
-      forceFormData: true,
-      onSuccess: () => {
-        showModal.value = false
-      }
-    })
+    form
+      .transform(data => ({
+        ...data,
+        _method: 'PUT'
+      }))
+      .post(route('admin.products.update', selectedProduct.value.id_produk), {
+        forceFormData: true,
+        onSuccess: () => {
+          showModal.value = false
+        },
+        onFinish: () => {
+          form.transform(data => data)
+        }
+      })
   } else {
     form.post(route('admin.products.store'), {
       forceFormData: true,
