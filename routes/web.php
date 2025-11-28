@@ -17,6 +17,7 @@ use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Auth\VerificationController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -91,6 +92,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+
+    // Reviews
+    Route::get('/penilaian', [ReviewController::class, 'ratingPage'])->name('reviews.index');
+    Route::post('/penilaian', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
 });
 
 // Logout (tidak perlu email verification)

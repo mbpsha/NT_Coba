@@ -25,7 +25,7 @@ function addToCart(p){
 }
 
 function goToReviews() {
-  router.visit('/penilaian', { preserveScroll: true })
+  router.visit(route('reviews.index'), { preserveScroll: true })
 }
 </script>
 
