@@ -185,7 +185,7 @@ class CheckoutController extends Controller
                 'email'    => $user->email ?? '',
                 'no_telp'  => $user->no_telp ?? '',
                 'alamat'   => $defaultAddress
-                    ? "{$defaultAddress->alamat_lengkap}, {$defaultAddress->kabupaten}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
+                    ? "{$defaultAddress->alamat_lengkap}, {$defaultAddress->kota}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
                     : ($user->alamat ?? ''),
             ],
             'shipping' => [
@@ -244,15 +244,15 @@ class CheckoutController extends Controller
         if ($defaultAddress) {
             $prefill['nama']    = $defaultAddress->nama_penerima;
             $prefill['phone']   = $defaultAddress->no_telp_penerima;
-            
+
             // Format: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
             $parts = [$defaultAddress->provinsi, $defaultAddress->kabupaten];
             if ($defaultAddress->kecamatan) $parts[] = $defaultAddress->kecamatan;
             if ($defaultAddress->kelurahan_desa) $parts[] = $defaultAddress->kelurahan_desa;
             $parts[] = $defaultAddress->kode_pos;
-            
+
             $prefill['prov_kab'] = implode(', ', $parts);
-            
+
             // Format street: Nama Jalan, No Rumah (bukan alamat_lengkap!)
             $streetParts = [];
             if ($defaultAddress->nama_jalan) $streetParts[] = $defaultAddress->nama_jalan;
@@ -295,46 +295,46 @@ class CheckoutController extends Controller
         $namaJalan = $streetParts[0] ?? null;
         $noRumah   = $streetParts[1] ?? null;
         $detailLain = array_slice($streetParts, 2); // sisa nya jadi detail
-        
+
         // Format alamat lengkap yang rapi (Jl, No, Detail, Kel., Kec., Kab., Prov.)
         $alamatParts = [];
-        
+
         // Nama Jalan
         if ($namaJalan) {
             $alamatParts[] = $namaJalan;
         }
-        
+
         // No Rumah/Gedung
         if ($noRumah) {
             $alamatParts[] = $noRumah;
         }
-        
+
         // Detail lainnya (RT/RW, Blok, dll)
         if (!empty($detailLain)) {
             $alamatParts[] = implode(', ', $detailLain);
         }
-        
+
         // Detail tambahan dari field terpisah
         if (!empty($validated['detail'])) {
             $alamatParts[] = $validated['detail'];
         }
-        
+
         // Kelurahan/Desa
         if ($kelurahanDesa) {
             $alamatParts[] = "Kel. {$kelurahanDesa}";
         }
-        
+
         // Kecamatan
         if ($kecamatan) {
             $alamatParts[] = "Kec. {$kecamatan}";
         }
-        
+
         // Kabupaten
         $alamatParts[] = $kabupaten;
-        
+
         // Provinsi dan Kode Pos
         $alamatParts[] = "{$provinsi} {$kodePos}";
-        
+
         $alamatLengkap = implode(', ', $alamatParts);
 
         // Jadikan alamat baru sebagai default (alamat lain otomatis nonaktif)
