@@ -20,7 +20,9 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'recaptchaSiteKey' => config('captcha.sitekey')
+        ]);
     }
 
     public function login(Request $request)
@@ -68,7 +70,8 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'no_telp' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'role' => 'nullable|in:admin,user'
+            'role' => 'nullable|in:admin,user',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         $user = User::create([

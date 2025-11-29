@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import Popup from '@/Components/Popup.vue'
 
 const props = defineProps({
     status: String
@@ -23,6 +24,7 @@ function resendEmail() {
 <template>
     <div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-green-100">
         <Head title="Verifikasi Email" />
+        <Popup />
 
         <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
             <!-- Icon -->

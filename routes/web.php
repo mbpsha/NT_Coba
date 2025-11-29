@@ -74,8 +74,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
 });
 
-// Protected - Require email verification (profil & checkout/order)
-Route::middleware(['auth', 'verified'])->group(function () {
+// Protected - Require email verification (profil & checkout/order) - USER ONLY
+Route::middleware(['auth', 'verified', 'user.only'])->group(function () {
     // Profil - WAJIB VERIFIKASI EMAIL
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

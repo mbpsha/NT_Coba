@@ -1,9 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
 import Logo from '*/dashboard/logo-ngundur.png'
 import Background from '*/login/BackgroundWOverlay.png'
+
+const props = defineProps({
+    recaptchaSiteKey: {
+        type: String,
+        required: true
+    }
+})
 
 const form = useForm({
     nama: '',
@@ -11,16 +18,50 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    'g-recaptcha-response': '',
 })
 
 const showPassword = ref(false)
+const recaptchaLoaded = ref(false)
+
 const togglePassword = () => {
     showPassword.value = !showPassword.value
 }
 
+function loadRecaptcha() {
+    if (window.grecaptcha) {
+        recaptchaLoaded.value = true
+        return
+    }
+    
+    const script = document.createElement('script')
+    script.src = 'https://www.google.com/recaptcha/api.js'
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+        recaptchaLoaded.value = true
+    }
+    document.head.appendChild(script)
+}
+
+onMounted(() => {
+    loadRecaptcha()
+})
+
 function submit() {
+    // Get reCAPTCHA response
+    if (window.grecaptcha) {
+        const response = window.grecaptcha.getResponse()
+        form['g-recaptcha-response'] = response
+    }
+    
     form.post(route('register'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => {
+            form.reset('password', 'password_confirmation')
+            if (window.grecaptcha) {
+                window.grecaptcha.reset()
+            }
+        },
     })
 }
 </script>
@@ -105,6 +146,18 @@ function submit() {
                             </button>
                         </div>
                         <div v-if="form.errors.password" class="text-red-200 text-sm mt-1">{{ form.errors.password }}</div>
+                    </div>
+
+                    <!-- reCAPTCHA -->
+                    <div class="flex justify-center">
+                        <div v-if="recaptchaLoaded" 
+                             class="g-recaptcha" 
+                             :data-sitekey="recaptchaSiteKey">
+                        </div>
+                        <div v-else class="text-white text-sm">Loading reCAPTCHA...</div>
+                    </div>
+                    <div v-if="form.errors['g-recaptcha-response']" class="text-red-200 text-sm text-center">
+                        {{ form.errors['g-recaptcha-response'] }}
                     </div>
 
                     <button :disabled="form.processing" type="submit" class="w-full py-3 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
