@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Models\News;
 use App\Models\User;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\UserMiddleware;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -45,25 +46,36 @@ Route::middleware('auth')->group(function () {
 
 // Halaman publik
 Route::get('/dashboard', function () {
-    $latestNews = News::published()->latest()->take(5)->get(); // kirim untuk carousel
+    if (auth()->check()) {
+        // Jika admin -> redirect ke admin dashboard
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+    }
+    // Jika bukan admin (termasuk guest), tampilkan dashboard user seperti biasa
+    $latestNews = News::published()->latest()->take(5)->get();
+
     return Inertia::render('User/Dashboard', [
         'welcome'     => 'Halo',
         'latestNews'  => $latestNews,
     ]);
 })->name('dashboard');
 
-// Produk - detail publik
-Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
 
-// Berita Dinamis
-Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
-Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
-Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
-Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
+Route::middleware(['auth', 'user'])->group(function () {
+    // Produk - detail publik
+    Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
 
-// Toko
-Route::get('/toko', [TokoController::class, 'index'])->name('toko');
-Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+    // Berita Dinamis
+    Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
+    Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
+    Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
+    Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
+
+    // Toko
+    Route::get('/toko', [TokoController::class, 'index'])->name('toko');
+    Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+});
 
 // Protected - No verification required (browsing, cart, etc)
 Route::middleware('auth')->group(function () {
@@ -75,7 +87,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Protected - Require email verification (profil & checkout/order)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'user'])->group(function () {
     // Profil - WAJIB VERIFIKASI EMAIL
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
