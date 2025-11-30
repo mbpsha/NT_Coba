@@ -94,7 +94,7 @@ function toast(message) {
           class="pb-2 text-sm font-semibold border-b-2"
           :class="activeTab==='history' ? 'text-green-700 border-green-600' : 'text-gray-500 border-transparent'"
           @click="activeTab='history'">
-          Histori pembelian
+          Histori Penilaian
         </button>
       </div>
 

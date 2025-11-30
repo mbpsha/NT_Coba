@@ -189,11 +189,11 @@ function getStatusColor(status) {
                     <h3 class="font-semibold text-lg mb-3 text-gray-800">Proof of Transfer</h3>
                     <div class="border rounded-lg p-4 bg-gray-50">
                         <img
-                            v-if="selectedPayment.bukti_transfer"
-                            :src="selectedPayment.bukti_transfer"
+                            v-if="selectedPayment.bukti_transfer_url"
+                            :src="selectedPayment.bukti_transfer_url"
                             alt="Proof of Transfer"
                             class="w-full max-h-96 object-contain rounded"
-                        >
+                            />
                         <p v-else class="text-gray-500 text-center py-8">No proof of transfer uploaded</p>
                     </div>
                 </div>

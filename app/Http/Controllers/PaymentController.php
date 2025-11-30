@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Order;
 use App\Http\Requests\PaymentRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -29,6 +30,13 @@ class PaymentController extends Controller
         $payments = Payment::with(['order.user', 'order.orderDetails.product', 'order.address'])
             ->latest()
             ->paginate(10);
+
+        $payments->getCollection()->transform(function ($p) {
+            $p->bukti_transfer_url = $p->bukti_transfer
+                ? asset('storage/' . $p->bukti_transfer) // atau Storage::url($p->bukti_transfer)
+                : null;
+            return $p;
+        });
 
         return Inertia::render('Admin/PaymentVerification', [
             'payments' => $payments

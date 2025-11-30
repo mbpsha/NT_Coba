@@ -113,7 +113,7 @@ class OrderController extends Controller
                     'products' => $order->orderDetails->map(function ($detail) {
                         return [
                             'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
-                            'gambar' => $detail->product->gambar_url ?? '/assets/dashboard/profil.png',
+                            'gambar' => $detail->product->gambar ?? '/assets/dashboard/profil.png',
                             'harga' => $detail->harga,
                             'jumlah' => $detail->jumlah,
                             'subtotal' => $detail->harga * $detail->jumlah
@@ -187,8 +187,10 @@ class OrderController extends Controller
                     'nama_penerima' => $user->nama ?? $user->username,
                     'no_telp_penerima' => $user->no_telp ?? '',
                     'alamat_lengkap' => $user->alamat,
-                    'kabupaten' => 'Tidak diketahui',
                     'provinsi' => 'Tidak diketahui',
+                    'kabupaten' => 'Tidak diketahui',
+                    'kecamatan' => 'Tidak diketahui',
+                    'kelurahan' => 'Tidak diketahui',
                     'kode_pos' => '00000',
                     'is_default' => true,
                 ]);
