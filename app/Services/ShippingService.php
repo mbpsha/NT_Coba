@@ -2,63 +2,62 @@
 
 namespace App\Services;
 
-use App\Models\Address;
-use Illuminate\Support\Facades\Log;
-
 class ShippingService
 {
-    public function __construct(
-        protected RajaOngkirService $rajaOngkir
-    ) {
+    protected RajaOngkirService $rajaOngkir;
+
+    public function __construct(RajaOngkirService $rajaOngkir)
+    {
+        $this->rajaOngkir = $rajaOngkir;
     }
 
-    /**
-     * Build shipping quote for a given address and weight (gram).
-     */
-    public function quote(?Address $address, int $weightGram, ?string $courier = null): array
+    public function quote($address, int $weightGram): array
     {
-        $fallbackCost = (int) config('rajaongkir.fallback_cost', 20000);
-
-        $quote = [
-            'cost' => $fallbackCost,
-            'courier' => null,
-            'service' => null,
-            'etd' => null,
-            'weight' => max(1, $weightGram),
-            'destination_city_id' => null,
-            'is_estimated' => true,
-        ];
-
-        if (!$address) {
-            return $quote;
+        // Cek apakah $address adalah objek Address atau array
+        if (is_array($address)) {
+            $cityName = $address['city'] ?? null;
+        } elseif ($address instanceof Address) {
+            $cityName = $address->kabupaten ?? null;  // Atur sesuai field yang ada
+        } else {
+            $cityName = null;
         }
 
-        $cityId = $this->rajaOngkir->resolveCityId($address->kabupaten ?? '', $address->provinsi ?? null);
-        if (!$cityId) {
-            Log::info('Unable to resolve RajaOngkir city id from address', [
-                'kabupaten' => $address->kabupaten,
-                'provinsi' => $address->provinsi,
-            ]);
-            return $quote;
+        $destinationCityId = $this->rajaOngkir->resolveCityId($cityName);
+
+        if (!$destinationCityId) {
+            return [
+                'cost' => 0,
+                'courier' => null,
+                'service' => null,
+                'etd' => null,
+                'weight' => $weightGram,
+                'destination_city_id' => null,
+                'is_estimated' => true,
+            ];
         }
 
-        $quote['destination_city_id'] = $cityId;
+        $costData = $this->rajaOngkir->calculateCost($destinationCityId, $weightGram);
 
-        $cost = $this->rajaOngkir->calculateCost($cityId, max(1, $weightGram), $courier);
-        if (!$cost) {
-            return $quote;
+        if (!$costData) {
+            return [
+                'cost' => 0,
+                'courier' => null,
+                'service' => null,
+                'etd' => null,
+                'weight' => $weightGram,
+                'destination_city_id' => $destinationCityId,
+                'is_estimated' => true,
+            ];
         }
 
         return [
-            'cost' => (int) ($cost['value'] ?? $fallbackCost),
-            'courier' => $cost['courier'] ?? null,
-            'service' => $cost['service'] ?? null,
-            'etd' => $cost['etd'] ?? null,
-            'weight' => max(1, $weightGram),
-            'destination_city_id' => $cityId,
+            'cost' => $costData['value'],
+            'courier' => $costData['courier'],
+            'service' => $costData['service'],
+            'etd' => $costData['etd'],
+            'weight' => $weightGram,
+            'destination_city_id' => $destinationCityId,
             'is_estimated' => false,
         ];
     }
 }
-
-

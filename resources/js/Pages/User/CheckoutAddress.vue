@@ -39,7 +39,10 @@ async function loadProvinces () {
     loadingProvinces.value = true
     const res = await fetch(route('api.provinces'))
     const data = await res.json()
-    provinces.value = data
+    provinces.value = data.data.map(province => ({
+      province_id: province.id,
+      province_name: province.name
+    }))
   } catch (e) {
     console.error('Gagal load provinsi', e)
   } finally {
@@ -54,14 +57,23 @@ async function loadCities () {
     selectedCityId.value = ''
     return
   }
-
   try {
     loadingCities.value = true
-    const res = await fetch(route('api.cities', { province_id: selectedProvinceId.value }))
-    const data = await res.json()
-    cities.value = data
+    // Ambil nama provinsi untuk dijadikan kata kunci (atau pakai input pengguna)
+    const provName = provinces.value.find(p => String(p.province_id) === String(selectedProvinceId.value))?.province_name ?? ''
+    const url = `/api/cities?search=${encodeURIComponent(provName)}`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { data } = await res.json()
+    // Sesuaikan shape item dari API (pakai id dan city_name)
+    cities.value = (data ?? []).map(c => ({
+      city_id: c.id,
+      city_name: c.city_name,
+      type: '' // jika tidak ada
+    }))
   } catch (e) {
     console.error('Gagal load kota', e)
+    cities.value = []
   } finally {
     loadingCities.value = false
   }
@@ -69,12 +81,19 @@ async function loadCities () {
 
 // Kalau provinsi berubah → reload kota
 watch(selectedProvinceId, () => {
-  loadCities()
+  loadCities();  // Memuat kota berdasarkan provinsi yang dipilih
 })
 
-// Build nilai form.prov_kab sebelum submit
+function submit() {
+  buildProvKab()
+
+  form.post(route('checkout.address.save', { id_produk: props.id_produk }), {
+    preserveScroll: true
+  })
+}
+
 function buildProvKab () {
-  const provinceName = provinces.value.find(p => String(p.province_id) === String(selectedProvinceId.value))?.province || ''
+  const provinceName = provinces.value.find(p => String(p.province_id) === String(selectedProvinceId.value))?.province_name || ''
   const cityName = cities.value.find(c => String(c.city_id) === String(selectedCityId.value))?.city_name || ''
 
   const parts = [
@@ -86,19 +105,6 @@ function buildProvKab () {
   ].filter(Boolean)
 
   form.prov_kab = parts.join(', ')
-}
-
-function submit() {
-  // gabungkan dulu ke form.prov_kab (agar cocok dengan backend sekarang)
-  buildProvKab()
-
-  form.post(route('checkout.address.save', { id_produk: props.id_produk }), {
-    preserveScroll: true
-  })
-}
-
-function backToCheckout() {
-  router.visit(route('checkout.show', { id_produk: props.id_produk }) + `?qty=${props.qty}`)
 }
 
 onMounted(() => {
@@ -127,7 +133,7 @@ onMounted(() => {
             <p v-if="form.errors.phone" class="mt-1 text-xs text-red-600">{{ form.errors.phone }}</p>
           </div>
 
-          <!-- PROVINSI -->
+          <!-- Dropdown untuk Provinsi -->
           <div>
             <label class="block mb-1 text-sm">Provinsi</label>
             <select
@@ -136,7 +142,7 @@ onMounted(() => {
             >
               <option value="" disabled>Pilih Provinsi</option>
               <option v-for="prov in provinces" :key="prov.province_id" :value="prov.province_id">
-                {{ prov.province }}
+                {{ prov.province_name }}
               </option>
             </select>
             <p v-if="loadingProvinces" class="mt-1 text-[11px] text-gray-500">Memuat provinsi...</p>

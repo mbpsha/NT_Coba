@@ -28,341 +28,337 @@ class CheckoutController extends Controller
         $this->defaultItemWeight = (int) config('rajaongkir.default_item_weight', 1000);
     }
 
+    /**
+     * Build shipping quote using ShippingService
+     */
     protected function buildShippingQuote(?Address $address, int $itemCount): array
     {
         $weight = max(1, $itemCount) * max(1, $this->defaultItemWeight);
-        $quote  = $this->shippingService->quote($address, $weight);
+
+        $quote = $this->shippingService->quote($address, $weight);
         $quote['weight'] = $weight;
 
         return $quote;
     }
 
+    /**
+     * PROSES CHECKOUT
+     */
     public function processCheckout(Request $request)
     {
         $request->validate([
             'id_user' => 'required|exists:users,id_user',
             'id_alamat' => 'required|exists:addresses,id_alamat',
-            'metode_pembayaran' => 'required|in:transfer_bank,ewallet,cod,kartu_kredit'
+            'metode_pembayaran' => 'required|in:transfer_bank,ewallet,cod,kartu_kredit',
         ]);
 
         try {
             DB::beginTransaction();
 
+            // Ambil keranjang
             $cart = Cart::where('id_user', $request->id_user)
                 ->with('cartDetails.product')
                 ->first();
+
             if (!$cart) {
                 return response()->json(['error' => 'Keranjang tidak ditemukan'], 404);
             }
 
             $cartItems = $cart->cartDetails;
+
             if ($cartItems->isEmpty()) {
                 return response()->json(['error' => 'Keranjang kosong'], 400);
             }
 
+            // Hitung subtotal
             $subtotal = 0;
             $totalItems = 0;
+
             foreach ($cartItems as $item) {
                 if ($item->product->stok < $item->jumlah) {
                     return response()->json([
                         'error' => "Stok {$item->product->nama} tidak mencukupi"
                     ], 400);
                 }
+
                 $subtotal   += $item->jumlah * $item->harga_satuan;
                 $totalItems += $item->jumlah;
             }
 
-            $address       = Address::findOrFail($request->id_alamat);
-            $shippingQuote = $this->buildShippingQuote($address, $totalItems);
-            $grandTotal    = $subtotal + $this->adminFee + $shippingQuote['cost'];
+            // Alamat
+            $address = Address::findOrFail($request->id_alamat);
 
+            // Ongkir
+            $shippingQuote = $this->buildShippingQuote($address, $totalItems);
+
+            $grandTotal = $subtotal + $this->adminFee + $shippingQuote['cost'];
+
+            // Buat order
             $order = Order::create([
-                'id_user' => $request->id_user,
-                'status' => 'pending',
-                'total_harga' => $grandTotal,
-                'id_alamat' => $address->id_alamat,
-                'shipping_cost' => $shippingQuote['cost'],
-                'admin_fee' => $this->adminFee,
+                'id_user'      => $request->id_user,
+                'status'       => 'pending',
+                'total_harga'  => $grandTotal,
+                'id_alamat'    => $address->id_alamat,
+                'shipping_cost'=> $shippingQuote['cost'],
+                'admin_fee'    => $this->adminFee,
                 'shipping_weight' => $shippingQuote['weight'],
                 'shipping_destination_city_id' => $shippingQuote['destination_city_id'],
                 'shipping_courier' => $shippingQuote['courier'],
                 'shipping_service' => $shippingQuote['service'],
-                'shipping_etd' => $shippingQuote['etd'],
+                'shipping_etd'     => $shippingQuote['etd'],
                 'shipping_is_estimated' => $shippingQuote['is_estimated'],
             ]);
 
+            // Detail order
             foreach ($cartItems as $item) {
                 OrderDetail::create([
-                    'id_order' => $order->id_order,
+                    'id_order'  => $order->id_order,
                     'id_produk' => $item->id_produk,
-                    'jumlah' => $item->jumlah,
-                    'harga' => $item->harga_satuan,
+                    'jumlah'    => $item->jumlah,
+                    'harga'     => $item->harga_satuan,
                 ]);
 
+                // Kurangi stok
                 $item->product->decrement('stok', $item->jumlah);
             }
 
-            $payment = Payment::create([
+            // Pembayaran
+            Payment::create([
                 'id_order' => $order->id_order,
                 'metode_pembayaran' => $request->metode_pembayaran,
                 'jumlah' => $grandTotal,
-                'status' => 'pending'
+                'status' => 'pending',
             ]);
 
+            // Kosongkan keranjang
             CartDetail::where('id_keranjang', $cart->id_keranjang)->delete();
 
             DB::commit();
 
             return response()->json([
                 'message' => 'Checkout berhasil',
-                'order' => $order->load(['orderDetails.product', 'payment'])
+                'order'   => $order->load(['orderDetails.product', 'payment'])
             ], 201);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Checkout gagal: '.$e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Checkout gagal: ' . $e->getMessage()
+            ], 500);
         }
     }
 
+    /**
+     * ORDER TRACKING
+     */
     public function getOrderTracking($orderId)
     {
-        $order = Order::with(['orderDetails.product', 'payment', 'user'])->findOrFail($orderId);
+        $order = Order::with(['orderDetails.product', 'payment', 'user'])
+            ->findOrFail($orderId);
+
         return response()->json($order);
     }
 
+    /**
+     * HALAMAN CHECKOUT PRODUK (Single Product Checkout)
+     */
     public function show($id_produk, Request $request)
     {
         $qty = max(1, (int) $request->query('qty', 1));
-
         $product = Product::where('id_produk', $id_produk)->firstOrFail();
         $user = Auth::user();
 
-        // Wajib punya alamat minimal (redirect ke profil bila kosong)
-        if (!filled($user->alamat)) {
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // HARUS PUNYA ALAMAT
+        if (!Address::where('id_user', $user->id_user)->exists()) {
             return redirect()
                 ->route('profile.show', [
                     'checkout'  => 1,
                     'id_produk' => $product->id_produk,
-                    'qty'       => $qty,
+                    'qty'       => $qty
                 ])
                 ->with('need_address', true);
         }
 
-        // Normalisasi path gambar -> kirim URL final siap pakai
-        $raw = (string) ($product->gambar ?? '');
-        $clean = str_replace('\\', '/', trim($raw));
-        $clean = preg_replace('#^/?(public|storage)/#', '', $clean); // buang prefix "public/" atau "storage/"
-        $gambarUrl = $clean
-            ? (preg_match('#^https?://#i', $clean) ? $clean : asset('storage/'.$clean))
-            : asset('/assets/dashboard/profil.png');
-
-        $hargaProduk = (int) $product->harga;
-        $subtotal    = $hargaProduk * $qty;
-
+        // Ambil alamat default
         $defaultAddress = Address::where('id_user', $user->id_user)
             ->where('is_default', true)
             ->first();
 
-        // Cek apakah user punya alamat default di table addresses
         if (!$defaultAddress) {
             $defaultAddress = Address::where('id_user', $user->id_user)->first();
         }
 
+        // Shipping quote
         $shippingQuote = $this->buildShippingQuote($defaultAddress, $qty);
-        $biayaAdmin    = $this->adminFee;
-        $biayaOngkir   = $shippingQuote['cost'];
-        $total         = $subtotal + $biayaAdmin + $biayaOngkir;
 
-        // Ambil order_id dari session kalau ada (setelah create order)
-        $orderId = $request->session()->get('_order_id');
+        $subtotal  = $product->harga * $qty;
+        $biayaAdmin = $this->adminFee;
+        $biayaOngkir = $shippingQuote['cost'];
+        $total = $subtotal + $biayaAdmin + $biayaOngkir;
 
         return Inertia::render('User/Checkout', [
-            'order_id' => $orderId, // Pass order_id ke frontend
             'user' => [
-                'id_user'  => $user->id_user ?? $user->id ?? null,
-                'id_alamat'=> $defaultAddress ? $defaultAddress->id_alamat : null,
-                'nama'     => $user->nama ?? $user->username ?? '',
-                'email'    => $user->email ?? '',
-                'no_telp'  => $user->no_telp ?? '',
-                'alamat'   => $defaultAddress
-                    ? "{$defaultAddress->alamat_lengkap}, {$defaultAddress->kabupaten}, {$defaultAddress->provinsi} {$defaultAddress->kode_pos}"
-                    : ($user->alamat ?? ''),
+                'id_user' => $user->id_user,
+                'id_alamat' => $defaultAddress->id_alamat ?? null,
+                'nama' => $user->nama ?? $user->username,
+                'email'=> $user->email,
+                'no_telp' => $user->no_telp,
+                'alamat' => $defaultAddress->alamat_lengkap,
             ],
+
             'shipping' => [
-                'name' => $defaultAddress
-                    ? $defaultAddress->nama_penerima
-                    : ($user->nama ?? $user->username ?? ''),
-                'text' => $defaultAddress
-                    ? $defaultAddress->alamat_lengkap
-                    : ($user->alamat ?? 'Belum ada alamat'),
-                'phone' => $defaultAddress
-                    ? $defaultAddress->no_telp_penerima
-                    : ($user->no_telp ?? ''),
-                'is_temp' => !$defaultAddress, // true jika pakai alamat sementara dari user.alamat
-                'quote' => $shippingQuote,
+                'name' => $defaultAddress->nama_penerima,
+                'text' => $defaultAddress->alamat_lengkap,
+                'phone'=> $defaultAddress->no_telp_penerima,
+                'quote'=> $shippingQuote,
             ],
+
             'product' => [
-                'id_produk'   => $product->id_produk,
+                'id_produk' => $product->id_produk,
                 'nama_produk' => $product->nama_produk,
-                'deskripsi'   => $product->deskripsi,
-                'harga'       => $hargaProduk,
-                'gambar_url'  => $this->getProductImageUrl($product->gambar), // convert to full URL
+                'deskripsi' => $product->deskripsi,
+                'harga' => $product->harga,
+                'gambar_url' => $this->getProductImageUrl($product->gambar),
             ],
+
             'qty' => $qty,
+
             'summary' => [
-                'admin'    => $biayaAdmin,
-                'ongkir'   => $biayaOngkir,
-                'subtotal' => $subtotal,
-                'total'    => $total,
-                'weight'   => $shippingQuote['weight'],
-                'courier'  => $shippingQuote['courier'],
-                'service'  => $shippingQuote['service'],
-                'etd'      => $shippingQuote['etd'],
-                'is_shipping_estimated' => $shippingQuote['is_estimated'],
+                'admin' => $biayaAdmin,
+                'ongkir'=> $biayaOngkir,
+                'subtotal'=> $subtotal,
+                'total'=> $total,
+                'weight'=> $shippingQuote['weight'],
+                'courier'=> $shippingQuote['courier'],
+                'service'=> $shippingQuote['service'],
+                'etd'=> $shippingQuote['etd'],
+                'is_shipping_estimated'=> $shippingQuote['is_estimated'],
             ],
         ]);
     }
 
+    /**
+     * SHOW ADDRESS FORM (during checkout)
+     */
     public function showAddressForm($id_produk, Request $request)
     {
         $qty = max(1, (int) $request->query('qty', 1));
-        $product = Product::findOrFail($id_produk);
-        $user    = Auth::user();
+        $user = Auth::user();
+
+        $defaultAddress = Address::where('id_user', $user->id_user)
+            ->where('is_default', true)->first();
 
         $prefill = [
-            'nama'   => $user->nama ?? $user->username ?? '',
-            'phone'  => $user->no_telp ?? '',
+            'nama'  => $defaultAddress->nama_penerima ?? $user->nama,
+            'phone' => $defaultAddress->no_telp_penerima ?? $user->no_telp,
             'prov_kab' => '',
             'street' => '',
             'detail' => '',
         ];
 
-        $defaultAddress = Address::where('id_user', $user->id_user)
-            ->where('is_default', true)
-            ->first();
-
         if ($defaultAddress) {
-            $prefill['nama']    = $defaultAddress->nama_penerima;
-            $prefill['phone']   = $defaultAddress->no_telp_penerima;
-            
-            // Format: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
-            $parts = [$defaultAddress->provinsi, $defaultAddress->kabupaten];
-            if ($defaultAddress->kecamatan) $parts[] = $defaultAddress->kecamatan;
-            if ($defaultAddress->kelurahan_desa) $parts[] = $defaultAddress->kelurahan_desa;
-            $parts[] = $defaultAddress->kode_pos;
-            
-            $prefill['prov_kab'] = implode(', ', $parts);
-            
-            // Format street: Nama Jalan, No Rumah (bukan alamat_lengkap!)
-            $streetParts = [];
-            if ($defaultAddress->nama_jalan) $streetParts[] = $defaultAddress->nama_jalan;
-            if ($defaultAddress->no_rumah) $streetParts[] = $defaultAddress->no_rumah;
-            $prefill['street'] = implode(', ', $streetParts);
+            $parts = [
+                $defaultAddress->provinsi,
+                $defaultAddress->kabupaten,
+                $defaultAddress->kecamatan,
+                $defaultAddress->kelurahan_desa,
+                $defaultAddress->kode_pos,
+            ];
+
+            $prefill['prov_kab'] = implode(', ', array_filter($parts));
+
+            $streetParts = [
+                $defaultAddress->nama_jalan,
+                $defaultAddress->no_rumah,
+            ];
+
+            $prefill['street'] = implode(', ', array_filter($streetParts));
         }
 
         return Inertia::render('User/CheckoutAddress', [
-            'product' => $product,
+            'id_produk' => $id_produk,
             'qty' => $qty,
-            'id_produk' => (int) $id_produk,
             'prefill' => $prefill,
         ]);
     }
 
+    /**
+     * SIMPAN ALAMAT CHECKOUT
+     */
     public function saveAddress(Request $request, $id_produk)
     {
-        $qty  = max(1, (int) $request->input('qty', 1));
-        $user = $request->user();
+        $qty    = max(1, (int) $request->input('qty', 1));
+        $user   = $request->user();
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'prov_kab' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'detail' => 'nullable|string|max:255',
-            'qty' => 'nullable|integer|min:1',
+            'nama'   => 'required',
+            'phone'  => 'required',
+            'prov_kab' => 'required',
+            'street' => 'required',
+            'detail' => 'nullable',
+            'qty'    => 'nullable|integer|min:1',
         ]);
 
-        // Parse: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
-        $parts = array_values(array_filter(array_map('trim', explode(',', $validated['prov_kab']))));
-        $provinsi      = $parts[0] ?? 'Tidak diketahui';
-        $kabupaten     = $parts[1] ?? 'Tidak diketahui';
-        $kecamatan     = $parts[2] ?? null;
-        $kelurahanDesa = $parts[3] ?? null;
-        $kodePos       = $parts[4] ?? '00000';
+        // Parse "Provinsi, Kabupaten, Kecamatan, Kelurahan, Kode Pos"
+        $parts = array_map('trim', explode(',', $validated['prov_kab']));
 
-        // Parse street: Nama Jalan, No/Gedung, Detail lainnya (dipisah koma)
-        $streetParts = array_values(array_filter(array_map('trim', explode(',', $validated['street']))));
+        $provinsi  = $parts[0] ?? '';
+        $kabupaten = $parts[1] ?? '';
+        $kecamatan = $parts[2] ?? null;
+        $kelurahan = $parts[3] ?? null;
+        $kodePos   = $parts[4] ?? '00000';
+
+        // Parse "Nama jalan, No rumah, detail"
+        $streetParts = array_map('trim', explode(',', $validated['street']));
         $namaJalan = $streetParts[0] ?? null;
         $noRumah   = $streetParts[1] ?? null;
-        $detailLain = array_slice($streetParts, 2); // sisa nya jadi detail
-        
-        // Format alamat lengkap yang rapi (Jl, No, Detail, Kel., Kec., Kab., Prov.)
-        $alamatParts = [];
-        
-        // Nama Jalan
-        if ($namaJalan) {
-            $alamatParts[] = $namaJalan;
-        }
-        
-        // No Rumah/Gedung
-        if ($noRumah) {
-            $alamatParts[] = $noRumah;
-        }
-        
-        // Detail lainnya (RT/RW, Blok, dll)
-        if (!empty($detailLain)) {
-            $alamatParts[] = implode(', ', $detailLain);
-        }
-        
-        // Detail tambahan dari field terpisah
-        if (!empty($validated['detail'])) {
-            $alamatParts[] = $validated['detail'];
-        }
-        
-        // Kelurahan/Desa
-        if ($kelurahanDesa) {
-            $alamatParts[] = "Kel. {$kelurahanDesa}";
-        }
-        
-        // Kecamatan
-        if ($kecamatan) {
-            $alamatParts[] = "Kec. {$kecamatan}";
-        }
-        
-        // Kabupaten
-        $alamatParts[] = $kabupaten;
-        
-        // Provinsi dan Kode Pos
-        $alamatParts[] = "{$provinsi} {$kodePos}";
-        
-        $alamatLengkap = implode(', ', $alamatParts);
+        $detailLain = implode(', ', array_slice($streetParts, 2));
 
-        // Jadikan alamat baru sebagai default (alamat lain otomatis nonaktif)
+        // Format alamat lengkap
+        $alamatLengkap = trim(implode(', ', array_filter([
+            $namaJalan,
+            $noRumah,
+            $detailLain,
+            $validated['detail'] ?? null,
+            "Kel. $kelurahan",
+            "Kec. $kecamatan",
+            $kabupaten,
+            "$provinsi $kodePos",
+        ])));
+
+        // Set default address baru
         Address::where('id_user', $user->id_user)->update(['is_default' => false]);
 
         Address::create([
             'id_user' => $user->id_user,
             'label' => 'Alamat Checkout',
             'nama_penerima' => $validated['nama'],
-            'no_telp_penerima' => $validated['phone'],
+            'no_telp_penerima'=> $validated['phone'],
             'nama_jalan' => $namaJalan,
             'no_rumah' => $noRumah,
             'alamat_lengkap' => $alamatLengkap,
-            'kelurahan_desa' => $kelurahanDesa,
+            'kelurahan_desa' => $kelurahan,
             'kecamatan' => $kecamatan,
             'kabupaten' => $kabupaten,
             'provinsi' => $provinsi,
-            'kode_pos' => $kodePos ?: '00000',
+            'kode_pos' => $kodePos,
             'is_default' => true,
         ]);
 
         return redirect()
-            ->route('checkout.show', ['id_produk' => $id_produk, 'qty' => $qty])
+            ->route('checkout.show', [
+                'id_produk' => $id_produk,
+                'qty' => $qty
+            ])
             ->with('message', 'Alamat berhasil disimpan! Silakan lanjutkan checkout.');
     }
 
     /**
-     * Helper method untuk convert gambar path ke URL
+     * Helper: Convert gambar product ke URL
      */
     private function getProductImageUrl($gambar)
     {
@@ -370,18 +366,12 @@ class CheckoutController extends Controller
             return asset('/assets/dashboard/profil.png');
         }
 
-        // Normalisasi path
-        $clean = str_replace('\\', '/', trim($gambar));
+        $clean = preg_replace('#^/?(public|storage)/#', '', str_replace('\\', '/', $gambar));
 
-        // Buang prefix "public/" atau "storage/" kalau ada
-        $clean = preg_replace('#^/?(public|storage)/#', '', $clean);
-
-        // Kalau sudah full URL, return aja
         if (preg_match('#^https?://#i', $clean)) {
             return $clean;
         }
 
-        // Convert ke storage URL
         return asset('storage/' . $clean);
     }
 }
