@@ -28,17 +28,28 @@ class Step4_EditProductTest extends TestCase
 
         $token = $loginResponse->json('token');
 
-        // Setup: Bikin product yang akan diedit
-        $product = Product::factory()->create([
+        // Setup: Bikin 2 product dulu (biar ID 2 ada)
+        $product1 = Product::factory()->create([
+            'nama_produk' => 'Product Dummy 1',
+            'harga' => 10000,
+            'stok' => 50,
+        ]);
+
+        $product2 = Product::factory()->create([
             'nama_produk' => 'Beras Organik Premium',
             'harga' => 50000,
             'stok' => 100,
         ]);
 
         echo "\n=== TC-INT-04 STEP 4: Admin Edit Product ===\n";
-        echo "Product ID: {$product->id_produk}\n";
-        echo "Nama awal: {$product->nama_produk}\n";
-        echo "Harga awal: Rp " . number_format($product->harga, 0, ',', '.') . "\n\n";
+        echo "Product yang akan diedit:\n";
+        echo "  - ID: {$product2->id_produk}\n";
+        echo "  - Nama awal: {$product2->nama_produk}\n";
+        echo "  - Harga awal: Rp " . number_format($product2->harga, 0, ',', '.') . "\n\n";
+
+        // 🔧 GANTI INI kalo mau edit product ID tertentu:
+        $productToEdit = $product2; // Default: edit product ID 2
+        // $productToEdit = Product::find(2); // Atau langsung cari by ID
 
         // Data update
         $updateData = [
@@ -53,7 +64,7 @@ class Step4_EditProductTest extends TestCase
         $editResponse = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
             'Accept' => 'application/json',
-        ])->putJson("/api/admin/products/{$product->id_produk}", $updateData);
+        ])->putJson("/api/admin/products/{$productToEdit->id_produk}", $updateData);
 
         // Cek update berhasil
         $editResponse->assertStatus(200)
@@ -61,7 +72,7 @@ class Step4_EditProductTest extends TestCase
             ->assertJsonPath('product.nama_produk', 'Beras Organik Premium UPDATED')
             ->assertJsonPath('product.harga', '55000.00');
 
-        echo "✓ Admin berhasil edit product ID {$product->id_produk}\n";
+        echo "✓ Admin berhasil edit product ID {$productToEdit->id_produk}\n";
         echo "  - Nama: 'Beras Organik Premium' → 'Beras Organik Premium UPDATED'\n";
         echo "  - Harga: Rp 50.000 → Rp 55.000\n";
         echo "  - Stok: 100 → 150\n";
@@ -71,7 +82,7 @@ class Step4_EditProductTest extends TestCase
 
         // Verify changes di database
         $this->assertDatabaseHas('products', [
-            'id_produk' => $product->id_produk,
+            'id_produk' => $productToEdit->id_produk,
             'nama_produk' => 'Beras Organik Premium UPDATED',
             'harga' => 55000,
         ]);

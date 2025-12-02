@@ -33,7 +33,7 @@ class Step3b_AddMultipleProductsTest extends TestCase
         // ADD PRODUCT #1
         // ============================================================
         echo "1️⃣ ADD PRODUCT #1\n";
-        
+
         $product1Data = [
             'nama_produk' => 'Beras Organik Premium',
             'deskripsi' => 'Beras organik berkualitas tinggi',
@@ -67,7 +67,7 @@ class Step3b_AddMultipleProductsTest extends TestCase
         // ADD PRODUCT #2
         // ============================================================
         echo "2️⃣ ADD PRODUCT #2\n";
-        
+
         $product2Data = [
             'nama_produk' => 'Jagung Manis Segar',
             'deskripsi' => 'Jagung manis langsung dari petani',
@@ -101,7 +101,7 @@ class Step3b_AddMultipleProductsTest extends TestCase
         // ADD PRODUCT #3
         // ============================================================
         echo "3️⃣ ADD PRODUCT #3\n";
-        
+
         $product3Data = [
             'nama_produk' => 'Tomat Cherry Fresh',
             'deskripsi' => 'Tomat cherry segar dan manis',
@@ -139,7 +139,7 @@ class Step3b_AddMultipleProductsTest extends TestCase
         echo "  1. Beras Organik Premium (ID: {$productId1})\n";
         echo "  2. Jagung Manis Segar (ID: {$productId2})\n";
         echo "  3. Tomat Cherry Fresh (ID: {$productId3})\n";
-        
+
         // Pastikan semua product ada di database
         $this->assertDatabaseCount('products', 3);
 
