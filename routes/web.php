@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ReviewController;
@@ -106,8 +107,8 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
 
     // Reviews
-    Route::get('/penilaian', [ReviewController::class, 'ratingPage'])->name('reviews.index');
-    Route::post('/penilaian', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
+    Route::get('/review', [ReviewController::class, 'ratingPage'])->name('reviews.index');
+    Route::post('/review', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
 });
 
 // Logout (tidak perlu email verification)

@@ -2,6 +2,7 @@
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
+import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
   id_produk: { type: Number, required: true },
@@ -18,7 +19,79 @@ const form = useForm({
   qty: props.qty
 })
 
+// state untuk dropdown lokasi
+const provinces = ref([])
+const cities = ref([])
+
+const selectedProvinceId = ref('')
+const selectedCityId = ref('')
+
+const kecamatan = ref('')
+const kelurahan = ref('')
+const kodePos = ref('')
+
+const loadingProvinces = ref(false)
+const loadingCities = ref(false)
+
+// Ambil provinsi dari backend → RajaOngkir
+async function loadProvinces () {
+  try {
+    loadingProvinces.value = true
+    const res = await fetch(route('api.provinces'))
+    const data = await res.json()
+    provinces.value = data
+  } catch (e) {
+    console.error('Gagal load provinsi', e)
+  } finally {
+    loadingProvinces.value = false
+  }
+}
+
+// Ambil kota berdasarkan province_id
+async function loadCities () {
+  if (!selectedProvinceId.value) {
+    cities.value = []
+    selectedCityId.value = ''
+    return
+  }
+
+  try {
+    loadingCities.value = true
+    const res = await fetch(route('api.cities', { province_id: selectedProvinceId.value }))
+    const data = await res.json()
+    cities.value = data
+  } catch (e) {
+    console.error('Gagal load kota', e)
+  } finally {
+    loadingCities.value = false
+  }
+}
+
+// Kalau provinsi berubah → reload kota
+watch(selectedProvinceId, () => {
+  loadCities()
+})
+
+// Build nilai form.prov_kab sebelum submit
+function buildProvKab () {
+  const provinceName = provinces.value.find(p => String(p.province_id) === String(selectedProvinceId.value))?.province || ''
+  const cityName = cities.value.find(c => String(c.city_id) === String(selectedCityId.value))?.city_name || ''
+
+  const parts = [
+    provinceName,
+    cityName,
+    kecamatan.value || null,
+    kelurahan.value || null,
+    kodePos.value || null
+  ].filter(Boolean)
+
+  form.prov_kab = parts.join(', ')
+}
+
 function submit() {
+  // gabungkan dulu ke form.prov_kab (agar cocok dengan backend sekarang)
+  buildProvKab()
+
   form.post(route('checkout.address.save', { id_produk: props.id_produk }), {
     preserveScroll: true
   })
@@ -27,6 +100,10 @@ function submit() {
 function backToCheckout() {
   router.visit(route('checkout.show', { id_produk: props.id_produk }) + `?qty=${props.qty}`)
 }
+
+onMounted(() => {
+  loadProvinces()
+})
 </script>
 
 <template>
@@ -50,12 +127,60 @@ function backToCheckout() {
             <p v-if="form.errors.phone" class="mt-1 text-xs text-red-600">{{ form.errors.phone }}</p>
           </div>
 
+          <!-- PROVINSI -->
           <div>
-            <label class="block mb-1 text-sm">Provinsi, Kota, Kecamatan, Kelurahan, Kode pos</label>
-            <input v-model="form.prov_kab" class="w-full px-3 py-2 bg-white border rounded-md" />
-            <p v-if="form.errors.prov_kab" class="mt-1 text-xs text-red-600">{{ form.errors.prov_kab }}</p>
+            <label class="block mb-1 text-sm">Provinsi</label>
+            <select
+              v-model="selectedProvinceId"
+              class="w-full px-3 py-2 bg-white border rounded-md"
+            >
+              <option value="" disabled>Pilih Provinsi</option>
+              <option v-for="prov in provinces" :key="prov.province_id" :value="prov.province_id">
+                {{ prov.province }}
+              </option>
+            </select>
+            <p v-if="loadingProvinces" class="mt-1 text-[11px] text-gray-500">Memuat provinsi...</p>
           </div>
 
+          <!-- KOTA / KABUPATEN -->
+          <div>
+            <label class="block mb-1 text-sm">Kota / Kabupaten</label>
+            <select
+              v-model="selectedCityId"
+              :disabled="!selectedProvinceId || loadingCities"
+              class="w-full px-3 py-2 bg-white border rounded-md disabled:bg-gray-100"
+            >
+              <option value="" disabled>
+                {{ selectedProvinceId ? (loadingCities ? 'Memuat kota...' : 'Pilih Kota/Kabupaten') : 'Pilih provinsi terlebih dahulu' }}
+              </option>
+              <option v-for="city in cities" :key="city.city_id" :value="city.city_id">
+                {{ city.type ? city.type + ' ' : '' }}{{ city.city_name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- KECAMATAN -->
+          <div>
+            <label class="block mb-1 text-sm">Kecamatan</label>
+            <input v-model="kecamatan" class="w-full px-3 py-2 bg-white border rounded-md" />
+          </div>
+
+          <!-- KELURAHAN / DESA -->
+          <div>
+            <label class="block mb-1 text-sm">Kelurahan / Desa</label>
+            <input v-model="kelurahan" class="w-full px-3 py-2 bg-white border rounded-md" />
+          </div>
+
+          <!-- KODE POS -->
+          <div>
+            <label class="block mb-1 text-sm">Kode Pos</label>
+            <input v-model="kodePos" class="w-full px-3 py-2 bg-white border rounded-md" />
+          </div>
+
+          <!-- Error dari backend untuk prov_kab (gabungan) -->
+          <p v-if="form.errors.prov_kab" class="mt-1 text-xs text-red-600">{{ form.errors.prov_kab }}</p>
+
+          <!-- JALAN -->
           <div>
             <label class="block mb-1 text-sm">Nama jalan, Gedung, No. Rumah</label>
             <input v-model="form.street" class="w-full px-3 py-2 bg-white border rounded-md" />
@@ -70,7 +195,7 @@ function backToCheckout() {
 
           <div class="flex items-center gap-3 pt-2">
             <button type="submit" :disabled="form.processing"
-                    class="px-6 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600">
+                    class="px-6 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:bg-gray-400">
               {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
             </button>
             <button type="button" @click="backToCheckout"

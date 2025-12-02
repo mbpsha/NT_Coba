@@ -16,9 +16,19 @@ class RajaOngkirService
 
     public function __construct()
     {
-        $this->config   = config('services.rajaongkir', []);
-        $this->baseUrl  = rtrim($this->config['base_url'] ?? 'https://rajaongkir.komerce.id/api/v1', '/');
-        $this->apiKey   = $this->config['key'] ?? null;
+        // Ambil semua config dari services.php
+        $this->config  = config('services.rajaongkir', []);
+
+        // base URL
+        $this->baseUrl = rtrim(
+            $this->config['base_url'] ?? 'https://rajaongkir.komerce.id/api/v1',
+            '/'
+        );
+
+        // API key
+        $this->apiKey  = $this->config['key'] ?? null;
+
+        // Header authentication
         $this->authHeaders = $this->buildAuthHeaders();
     }
 
@@ -35,6 +45,58 @@ class RajaOngkirService
             'X-API-Key'  => $this->apiKey,
             'Authorization' => 'Bearer '.$this->apiKey,
         ];
+    }
+
+    /**
+     * Ambil list provinsi dari RajaOngkir (Starter: cuma provinsi & kota)
+     */
+    public function getProvinces(): array
+    {
+        try {
+            $res = Http::withHeaders($this->authHeaders)
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/destination/provinces");
+
+            $json = $res->json();
+
+            if (!isset($json['meta']['status']) || $json['meta']['status'] !== 'success') {
+                return [];
+            }
+
+            return $json['data'] ?? [];
+
+        } catch (\Throwable $e) {
+            Log::error("Provinces error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Ambil list kota/kab berdasarkan province_id
+     */
+    public function getCitiesByProvince($provinceId): array
+    {
+        if (!$provinceId) return [];
+
+        try {
+            $res = Http::withHeaders($this->authHeaders)
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/destination/cities", [
+                    "province_id" => $provinceId
+                ]);
+
+            $json = $res->json();
+
+            if (!isset($json['meta']['status']) || $json['meta']['status'] !== 'success') {
+                return [];
+            }
+
+            return $json['data'] ?? [];
+
+        } catch (\Throwable $e) {
+            Log::error("Cities error: " . $e->getMessage());
+            return [];
+        }
     }
 
     /**

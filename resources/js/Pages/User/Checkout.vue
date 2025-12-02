@@ -98,7 +98,7 @@ function submitPayment() {
     forceFormData: true,
     preserveScroll: true,
     onSuccess: () => {
-      payForm.reset('trx_id', 'bukti_transfer', 'agree')
+      router.visit(route('orders.my'), { preserveScroll: true })
     }
   })
 }
