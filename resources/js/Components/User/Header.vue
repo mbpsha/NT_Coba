@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { Link, usePage, useForm, router } from '@inertiajs/vue3'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { Link, usePage, router } from '@inertiajs/vue3'
+import axios from 'axios'
 
 import Logo from '*/dashboard/logo-ngundur.png'
 
@@ -23,16 +24,35 @@ watch(()=> page.props.flash?.cart_added, v=>{
 const profileMenu = ref(false)
 function toggleProfile(){ profileMenu.value = !profileMenu.value }
 
-const logoutForm = useForm({})
-function logout() {
-  logoutForm.post(route('logout'),
-  {
-        preserveState: false,
-        preserveScroll: false,
-        onSuccess: () => {
-            window.location.href = route('dashboard')
-        }
+// Close dropdown when clicking outside
+function handleClickOutside(event) {
+  const dropdown = document.querySelector('.profile-dropdown')
+  if (dropdown && !dropdown.contains(event.target)) {
+    profileMenu.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+async function logout() {
+  try {
+    await axios.post('/logout', {}, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
     })
+    router.visit('/dashboard', { replace: true, preserveState: false })
+  } catch (error) {
+    console.error('Logout failed:', error)
+    router.visit('/dashboard', { replace: true, preserveState: false })
+  }
 }
 
 function goCart() {
@@ -78,43 +98,45 @@ function goCart() {
 
 
           <!-- Profil -->
-          <div class="relative">
-            <button @click="toggleProfile"
+          <div class="relative profile-dropdown">
+            <button @click.stop="toggleProfile"
                     class="flex items-center justify-center w-10 h-10 text-green-700 bg-green-100 rounded-full hover:bg-green-200 ring-1 ring-green-300">
               <svg class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
               </svg>
             </button>
-            <div v-if="profileMenu" class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white rounded-md shadow ring-1 ring-black/5">
-              <div class="px-4 py-3 text-sm border-b">
-                <p class="font-medium text-gray-900 truncate">{{ user.nama || user.username }}</p>
-                <p v-if="user.email" class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+            <div v-if="profileMenu" class="absolute right-0 z-50 w-56 mt-2 overflow-hidden bg-white rounded-lg shadow-lg ring-1 ring-black/10">
+              <!-- User Info Header -->
+              <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                <p class="font-semibold text-gray-900 truncate">{{ user.nama || user.username }}</p>
+                <p v-if="user.email" class="text-xs text-gray-600 truncate mt-0.5">{{ user.email }}</p>
               </div>
-              <Link href="/profile" class="block px-4 py-2 text-sm hover:bg-gray-50">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+              <!-- Menu Items -->
+              <div class="py-1">
+                <Link href="/profile" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
-                  Profil
-                </span>
-              </Link>
-              <Link :href="route('orders.my')" class="block px-4 py-2 text-sm hover:bg-gray-50">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span>Profil Saya</span>
+                </Link>
+
+                <Link href="/orders/my" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                   </svg>
-                  Pesanan Saya
-                </span>
-              </Link>
-              <button @click="logout" :disabled="logoutForm.processing"
-                      class="w-full px-4 py-2 text-sm text-left text-red-600 border-t hover:bg-gray-50">
-                <span class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span>Pesanan Saya</span>
+                </Link>
+              </div>              <!-- Logout -->
+              <div class="border-t border-gray-100">
+                <button @click="logout"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                   </svg>
-                  Keluar
-                </span>
-              </button>
+                  <span>Keluar</span>
+                </button>
+              </div>
             </div>
           </div>
         </template>

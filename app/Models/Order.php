@@ -27,11 +27,11 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'total_harga' => 'decimal:2',
-        'shipping_cost' => 'decimal:2',
-        'admin_fee' => 'decimal:2',
+        'total_harga' => 'integer',
+        'shipping_cost' => 'integer',
+        'admin_fee' => 'integer',
         'shipping_weight' => 'integer',
-        'shipping_is_estimated' => 'boolean',
+        'shipping_is_estimated' => 'integer',
     ];
 
     // Relations

@@ -11,6 +11,19 @@ class ProfileController extends Controller
 {
     public function show(Request $request)
     {
+        // Return JSON for API requests (Postman with Bearer token)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'user' => $request->user(),
+                'props' => [
+                    'auth' => [
+                        'user' => $request->user()
+                    ]
+                ]
+            ], 200);
+        }
+
+        // Return Inertia page for web requests
         return Inertia::render('User/ProfilePage', [
             'user' => $request->user(),
             'needAddress'    => (bool) $request->session()->get('need_address'),
@@ -27,8 +40,8 @@ class ProfileController extends Controller
 
         $data = $request->validate([
             'nama'     => ['nullable','string','max:255'],
-            'username' => ['nullable','string','max:255'],
-            'email'    => ['nullable','email','max:255'],
+            'username' => ['nullable','string','max:255', Rule::unique('users')->ignore($user->id_user, 'id_user')],
+            'email'    => ['nullable','email','max:255', Rule::unique('users')->ignore($user->id_user, 'id_user')],
             'no_telp'  => ['nullable','string','max:20'],
             'alamat'   => ['nullable','string','max:255'],
             // hidden (opsional, tidak divalidasi khusus)
@@ -37,7 +50,15 @@ class ProfileController extends Controller
             'checkout_qty'       => ['nullable','integer'],
         ]);
 
-        $user->update($data);
+        // Only update fields that are not null
+        $updateData = array_filter($data, function($value) {
+            return !is_null($value);
+        });
+
+        // Remove checkout-related fields from update
+        unset($updateData['checkout_return'], $updateData['checkout_product_id'], $updateData['checkout_qty']);
+
+        $user->update($updateData);
 
         // Jika alamat diisi, buat/update entry di table addresses
         if (!empty($data['alamat'])) {
@@ -74,6 +95,14 @@ class ProfileController extends Controller
             if ($pid) {
                 return redirect()->route('checkout.show', ['id_produk' => $pid, 'qty' => $qty]);
             }
+        }
+
+        // Return JSON for API requests (Postman)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Profil berhasil diperbarui.',
+                'user' => $user->fresh()
+            ], 200);
         }
 
         return back()->with('success', 'Profil berhasil diperbarui.');

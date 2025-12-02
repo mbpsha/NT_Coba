@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, reactive, onMounted } from 'vue'
+import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 
 import Logo from '*/dashboard/logo-ngundur.png'
 import Background from '*/login/BackgroundWOverlay.png'
@@ -12,13 +13,14 @@ const props = defineProps({
     }
 })
 
-const form = useForm({
+const form = reactive({
     nama: '',
     username: '',
     email: '',
     password: '',
     password_confirmation: '',
-    'g-recaptcha-response': '',
+    processing: false,
+    errors: {}
 })
 
 const showPassword = ref(false)
@@ -33,7 +35,7 @@ function loadRecaptcha() {
         recaptchaLoaded.value = true
         return
     }
-    
+
     const script = document.createElement('script')
     script.src = 'https://www.google.com/recaptcha/api.js'
     script.async = true
@@ -48,21 +50,45 @@ onMounted(() => {
     loadRecaptcha()
 })
 
-function submit() {
-    // Get reCAPTCHA response
-    if (window.grecaptcha) {
-        const response = window.grecaptcha.getResponse()
-        form['g-recaptcha-response'] = response
-    }
-    
-    form.post(route('register'), {
-        onFinish: () => {
-            form.reset('password', 'password_confirmation')
-            if (window.grecaptcha) {
-                window.grecaptcha.reset()
+async function submit() {
+    form.processing = true
+    form.errors = {}
+
+    try {
+        const response = await axios.post('/register', {
+            nama: form.nama,
+            username: form.username,
+            email: form.email,
+            password: form.password
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
-        },
-    })
+        })
+
+        // Token received, redirect to verification notice using Inertia router
+        const redirectUrl = response.data.redirect || '/email/verify'
+        router.visit(redirectUrl, {
+            replace: true,
+            preserveState: false,
+            preserveScroll: false
+        })
+    } catch (error) {
+        form.processing = false
+        if (error.response?.data?.errors) {
+            form.errors = error.response.data.errors
+        } else if (error.response?.data?.message) {
+            form.errors.email = error.response.data.message
+        } else {
+            form.errors.email = 'Registration failed. Please try again.'
+        }
+        form.password = ''
+        form.password_confirmation = ''
+        if (window.grecaptcha) {
+            window.grecaptcha.reset()
+        }
+    }
 }
 </script>
 
@@ -150,8 +176,8 @@ function submit() {
 
                     <!-- reCAPTCHA -->
                     <div class="flex justify-center">
-                        <div v-if="recaptchaLoaded" 
-                             class="g-recaptcha" 
+                        <div v-if="recaptchaLoaded"
+                             class="g-recaptcha"
                              :data-sitekey="recaptchaSiteKey">
                         </div>
                         <div v-else class="text-white text-sm">Loading reCAPTCHA...</div>

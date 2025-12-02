@@ -22,11 +22,23 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
+        // Replace default CSRF middleware with custom one
+        $middleware->validateCsrfTokens(except: [
+            '/login',
+            '/register',
+            '/logout',
+            '/profile',
+            '/cart',
+            '/admin/orders/*/status',
+            '/checkout/*/address',
+            '/order/*/create',
+        ]);
 
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'user.only' => \App\Http\Middleware\UserOnlyMiddleware::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
         //

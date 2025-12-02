@@ -31,8 +31,14 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::findOrFail($id);
-        return response()->json($order);
+        $order = Order::with(['user', 'address', 'orderDetails.product', 'payment'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'props' => [
+                'order' => $order
+            ]
+        ]);
     }
 
     // Admin methods
@@ -59,10 +65,94 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Order status updated successfully!');
     }
 
-    public function store(OrderRequest $request)
+    /**
+     * Store order via API (for Postman/Testing)
+     * POST /api/orders
+     */
+    public function store(Request $request)
     {
-        $order = Order::create($request->validated());
-        return response()->json($order, 201);
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthenticated'], 401);
+            }
+
+            // Validate all required fields for API
+            $validated = $request->validate([
+                'id_produk' => 'required|integer|exists:products,id_produk',
+                'id_alamat' => 'required|integer|exists:addresses,id_alamat',
+                'shipping_cost' => 'required|integer|min:0',
+                'admin_fee' => 'required|integer|min:0',
+                'shipping_weight' => 'required|integer|min:1',
+                'shipping_destination_city_id' => 'required|integer',
+                'shipping_courier' => 'required|string',
+                'shipping_service' => 'required|string',
+                'shipping_etd' => 'required|string',
+                'shipping_is_estimated' => 'required|integer|in:0,1',
+                'quantity' => 'nullable|integer|min:1',
+            ]);
+
+            // Get product and calculate total
+            $product = \App\Models\Product::findOrFail($validated['id_produk']);
+            $qty = $validated['quantity'] ?? 1;
+            $hargaProduk = (int) $product->harga;
+            $subtotal = $hargaProduk * $qty;
+
+            // Verify address belongs to user
+            $address = Address::where('id_alamat', $validated['id_alamat'])
+                ->where('id_user', $user->id_user)
+                ->firstOrFail();
+
+            // Calculate total
+            $biayaAdmin = (int) $validated['admin_fee'];
+            $biayaOngkir = (int) $validated['shipping_cost'];
+            $total = $subtotal + $biayaAdmin + $biayaOngkir;
+
+            // Create order
+            $order = Order::create([
+                'id_user' => $user->id_user,
+                'id_alamat' => $validated['id_alamat'],
+                'total_harga' => $total,
+                'status' => 'pending',
+                'admin_fee' => $biayaAdmin,
+                'shipping_cost' => $biayaOngkir,
+                'shipping_weight' => $validated['shipping_weight'],
+                'shipping_destination_city_id' => $validated['shipping_destination_city_id'],
+                'shipping_courier' => $validated['shipping_courier'],
+                'shipping_service' => $validated['shipping_service'],
+                'shipping_etd' => $validated['shipping_etd'],
+                'shipping_is_estimated' => $validated['shipping_is_estimated'],
+            ]);
+
+            // Create order detail
+            \App\Models\OrderDetail::create([
+                'id_order' => $order->id_order,
+                'id_produk' => $validated['id_produk'],
+                'jumlah' => $qty,
+                'harga' => $hargaProduk,
+            ]);
+
+            // Load relations
+            $order->load(['orderDetails.product', 'address', 'user']);
+
+            return response()->json([
+                'message' => 'Order created successfully!',
+                'order' => $order,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Order creation failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'error' => 'Order creation failed',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(OrderRequest $request, $id)
@@ -150,109 +240,102 @@ class OrderController extends Controller
 
             $user = $request->user();
 
+            if (!$user) {
+                Log::error('No authenticated user');
+                return response()->json(['error' => 'Unauthenticated'], 401);
+            }
+
             Log::info('Validating request...', ['request_data' => $request->all()]);
 
+            // Validate all required fields from Postman
             $validated = $request->validate([
-                'qty' => 'required|integer|min:1',
+                'id_alamat' => 'required|integer|exists:addresses,id_alamat',
+                'shipping_cost' => 'required|integer|min:0',
+                'admin_fee' => 'required|integer|min:0',
+                'shipping_weight' => 'required|integer|min:1',
+                'shipping_destination_city_id' => 'required|integer',
+                'shipping_courier' => 'required|string',
+                'shipping_service' => 'required|string',
+                'shipping_etd' => 'required|string',
+                'shipping_is_estimated' => 'required|integer|in:0,1',
             ]);
 
             Log::info('Validation passed', ['validated' => $validated]);
 
-            // Get product and calculate total
+            // Get product from URL parameter
             $product = \App\Models\Product::findOrFail($id_produk);
-            $qty = $validated['qty'];
+            $qty = 1; // Default qty 1, atau bisa ambil dari request jika ada
             $hargaProduk = (int) $product->harga;
             $subtotal = $hargaProduk * $qty;
 
-            Log::info('Product found', ['product_id' => $product->id_produk, 'qty' => $qty]);
+            Log::info('Product found', ['product_id' => $product->id_produk, 'qty' => $qty, 'harga' => $hargaProduk]);
 
-            // Get user's default address
-            $defaultAddress = Address::where('id_user', $user->id_user)
-                ->where('is_default', true)
-                ->first();
+            // Get address
+            $address = Address::where('id_alamat', $validated['id_alamat'])
+                ->where('id_user', $user->id_user)
+                ->firstOrFail();
 
-            if (!$defaultAddress) {
-                $defaultAddress = Address::where('id_user', $user->id_user)->first();
-            }
+            Log::info('Address verified', ['address_id' => $address->id_alamat]);
 
-            Log::info('Address check', ['has_address' => !!$defaultAddress]);
+            // Calculate total: product + admin_fee + shipping_cost
+            $biayaAdmin = (int) $validated['admin_fee'];
+            $biayaOngkir = (int) $validated['shipping_cost'];
+            $total = $subtotal + $biayaAdmin + $biayaOngkir;
 
-            // Jika tidak ada alamat di table addresses, create dari user.alamat
-            if (!$defaultAddress && !empty($user->alamat)) {
-                Log::info('Creating address from user.alamat', ['alamat' => $user->alamat]);
-
-                $defaultAddress = Address::create([
-                    'id_user' => $user->id_user,
-                    'label' => 'Rumah',
-                    'nama_penerima' => $user->nama ?? $user->username,
-                    'no_telp_penerima' => $user->no_telp ?? '',
-                    'alamat_lengkap' => $user->alamat,
-                    'kabupaten' => 'Tidak diketahui',
-                    'provinsi' => 'Tidak diketahui',
-                    'kode_pos' => '00000',
-                    'is_default' => true,
-                ]);
-
-                Log::info('Address created from user.alamat', ['address_id' => $defaultAddress->id_alamat]);
-            }
-
-            if (!$defaultAddress) {
-                Log::warning('No address found and user.alamat is empty', ['user_id' => $user->id_user]);
-                return back()->withErrors(['error' => 'Alamat belum dilengkapi. Silakan lengkapi alamat di halaman profil terlebih dahulu.']);
-            }
-
-            $shippingQuote = $this->shippingService->quote($defaultAddress, max(1, $qty) * $this->defaultItemWeight);
-            $biayaAdmin    = $this->adminFee;
-            $biayaOngkir   = $shippingQuote['cost'];
-            $total         = $subtotal + $biayaAdmin + $biayaOngkir;
-
-            Log::info('Shipping quote prepared', [
-                'address_id' => $defaultAddress->id_alamat,
-                'courier' => $shippingQuote['courier'],
-                'cost' => $biayaOngkir,
+            Log::info('Total calculated', [
+                'subtotal' => $subtotal,
                 'admin_fee' => $biayaAdmin,
+                'shipping_cost' => $biayaOngkir,
                 'total' => $total,
             ]);
+
         } catch (\Exception $e) {
             Log::error('Error in createFromCheckout before transaction', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $e->getMessage()], 400);
+            }
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
 
         try {
             DB::beginTransaction();
 
-            Log::info('Creating order...', ['user_id' => $user->id_user, 'address_id' => $defaultAddress->id_alamat]);
+            Log::info('Creating order...', ['user_id' => $user->id_user, 'address_id' => $address->id_alamat]);
 
-            // Create order
+            // Create order with all shipping details
             $order = Order::create([
                 'id_user' => $user->id_user,
-                'id_alamat' => $defaultAddress->id_alamat,
+                'id_alamat' => $validated['id_alamat'],
                 'total_harga' => $total,
-                'shipping_cost' => $biayaOngkir,
-                'admin_fee' => $biayaAdmin,
-                'shipping_weight' => $shippingQuote['weight'],
-                'shipping_destination_city_id' => $shippingQuote['destination_city_id'],
-                'shipping_courier' => $shippingQuote['courier'],
-                'shipping_service' => $shippingQuote['service'],
-                'shipping_etd' => $shippingQuote['etd'],
-                'shipping_is_estimated' => $shippingQuote['is_estimated'],
+                'shipping_cost' => $validated['shipping_cost'],
+                'admin_fee' => $validated['admin_fee'],
+                'shipping_weight' => $validated['shipping_weight'],
+                'shipping_destination_city_id' => $validated['shipping_destination_city_id'],
+                'shipping_courier' => strtoupper($validated['shipping_courier']),
+                'shipping_service' => strtoupper($validated['shipping_service']),
+                'shipping_etd' => $validated['shipping_etd'],
+                'shipping_is_estimated' => $validated['shipping_is_estimated'],
                 'status' => 'pending' // Status pending, menunggu konfirmasi pembayaran
             ]);
 
-            Log::info('Order created', ['order_id' => $order->id_order]);
+            Log::info('Order created successfully', [
+                'order_id' => $order->id_order,
+                'order_exists_in_db' => Order::where('id_order', $order->id_order)->exists()
+            ]);
 
             // Create order detail
             \App\Models\OrderDetail::create([
                 'id_order' => $order->id_order,
-                'id_produk' => $id_produk,
+                'id_produk' => $id_produk, // Ambil dari URL parameter bukan dari $validated
                 'jumlah' => $qty,
                 'harga' => $hargaProduk
             ]);
 
-            Log::info('Order detail created');
+            Log::info('Order detail created successfully');
 
             // PAYMENT AKAN DIBUAT SAAT USER UPLOAD BUKTI TRANSFER (di PaymentController)
             // Tidak create payment di sini
@@ -260,6 +343,16 @@ class OrderController extends Controller
             DB::commit();
 
             Log::info('Transaction committed successfully - Order created without payment');
+
+            // Return JSON for API requests
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Pesanan berhasil dibuat!',
+                    'order' => $order->load(['user', 'address', 'orderDetails.product']),
+                    'order_id' => $order->id_order,
+                    'total_harga' => $total,
+                ], 200);
+            }
 
             // Redirect ke halaman checkout dengan order_id di URL
             return redirect()->route('checkout.show', ['id_produk' => $id_produk])
@@ -277,6 +370,10 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage()]);
         }
     }

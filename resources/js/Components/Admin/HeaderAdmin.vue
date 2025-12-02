@@ -1,15 +1,25 @@
 <script setup>
 import { computed } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
+import axios from 'axios'
 import Logo from '*/dashboard/logo-tandur.png'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
 
-const onLogout = () => {
-    router.post(route('logout'), {}, {
-        onSuccess: () => router.visit('/', { replace: true, preserveState: false })
-    })
+const onLogout = async () => {
+    try {
+        await axios.post('/logout', {}, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        router.visit('/dashboard', { replace: true, preserveState: false })
+    } catch (error) {
+        console.error('Logout failed:', error)
+        router.visit('/dashboard', { replace: true, preserveState: false })
+    }
 }
 </script>
 

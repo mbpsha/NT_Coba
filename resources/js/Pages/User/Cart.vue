@@ -41,16 +41,18 @@ const summaryView = computed(() => {
   return { subtotal: sub, admin, ongkir, total }
 })
 
-// Checkout single item
+// Checkout single item - langsung ke halaman checkout produk
 function checkoutSingle(it){
-  if(!it?.id_produk) return
-  router.visit(route('checkout',{ id_produk: it.id_produk }) + '?qty=' + (it.qty || 1))
+  if(!it?.id_produk && !it?.product?.id_produk) return
+  const productId = it.id_produk || it.product.id_produk
+  const quantity = it.qty || it.jumlah || 1
+  router.visit(`/checkout/${productId}?qty=${quantity}`)
 }
 
-// Checkout semua item (bulk)
+// Checkout semua item (bulk) - NOT IMPLEMENTED YET
 function checkoutAll(){
-  if(!props.items.length) return
-  router.visit(route('checkout.cart'))
+  alert('Fitur Checkout All belum tersedia. Silakan checkout satu per satu.')
+  // TODO: Implementasi bulk checkout jika diperlukan
 }
 
 // (Jika tetap diperlukan oleh fitur lain)
@@ -95,13 +97,13 @@ console.log('Render Cart.vue')
         <div class="space-y-3">
           <div v-for="it in items" :key="it.id_detail_keranjang"
               class="flex items-center gap-4 bg-white rounded-xl border p-3">
-              <img 
+              <img
                 :src="imgUrl(it.product.gambar)"
                 alt=""
                 class="w-16 h-16 object-contain rounded border"
                 @error="$event.target.src = FALLBACK"
               />
-              
+
             <div class="flex-1">
               <p class="text-sm font-medium">{{ it.product?.nama_produk || 'Produk' }}</p>
               <p class="text-[11px] text-gray-500">Qty: {{ it.qty }}</p>

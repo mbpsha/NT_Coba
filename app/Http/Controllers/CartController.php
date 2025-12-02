@@ -19,6 +19,7 @@ class CartController extends Controller
 
         $items = $cart ? $cart->cartDetails->map(fn($d) => [
                 'id_detail_keranjang' => $d->id_detail_keranjang,
+                'id_produk'  => $d->product->id_produk, // Langsung di level item untuk kemudahan
                 'qty'        => (int)$d->jumlah,
                 'added_at'   => optional($d->created_at)->format('d M Y'),
                 'avg_rating' => 0,

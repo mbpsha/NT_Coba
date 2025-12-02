@@ -1,6 +1,7 @@
 <script setup>
-import { Link, useForm, usePage, router } from '@inertiajs/vue3'
-import Logo from '*/dashboard/logo-ngundur.png'
+import { useForm, usePage, router } from '@inertiajs/vue3'
+import Header from '@/Components/User/Header.vue'
+import Footer from '@/Components/User/Footer.vue'
 
 const page = usePage()
 const checkoutIntent = page.props.checkoutIntent
@@ -43,13 +44,9 @@ function backToCheckout(){
 
 <template>
     <div class="flex flex-col min-h-screen bg-slate-50">
-        <header class="flex items-center justify-between h-16 px-4 shadow-sm bg-white/80 backdrop-blur">
-        <Link :href="route('dashboard')" class="flex items-center gap-2">
-            <img :src="Logo" alt="NGUNDUR" class="h-14" />
-        </Link>
-        </header>
+        <Header />
 
-        <main class="flex-1 w-full max-w-3xl p-6 mx-auto">
+        <main class="flex-1 w-full max-w-3xl p-6 mx-auto mt-16">
         <h1 class="mb-6 text-2xl font-semibold text-center">Profil Saya</h1>
 
         <div v-if="needAddress && checkoutIntent" class="px-4 py-3 mb-4 text-sm text-red-700 border border-red-300 rounded bg-red-50">
@@ -113,5 +110,7 @@ function backToCheckout(){
             </form>
         </div>
         </main>
+
+        <Footer />
     </div>
 </template>

@@ -14,6 +14,7 @@ use App\Services\ShippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -173,10 +174,13 @@ class CheckoutController extends Controller
         $biayaOngkir   = $shippingQuote['cost'];
         $total         = $subtotal + $biayaAdmin + $biayaOngkir;
 
-        // Ambil order_id dari session kalau ada (setelah create order)
-        $orderId = $request->session()->get('_order_id');
+        // Ambil order_id dari session kalau ada (hanya untuk web, bukan API)
+        $orderId = null;
+        if ($request->hasSession()) {
+            $orderId = $request->session()->get('_order_id');
+        }
 
-        return Inertia::render('User/Checkout', [
+        $checkoutData = [
             'order_id' => $orderId, // Pass order_id ke frontend
             'user' => [
                 'id_user'  => $user->id_user ?? $user->id ?? null,
@@ -220,7 +224,14 @@ class CheckoutController extends Controller
                 'etd'      => $shippingQuote['etd'],
                 'is_shipping_estimated' => $shippingQuote['is_estimated'],
             ],
-        ]);
+        ];
+
+        // Return JSON for API requests
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json($checkoutData);
+        }
+
+        return Inertia::render('User/Checkout', $checkoutData);
     }
 
     public function showAddressForm($id_produk, Request $request)
@@ -270,8 +281,19 @@ class CheckoutController extends Controller
 
     public function saveAddress(Request $request, $id_produk)
     {
+        Log::info('SaveAddress called', [
+            'id_produk' => $id_produk,
+            'request_data' => $request->all(),
+            'user_id' => $request->user()?->id_user ?? 'not authenticated'
+        ]);
+
         $qty  = max(1, (int) $request->input('qty', 1));
         $user = $request->user();
+
+        if (!$user) {
+            Log::error('SaveAddress: No authenticated user');
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
@@ -281,6 +303,8 @@ class CheckoutController extends Controller
             'detail' => 'nullable|string|max:255',
             'qty' => 'nullable|integer|min:1',
         ]);
+
+        Log::info('SaveAddress: Validation passed', ['validated' => $validated]);
 
         // Parse: Provinsi, Kabupaten, Kecamatan, Kelurahan/Desa, Kode Pos
         $parts = array_values(array_filter(array_map('trim', explode(',', $validated['prov_kab']))));
@@ -338,9 +362,10 @@ class CheckoutController extends Controller
         $alamatLengkap = implode(', ', $alamatParts);
 
         // Jadikan alamat baru sebagai default (alamat lain otomatis nonaktif)
-        Address::where('id_user', $user->id_user)->update(['is_default' => false]);
+        $updatedCount = Address::where('id_user', $user->id_user)->update(['is_default' => false]);
+        Log::info('SaveAddress: Set other addresses to non-default', ['updated_count' => $updatedCount]);
 
-        Address::create([
+        $addressData = [
             'id_user' => $user->id_user,
             'label' => 'Alamat Checkout',
             'nama_penerima' => $validated['nama'],
@@ -354,8 +379,34 @@ class CheckoutController extends Controller
             'provinsi' => $provinsi,
             'kode_pos' => $kodePos ?: '00000',
             'is_default' => true,
-        ]);
+        ];
 
+        Log::info('SaveAddress: About to create address', ['data' => $addressData]);
+
+        try {
+            $address = Address::create($addressData);
+            Log::info('SaveAddress: Address created successfully', [
+                'address_id' => $address->id_alamat,
+                'address_exists_in_db' => Address::where('id_alamat', $address->id_alamat)->exists()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('SaveAddress: Failed to create address', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+
+        // Return JSON for API requests (Postman/mobile apps)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Alamat berhasil disimpan!',
+                'address' => $address,
+                'redirect_url' => route('checkout.show', ['id_produk' => $id_produk, 'qty' => $qty])
+            ], 200);
+        }
+
+        // Redirect for web requests (Inertia/browser)
         return redirect()
             ->route('checkout.show', ['id_produk' => $id_produk, 'qty' => $qty])
             ->with('message', 'Alamat berhasil disimpan! Silakan lanjutkan checkout.');

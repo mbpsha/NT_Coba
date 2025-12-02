@@ -47,13 +47,28 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        // Generate Sanctum token
+        $token = $user->createToken('auth-token')->plainTextToken;
+        $verified = $user->hasVerifiedEmail();
+
+        // Return JSON with Sanctum token (untuk Postman & API)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Login successful!',
+                'user' => $user,
+                'token' => $token,
+                'email_verified' => $verified,
+                'redirect' => $verified ? ($user->role === 'admin' ? route('admin.dashboard') : route('dashboard')) : route('verification.notice')
+            ], 200);
+        }
+
         // Check if email is verified (skip for admin)
         if ($user->role !== 'admin' && !$user->hasVerifiedEmail()) {
             return redirect()->route('verification.notice')
                 ->with('message', 'Silakan verifikasi email Anda untuk dapat mengakses fitur Profil dan Pemesanan. Cek inbox email Anda.');
         }
 
-        // Redirect based on user role
+        // Web: Redirect based on user role
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')->with('message', 'Login successful!');
         }
@@ -68,10 +83,7 @@ class AuthController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'no_telp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'role' => 'nullable|in:admin,user',
-            'g-recaptcha-response' => 'required|captcha'
+            'role' => 'nullable|in:admin,user'
         ]);
 
         $user = User::create([
@@ -79,8 +91,6 @@ class AuthController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'no_telp' => $request->no_telp,
-            'alamat' => $request->alamat,
             'role' => $request->role ?? 'user'
         ]);
 
@@ -89,19 +99,46 @@ class AuthController extends Controller
         // Send email verification notification
         $user->sendEmailVerificationNotification();
 
-        // Redirect to verification notice page
+        // Generate Sanctum token
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        // Return JSON with Sanctum token (untuk Postman & API)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.',
+                'user' => $user,
+                'token' => $token,
+                'redirect' => route('verification.notice')
+            ], 200);
+        }
+
+        // Web: Redirect to verification notice page
         return redirect()->route('verification.notice')->with('message', 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.');
     }
 
     public function logout(Request $request)
     {
-        $isAdmin = $request->user() && $request->user()->role === 'admin';
+        $user = $request->user();
 
-        Auth::logout();
+        // Revoke all Sanctum tokens
+        if ($user) {
+            $user->tokens()->delete();
+        }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Only invalidate session if it exists (for web requests)
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
+        // Return JSON for API (Postman)
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Logout successful!'
+            ], 200);
+        }
+
+        // Web: Redirect to dashboard
         return redirect()->route('dashboard');
     }
 

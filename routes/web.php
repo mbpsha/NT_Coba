@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\News;
 use App\Models\User;
@@ -24,12 +25,17 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
 
-// Auth (guest)
+// Auth (guest) - Web Form Pages + POST handlers
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
+
+// Auth (authenticated) - Logout
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // Email Verification Routes
@@ -43,8 +49,13 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 });
 
-// Halaman publik
+// Halaman publik dashboard - redirect admin ke admin dashboard
 Route::get('/dashboard', function () {
+    // Jika user adalah admin yang sudah login, redirect ke admin dashboard
+    if (Auth::check() && Auth::user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
     $latestNews = News::published()->latest()->take(5)->get(); // kirim untuk carousel
     return Inertia::render('User/Dashboard', [
         'welcome'     => 'Halo',
@@ -92,16 +103,14 @@ Route::middleware(['auth', 'verified', 'user.only'])->group(function () {
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
 
     // Reviews
     Route::get('/penilaian', [ReviewController::class, 'ratingPage'])->name('reviews.index');
     Route::post('/penilaian', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
 });
 
-// Logout (tidak perlu email verification)
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-});
+
 
 // Admin (protected) — hanya auth + AdminMiddleware
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {

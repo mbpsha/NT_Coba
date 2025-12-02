@@ -1,13 +1,16 @@
 <script setup>
-import { ref } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { ref, reactive } from 'vue'
+import axios from 'axios'
+import { router } from '@inertiajs/vue3'
 
 import Logo from '*/dashboard/logo-ngundur.png'
 import Background from '*/login/BackgroundWOverlay.png'
 
-const form = useForm({
+const form = reactive({
     login: '',
     password: '',
+    processing: false,
+    errors: {}
 })
 
 const showPassword = ref(false)
@@ -15,10 +18,39 @@ const togglePassword = () => {
     showPassword.value = !showPassword.value
 }
 
-function submit() {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    })
+async function submit() {
+    form.processing = true
+    form.errors = {}
+
+    try {
+        const response = await axios.post('/login', {
+            login: form.login,
+            password: form.password
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+
+        // Token received, redirect based on role using Inertia router
+        const redirectUrl = response.data.redirect || (response.data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard')
+        router.visit(redirectUrl, {
+            replace: true,
+            preserveState: false,
+            preserveScroll: false
+        })
+    } catch (error) {
+        form.processing = false
+        if (error.response?.data?.errors) {
+            form.errors = error.response.data.errors
+        } else if (error.response?.data?.message) {
+            form.errors.login = error.response.data.message
+        } else {
+            form.errors.login = 'Login failed. Please try again.'
+        }
+        form.password = ''
+    }
 }
 </script>
 

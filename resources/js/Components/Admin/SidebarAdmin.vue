@@ -1,19 +1,24 @@
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
+import axios from 'axios'
 
 const isActive = (routeName) => {
     return route().current(routeName)
 }
 
-const logoutForm = useForm({})
-function logout() {
-    logoutForm.post(route('logout'), {
-        preserveState: false,
-        preserveScroll: false,
-        onSuccess: () => {
-            window.location.href = route('dashboard')
-        }
-    })
+async function logout() {
+    try {
+        await axios.post('/logout', {}, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        router.visit('/dashboard', { replace: true, preserveState: false })
+    } catch (error) {
+        console.error('Logout failed:', error)
+        router.visit('/dashboard', { replace: true, preserveState: false })
+    }
 }
 </script>
 
@@ -75,10 +80,9 @@ function logout() {
             <!-- Logout Button -->
             <button
                 @click="logout"
-                :disabled="logoutForm.processing"
                 class="flex items-center w-full px-6 py-3 mt-4 text-left transition hover:bg-red-500"
             >
-                {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
+                Logout
             </button>
         </nav>
     </aside>

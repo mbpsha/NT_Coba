@@ -59,9 +59,18 @@ function openAddressForm() {
 // STEP 1: CREATE ORDER
 const orderForm = useForm({
   qty: props.qty,
+  id_alamat: props.user?.id_alamat || null,
+  shipping_cost: props.shipping?.quote?.cost || props.summary?.ongkir || 0,
+  admin_fee: props.summary?.admin || 5000,
+  shipping_weight: props.summary?.weight || props.shipping?.quote?.weight || 1000,
+  shipping_destination_city_id: props.shipping?.quote?.destination_city_id || 0,
+  shipping_courier: props.summary?.courier || props.shipping?.quote?.courier || 'jne',
+  shipping_service: props.summary?.service || props.shipping?.quote?.service || 'REG',
+  shipping_etd: props.summary?.etd || props.shipping?.quote?.etd || '3-5',
+  shipping_is_estimated: props.summary?.is_shipping_estimated || props.shipping?.quote?.is_estimated ? 1 : 0,
 })
 function createOrder() {
-  console.log('Creating order...', { id_produk: props.product.id_produk, qty: props.qty })
+  console.log('Creating order with data:', orderForm.data())
   orderForm.post(route('order.create', { id_produk: props.product.id_produk }), {
     preserveScroll: false, // Allow page to scroll to top after order created
     preserveState: false,  // Force page re-render to show flash message

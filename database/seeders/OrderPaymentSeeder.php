@@ -76,7 +76,10 @@ class OrderPaymentSeeder extends Seeder
                 $picked = $products->random($detailCount);
                 $total = 0;
 
-                foreach (Arr::wrap($picked) as $p) {
+                // Ensure $picked is always a collection
+                $pickedCollection = is_a($picked, \Illuminate\Database\Eloquent\Collection::class) ? $picked : collect([$picked]);
+
+                foreach ($pickedCollection as $p) {
                     $qty = rand(1, 3);
                     $line = $p->harga * $qty;
                     OrderDetail::create([
@@ -96,7 +99,7 @@ class OrderPaymentSeeder extends Seeder
 
                 Payment::create([
                     'id_order' => $order->id_order,
-                    'metode_pembayaran' => 'QRIS',
+                    'metode_pembayaran' => 'qris',
                     'jumlah' => $total,
                     'status' => $pStatus,
                     'bukti_transfer' => $pStatus === 'verified'
