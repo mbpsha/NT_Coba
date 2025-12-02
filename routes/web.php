@@ -62,16 +62,16 @@ Route::get('/dashboard', function () {
     ]);
 })->name('dashboard');
 
-
-Route::middleware(['auth', 'user'])->group(function () {
-    // Produk - detail publik
-    Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
-
-    // Berita Dinamis
+// Berita Dinamis
     Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
     Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
     Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
     Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
+
+
+Route::middleware(['auth', 'user'])->group(function () {
+    // Produk - detail publik
+    Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
 
     // Toko
     Route::get('/toko', [TokoController::class, 'index'])->name('toko');
