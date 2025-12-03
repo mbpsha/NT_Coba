@@ -5,7 +5,7 @@ import { Head, useForm, router } from '@inertiajs/vue3'
 import { ref, onMounted, watch } from 'vue'
 
 const props = defineProps({
-  id_produk: { type: Number, required: true },
+  id_produk: { type: [Number, String], required: true }, // Accept both Number and String
   qty: { type: Number, default: 1 },
   prefill: { type: Object, default: () => ({}) }
 })
@@ -16,7 +16,8 @@ const form = useForm({
   prov_kab: props.prefill.prov_kab || '',
   street: props.prefill.street || '',
   detail: props.prefill.detail || '',
-  qty: props.qty
+  qty: props.qty,
+  city_id: props.prefill.city_id || null // TAMBAHAN: buat shipping calculation
 })
 
 // state untuk dropdown lokasi
@@ -59,17 +60,16 @@ async function loadCities () {
   }
   try {
     loadingCities.value = true
-    // Ambil nama provinsi untuk dijadikan kata kunci (atau pakai input pengguna)
-    const provName = provinces.value.find(p => String(p.province_id) === String(selectedProvinceId.value))?.province_name ?? ''
-    const url = `/api/cities?search=${encodeURIComponent(provName)}`
+    // PERBAIKAN: Kirim province_id, bukan nama provinsi
+    const url = `/api/cities?province_id=${selectedProvinceId.value}`
     const res = await fetch(url)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const { data } = await res.json()
-    // Sesuaikan shape item dari API (pakai id dan city_name)
+    // API return: { id, name } - mapping ke format yang kita butuhkan
     cities.value = (data ?? []).map(c => ({
       city_id: c.id,
-      city_name: c.city_name,
-      type: '' // jika tidak ada
+      city_name: c.name,
+      type: c.type || '' // tambahkan type kalo ada
     }))
   } catch (e) {
     console.error('Gagal load kota', e)
@@ -105,6 +105,9 @@ function buildProvKab () {
   ].filter(Boolean)
 
   form.prov_kab = parts.join(', ')
+  
+  // PERBAIKAN: Simpan city_id untuk shipping calculation
+  form.city_id = selectedCityId.value || null
 }
 
 onMounted(() => {

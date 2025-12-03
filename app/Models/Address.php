@@ -20,6 +20,7 @@
             'kabupaten',
             'provinsi',
             'kode_pos',
+            'city_id', // TAMBAHAN: untuk RajaOngkir shipping calculation
             'is_default'
         ];
 

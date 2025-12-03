@@ -12,8 +12,8 @@ class CheckRajaOngkir extends Command
 
     public function handle()
     {
-        $baseUrl = rtrim(config('rajaongkir.base_url', 'https://rajaongkir.komerce.id/api/v1'), '/');
-        $apiKey = config('rajaongkir.api_key');
+        $baseUrl = rtrim(config('services.rajaongkir.base_url', 'https://rajaongkir.komerce.id/api/v1'), '/');
+        $apiKey = config('services.rajaongkir.key'); // FIX: Pake services.rajaongkir.key
         $action = $this->argument('action');
         $search = $this->option('search');
         $id = $this->option('id');

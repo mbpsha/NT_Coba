@@ -301,6 +301,7 @@ class CheckoutController extends Controller
             'street' => 'required',
             'detail' => 'nullable',
             'qty'    => 'nullable|integer|min:1',
+            'city_id' => 'nullable|integer', // TAMBAHAN: untuk shipping calculation
         ]);
 
         // Parse "Provinsi, Kabupaten, Kecamatan, Kelurahan, Kode Pos"
@@ -346,6 +347,7 @@ class CheckoutController extends Controller
             'kabupaten' => $kabupaten,
             'provinsi' => $provinsi,
             'kode_pos' => $kodePos,
+            'city_id' => $validated['city_id'] ?? null, // TAMBAHAN: simpan city_id untuk shipping
             'is_default' => true,
         ]);
 
