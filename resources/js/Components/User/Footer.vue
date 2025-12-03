@@ -3,7 +3,7 @@ import FooterBg from '*/dashboard/footer-logo.png'
 </script>
 
 <template>
-    <footer class="relative mt-10">
+    <footer class="bg-green-800 text-green-50 w-full"> <!-- remove mt-*, keep full width -->
         <div class="relative bg-gradient-to-r from-green-800 to-green-700 text-white">
         <div class="absolute inset-y-0 right-0 w-1/3 opacity-30 hidden md:block">
             <img :src="FooterBg" alt="" class="w-full h-full object-cover">
