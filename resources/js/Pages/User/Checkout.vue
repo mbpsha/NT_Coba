@@ -31,11 +31,12 @@ const shippingQuoteText = computed(() => {
   return (base.length ? base.join(' • ') : 'Estimasi ongkir') + suffix
 })
 
-// Notification Pop-up State
+// Order ID (ambil dari props atau flash)
+const orderId = computed(() => props.order_id ?? page.props.flash?.order_id ?? null)
+
+// Notification Pop-up State (opsional, jika backend mengirim flash.notification)
 const showNotification = ref(false)
 const notification = ref(null)
-
-// Watch untuk notification dari backend
 watch(() => page.props.flash?.notification, (newNotif) => {
   if (newNotif) {
     notification.value = newNotif
@@ -49,7 +50,7 @@ function closeNotification() {
 }
 
 function goToMyOrders() {
-  router.visit('/pesanan-saya')
+  router.visit(route('orders.my'))
 }
 
 function openAddressForm() {
@@ -61,22 +62,17 @@ const orderForm = useForm({
   qty: props.qty,
 })
 function createOrder() {
-  console.log('Creating order...', { id_produk: props.product.id_produk, qty: props.qty })
   orderForm.post(route('order.create', { id_produk: props.product.id_produk }), {
-    preserveScroll: false, // Allow page to scroll to top after order created
-    preserveState: false,  // Force page re-render to show flash message
-    onSuccess: (response) => {
-      console.log('Order created successfully!', response)
-      // Page will reload with flash message
-    },
+    preserveScroll: false,
+    preserveState: false,
     onError: (errors) => {
       console.error('Order creation failed:', errors)
-      alert('Gagal membuat pesanan: ' + JSON.stringify(errors))
+      alert('Gagal membuat pesanan. Periksa data Anda.')
     }
   })
 }
 
-// STEP 2: UPLOAD BUKTI (setelah order dibuat)
+// STEP 2: UPLOAD BUKTI (setelah order dibuat) -> PaymentController@confirmPayment
 const payForm = useForm({
   trx_id: '',
   bukti_transfer: null,
@@ -86,15 +82,11 @@ function onFileChange(e) {
   payForm.bukti_transfer = e.target.files?.[0] || null
 }
 function submitPayment() {
-  // Gunakan order_id dari props (persistent) atau flash message
-  const orderId = props.order_id || page.props.flash?.order_id
-
-  if (!orderId) {
+  if (!orderId.value) {
     alert('Silakan buat pesanan terlebih dahulu dengan klik tombol "Buat Pesanan".')
     return
   }
-
-  payForm.post(route('payment.confirm', { id_order: orderId }), {
+  payForm.post(route('payment.confirm', { id_order: orderId.value }), {
     forceFormData: true,
     preserveScroll: true,
     onSuccess: () => {
@@ -117,7 +109,7 @@ function submitPayment() {
         </button>
       </div>
 
-      <!-- Success Messages -->
+      <!-- Flash Messages -->
       <div v-if="$page.props.flash?.message" class="px-4 py-2 mb-4 text-blue-800 bg-blue-100 rounded">
         {{ $page.props.flash.message }}
       </div>
@@ -125,7 +117,7 @@ function submitPayment() {
         {{ $page.props.flash.error }}
       </div>
 
-      <!-- Notification Pop-up (Success Payment) -->
+      <!-- Notification Pop-up (opsional) -->
       <Transition
         enter-active-class="transition duration-300 ease-out"
         enter-from-class="translate-y-4 opacity-0"
@@ -138,7 +130,6 @@ function submitPayment() {
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
              @click="closeNotification">
           <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl" @click.stop>
-            <!-- Icon Success -->
             <div class="flex justify-center mb-4">
               <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
                 <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,16 +137,12 @@ function submitPayment() {
                 </svg>
               </div>
             </div>
-
-            <!-- Title & Message -->
             <h3 class="mb-2 text-xl font-bold text-center text-gray-900">
               {{ notification.title }}
             </h3>
             <p class="mb-6 text-sm text-center text-gray-600">
               {{ notification.message }}
             </p>
-
-            <!-- Order Info -->
             <div class="p-3 mb-6 border rounded-lg bg-gray-50">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Order ID:</span>
@@ -166,8 +153,6 @@ function submitPayment() {
                 <span class="font-semibold">#{{ notification.payment_id }}</span>
               </div>
             </div>
-
-            <!-- Action Buttons -->
             <div class="flex gap-3">
               <button @click="closeNotification"
                       class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
@@ -184,7 +169,6 @@ function submitPayment() {
 
       <div class="p-5 bg-white border shadow-sm rounded-2xl md:p-6">
         <div class="grid md:grid-cols-[1fr_300px] gap-6">
-
           <!-- kiri: produk + alamat + ringkasan + konfirmasi -->
           <div class="space-y-4">
             <!-- Produk -->
@@ -201,7 +185,7 @@ function submitPayment() {
               </div>
             </div>
 
-            <!-- Alamat untuk pesanan ini -->
+            <!-- Alamat -->
             <div class="p-4 border border-green-100 rounded-lg bg-green-50">
               <div class="flex items-start justify-between gap-3">
                 <div>
@@ -246,13 +230,13 @@ function submitPayment() {
 
             <!-- Tombol Buat Pesanan / Selesaikan Pembayaran -->
             <button @click="createOrder"
-                    :disabled="orderForm.processing || order_id"
+                    :disabled="orderForm.processing || !!orderId"
                     class="w-full h-10 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-              {{ orderForm.processing ? 'Memproses...' : (order_id ? '✓ Pesanan Dibuat - Silakan Upload Bukti Pembayaran' : 'Buat Pesanan') }}
+              {{ orderForm.processing ? 'Memproses...' : (orderId ? '✓ Pesanan Dibuat - Silakan Upload Bukti Pembayaran' : 'Buat Pesanan') }}
             </button>
 
-            <!-- Info Order (hanya muncul setelah order dibuat) -->
-            <div v-if="order_id || $page.props.flash?.order_created" class="px-4 py-3 mt-2 border-l-4 border-red-500 rounded-md bg-red-50">
+            <!-- Info Order -->
+            <div v-if="orderId || $page.props.flash?.order_created" class="px-4 py-3 mt-2 border-l-4 border-red-500 rounded-md bg-red-50">
               <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -279,10 +263,10 @@ function submitPayment() {
 
                 <div>
                   <label class="block mb-1 text-sm font-medium">Bukti Pembayaran <span class="text-red-500">*</span></label>
-                  <input type="file" accept=".jpg,.jpeg,.png" @change="onFileChange"
+                  <input type="file" accept=".jpg,.jpeg,.png,.pdf,.webp" @change="onFileChange"
                          class="block w-full text-sm file:mr-3 file:px-4 file:py-2 file:rounded-md file:bg-green-600 file:text-white file:hover:bg-green-700 file:border-0" />
                   <ul class="mt-2 text-[11px] text-gray-600 list-disc ml-4">
-                    <li>Format: JPG, JPEG, PNG</li>
+                    <li>Format: JPG, JPEG, PNG, PDF, WEBP</li>
                     <li>Maksimal ukuran: 5 MB</li>
                     <li>Pastikan bukti pembayaran jelas dan dapat dibaca</li>
                   </ul>

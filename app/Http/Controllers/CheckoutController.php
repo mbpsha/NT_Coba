@@ -183,59 +183,59 @@ class CheckoutController extends Controller
                 ->with('need_address', true);
         }
 
-        // Ambil alamat default
+        // Alamat default
         $defaultAddress = Address::where('id_user', $user->id_user)
             ->where('is_default', true)
-            ->first();
-
-        if (!$defaultAddress) {
-            $defaultAddress = Address::where('id_user', $user->id_user)->first();
-        }
+            ->first()
+            ?: Address::where('id_user', $user->id_user)->first();
 
         // Shipping quote
         $shippingQuote = $this->buildShippingQuote($defaultAddress, $qty);
 
-        $subtotal  = $product->harga * $qty;
-        $biayaAdmin = $this->adminFee;
+        $subtotal    = $product->harga * $qty;
+        $biayaAdmin  = $this->adminFee;
         $biayaOngkir = $shippingQuote['cost'];
-        $total = $subtotal + $biayaAdmin + $biayaOngkir;
+        $total       = $subtotal + $biayaAdmin + $biayaOngkir;
 
         return Inertia::render('User/Checkout', [
+            // penting: kirim order_id dari flash agar tombol Konfirmasi dapat dipakai
+            'order_id' => session('order_id') ?: null,
+
             'user' => [
-                'id_user' => $user->id_user,
+                'id_user'   => $user->id_user,
                 'id_alamat' => $defaultAddress->id_alamat ?? null,
-                'nama' => $user->nama ?? $user->username,
-                'email'=> $user->email,
-                'no_telp' => $user->no_telp,
-                'alamat' => $defaultAddress->alamat_lengkap,
+                'nama'      => $user->nama ?? $user->username,
+                'email'     => $user->email,
+                'no_telp'   => $user->no_telp,
+                'alamat'    => $defaultAddress->alamat_lengkap,
             ],
 
             'shipping' => [
-                'name' => $defaultAddress->nama_penerima,
-                'text' => $defaultAddress->alamat_lengkap,
-                'phone'=> $defaultAddress->no_telp_penerima,
-                'quote'=> $shippingQuote,
+                'name'  => $defaultAddress->nama_penerima,
+                'text'  => $defaultAddress->alamat_lengkap,
+                'phone' => $defaultAddress->no_telp_penerima,
+                'quote' => $shippingQuote,
             ],
 
             'product' => [
-                'id_produk' => $product->id_produk,
+                'id_produk'   => $product->id_produk,
                 'nama_produk' => $product->nama_produk,
-                'deskripsi' => $product->deskripsi,
-                'harga' => $product->harga,
-                'gambar_url' => $this->getProductImageUrl($product->gambar),
+                'deskripsi'   => $product->deskripsi,
+                'harga'       => $product->harga,
+                'gambar_url'  => $this->getProductImageUrl($product->gambar),
             ],
 
             'qty' => $qty,
 
             'summary' => [
-                'admin' => $biayaAdmin,
-                'ongkir'=> $biayaOngkir,
+                'admin'   => $biayaAdmin,
+                'ongkir'  => $biayaOngkir,
                 'subtotal'=> $subtotal,
-                'total'=> $total,
-                'weight'=> $shippingQuote['weight'],
-                'courier'=> $shippingQuote['courier'],
-                'service'=> $shippingQuote['service'],
-                'etd'=> $shippingQuote['etd'],
+                'total'   => $total,
+                'weight'  => $shippingQuote['weight'],
+                'courier' => $shippingQuote['courier'],
+                'service' => $shippingQuote['service'],
+                'etd'     => $shippingQuote['etd'],
                 'is_shipping_estimated'=> $shippingQuote['is_estimated'],
             ],
         ]);
