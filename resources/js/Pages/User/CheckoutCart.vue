@@ -6,11 +6,11 @@ import { ref, computed, watch } from 'vue'
 import Qris from '*/dashboard/qrisNGUNDUR.jpg'
 
 const props = defineProps({
-  order_id: { type: Number, default: null }, // Order ID yang sudah dibuat (persistent)
+  order_id: { type: Number, default: null },
   user: { type: Object, required: true },
   shipping: { type: Object, required: true },
-  product: { type: Object, required: true },
-  qty: { type: Number, default: 1 },
+  products: { type: Array, required: true },
+  cart_id: { type: Number, required: true },
   summary: { type: Object, required: true }
 })
 
@@ -31,10 +31,8 @@ const shippingQuoteText = computed(() => {
   return (base.length ? base.join(' • ') : 'Estimasi ongkir') + suffix
 })
 
-// Order ID (ambil dari props atau flash)
 const orderId = computed(() => props.order_id ?? page.props.flash?.order_id ?? null)
 
-// Notification Pop-up State (opsional, jika backend mengirim flash.notification)
 const showNotification = ref(false)
 const notification = ref(null)
 watch(() => page.props.flash?.notification, (newNotif) => {
@@ -54,40 +52,36 @@ function goToMyOrders() {
 }
 
 function openAddressForm() {
-  router.visit(route('checkout.address', { id_produk: props.product.id_produk }) + `?qty=${props.qty}`)
+  router.visit(route('checkout.cart.address'))
 }
 
-// QTY management
-const currentQty = ref(props.qty)
+// Update qty di cart
+function updateQty(productItem, change) {
+  const newQty = productItem.qty + change
+  if (newQty < 1) return
+  if (newQty > productItem.stok) {
+    alert(`Stok maksimal: ${productItem.stok}`)
+    return
+  }
 
-function incrementQty() {
-  currentQty.value++
-  router.reload({
-    only: ['summary', 'shipping'],
-    data: { qty: currentQty.value },
+  router.post(route('cart.update.qty'), {
+    id_detail: productItem.id_detail_keranjang,
+    qty: newQty
+  }, {
+    preserveScroll: true,
     preserveState: true,
-    preserveScroll: true
+    onSuccess: () => {
+      router.reload({ only: ['products', 'summary'] })
+    }
   })
 }
 
-function decrementQty() {
-  if (currentQty.value <= 1) return
-  currentQty.value--
-  router.reload({
-    only: ['summary', 'shipping'],
-    data: { qty: currentQty.value },
-    preserveState: true,
-    preserveScroll: true
-  })
-}
-
-// STEP 1: CREATE ORDER
+// CREATE ORDER FROM CART
 const orderForm = useForm({
-  qty: currentQty,
+  cart_id: props.cart_id,
 })
-function createOrder() {
-  orderForm.qty = currentQty.value
-  orderForm.post(route('order.create', { id_produk: props.product.id_produk }), {
+function createOrderFromCart() {
+  orderForm.post(route('order.cart.create'), {
     preserveScroll: false,
     preserveState: false,
     onError: (errors) => {
@@ -97,7 +91,7 @@ function createOrder() {
   })
 }
 
-// STEP 2: UPLOAD BUKTI (setelah order dibuat) -> PaymentController@confirmPayment
+// UPLOAD BUKTI
 const payForm = useForm({
   trx_id: '',
   bukti_transfer: null,
@@ -108,7 +102,7 @@ function onFileChange(e) {
 }
 function submitPayment() {
   if (!orderId.value) {
-    alert('Silakan buat pesanan terlebih dahulu dengan klik tombol "Buat Pesanan".')
+    alert('Silakan buat pesanan terlebih dahulu.')
     return
   }
   payForm.post(route('payment.confirm', { id_order: orderId.value }), {
@@ -124,13 +118,13 @@ function submitPayment() {
 <template>
   <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
     <Header />
-    <Head title="Check Out" />
+    <Head title="Checkout Cart" />
 
     <main class="max-w-5xl px-4 pt-24 pb-16 mx-auto sm:px-6 lg:px-8">
       <div class="flex items-center justify-between mb-4">
-        <h1 class="text-lg font-semibold">Check Out</h1>
-        <button @click="router.visit('/toko')" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
-          Kembali
+        <h1 class="text-lg font-semibold">Checkout - Keranjang</h1>
+        <button @click="router.visit('/cart')" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+          Kembali ke Keranjang
         </button>
       </div>
 
@@ -142,93 +136,54 @@ function submitPayment() {
         {{ $page.props.flash.error }}
       </div>
 
-      <!-- Notification Pop-up (opsional) -->
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="translate-y-4 opacity-0"
-        enter-to-class="translate-y-0 opacity-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="translate-y-0 opacity-100"
-        leave-to-class="translate-y-4 opacity-0"
-      >
-        <div v-if="showNotification && notification"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-             @click="closeNotification">
-          <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl" @click.stop>
-            <div class="flex justify-center mb-4">
-              <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
-                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-              </div>
-            </div>
-            <h3 class="mb-2 text-xl font-bold text-center text-gray-900">
-              {{ notification.title }}
-            </h3>
-            <p class="mb-6 text-sm text-center text-gray-600">
-              {{ notification.message }}
-            </p>
-            <div class="p-3 mb-6 border rounded-lg bg-gray-50">
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Order ID:</span>
-                <span class="font-semibold">#{{ notification.order_id }}</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Payment ID:</span>
-                <span class="font-semibold">#{{ notification.payment_id }}</span>
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <button @click="closeNotification"
-                      class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
-                Tutup
-              </button>
-              <button @click="goToMyOrders"
-                      class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-                Lihat Pesanan Saya
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
       <div class="p-5 bg-white border shadow-sm rounded-2xl md:p-6">
         <div class="grid md:grid-cols-[1fr_300px] gap-6">
           <!-- kiri: produk + alamat + ringkasan + konfirmasi -->
           <div class="space-y-4">
-            <!-- Produk -->
-            <div class="flex gap-4">
-              <img :src="product.gambar_url || '/assets/dashboard/profil.png'"
-                   class="object-contain w-24 h-24 border rounded-md" alt="produk"
-                   @error="$event.target.src='/assets/dashboard/profil.png'" />
-              <div class="flex-1">
-                <p class="font-semibold leading-snug">{{ product.nama_produk }}</p>
-                <p class="mt-1 text-xs text-gray-600 line-clamp-2">{{ product.deskripsi }}</p>
-                <div class="mt-2 font-bold text-red-600">{{ fmt(product.harga) }}</div>
-                <div class="flex items-center gap-2 mt-2">
-                  <span class="text-xs text-gray-600">Jumlah:</span>
-                  <button @click="decrementQty"
-                          :disabled="currentQty <= 1 || !!orderId"
-                          class="flex items-center justify-center w-6 h-6 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                    -
-                  </button>
-                  <span class="w-8 text-sm font-medium text-center">{{ currentQty }}</span>
-                  <button @click="incrementQty"
-                          :disabled="!!orderId"
-                          class="flex items-center justify-center w-6 h-6 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                    +
-                  </button>
+            <!-- Products List -->
+            <div>
+              <h2 class="mb-3 text-sm font-semibold text-gray-700">Produk yang Dipesan</h2>
+              <div class="space-y-3">
+                <div v-for="product in products" :key="product.id_produk"
+                     class="flex gap-4 pb-3 border-b last:border-0 last:pb-0">
+                  <img :src="product.gambar_url || '/assets/dashboard/profil.png'"
+                       :alt="product.nama_produk"
+                       class="object-contain w-20 h-20 border rounded-md"
+                       @error="$event.target.src='/assets/dashboard/profil.png'" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold leading-snug">{{ product.nama_produk }}</p>
+                    <div class="mt-2 text-sm font-bold text-red-600">{{ fmt(product.harga) }}</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs text-gray-600">Jumlah:</span>
+                      <div class="flex items-center gap-1">
+                        <button @click="updateQty(product, -1)"
+                                :disabled="product.qty <= 1"
+                                class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                          -
+                        </button>
+                        <span class="w-8 text-center text-sm font-medium">{{ product.qty }}</span>
+                        <button @click="updateQty(product, 1)"
+                                :disabled="product.qty >= product.stok"
+                                class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                          +
+                        </button>
+                      </div>
+                      <span class="text-[10px] text-gray-500">(Stok: {{ product.stok }})</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-semibold text-gray-800">{{ fmt(product.harga * product.qty) }}</p>
+                  </div>
                 </div>
-                <div class="mt-1 text-xs text-gray-600">Estimasi Tiba: <span class="font-medium">± 15 hari</span></div>
               </div>
             </div>
 
             <!-- Alamat -->
             <div class="p-4 border border-green-100 rounded-lg bg-green-50">
               <div class="flex items-start justify-between gap-3">
-                <div>
+                <div class="flex-1">
                   <p class="text-sm font-semibold">
-                    {{ shipping.is_temp ? 'Alamat Pengiriman (Sementara)' : 'Alamat Saya' }}
+                    {{ shipping.is_temp ? 'Alamat Pengiriman (Sementara)' : 'Alamat Pengiriman' }}
                   </p>
                   <p class="mt-1 text-xs text-gray-700 whitespace-pre-line">
                     {{ shipping.name }}<br>
@@ -240,8 +195,8 @@ function submitPayment() {
                   <div class="pt-3 mt-3 text-xs text-gray-600 border-t border-green-100">
                     <p class="font-semibold text-gray-700">Info Pengiriman</p>
                     <p>{{ shippingQuoteText }}</p>
-                    <p v-if="shipping.quote && shipping.quote.weight" class="text-[11px] text-gray-500">
-                      Berat dihitung: {{ formatWeight(shipping.quote.weight) }} kg
+                    <p v-if="summary.weight" class="text-[11px] text-gray-500">
+                      Berat dihitung: {{ formatWeight(summary.weight) }} kg
                     </p>
                   </div>
                 </div>
@@ -254,7 +209,7 @@ function submitPayment() {
 
             <!-- Ringkasan -->
             <div class="p-4 text-sm border rounded-lg bg-gray-50">
-              <div class="flex justify-between"><span>Harga Produk</span><span>{{ fmt(product.harga * qty) }}</span></div>
+              <div class="flex justify-between"><span>Subtotal Produk</span><span>{{ fmt(summary.subtotal) }}</span></div>
               <div class="flex justify-between"><span>Biaya Admin</span><span>{{ fmt(summary.admin) }}</span></div>
               <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summary.ongkir) }}</span></div>
               <p v-if="summary.courier || summary.service || summary.etd" class="mt-1 text-[11px] text-right text-gray-500">
@@ -266,8 +221,8 @@ function submitPayment() {
               <div class="flex justify-between font-semibold"><span>Total Harga</span><span>{{ fmt(summary.total) }}</span></div>
             </div>
 
-            <!-- Tombol Buat Pesanan / Selesaikan Pembayaran -->
-            <button @click="createOrder"
+            <!-- Tombol Buat Pesanan -->
+            <button @click="createOrderFromCart"
                     :disabled="orderForm.processing || !!orderId"
                     class="w-full h-10 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
               {{ orderForm.processing ? 'Memproses...' : (orderId ? '✓ Pesanan Dibuat - Silakan Upload Bukti Pembayaran' : 'Buat Pesanan') }}

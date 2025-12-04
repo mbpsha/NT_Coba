@@ -253,4 +253,123 @@ class OrderController extends Controller
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * CREATE ORDER FROM CART (BULK)
+     */
+    public function createFromCart(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'cart_id' => 'required|integer|exists:carts,id_keranjang',
+            'metode_pembayaran' => 'nullable|string|in:transfer_bank,ewallet,cod,kartu_kredit,qris',
+        ]);
+
+        $cartId = (int) $validated['cart_id'];
+
+        // Ambil cart items
+        $cart = \App\Models\Cart::where('id_keranjang', $cartId)
+            ->where('id_user', $user->id_user)
+            ->firstOrFail();
+
+        $cartItems = $cart->cartDetails()->with('product')->get();
+
+        if ($cartItems->isEmpty()) {
+            return back()->withErrors(['error' => 'Keranjang kosong.']);
+        }
+
+        // Alamat default
+        $defaultAddress = Address::where('id_user', $user->id_user)->where('is_default', true)->first()
+            ?: Address::where('id_user', $user->id_user)->first();
+
+        if (!$defaultAddress) {
+            return back()->withErrors(['error' => 'Alamat belum dilengkapi. Silakan lengkapi alamat terlebih dahulu.']);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $subtotal = 0;
+            $totalQty = 0;
+            $orderDetails = [];
+
+            // Validasi stok dan hitung subtotal
+            foreach ($cartItems as $item) {
+                $product = \App\Models\Product::where('id_produk', $item->id_produk)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $qty = max(1, $item->qty);
+
+                if ($product->stok < $qty) {
+                    DB::rollBack();
+                    return back()->withErrors(['error' => "Stok produk '{$product->nama_produk}' tidak mencukupi."]);
+                }
+
+                $hargaProduk = (int) $product->harga;
+                $subtotal += $hargaProduk * $qty;
+                $totalQty += $qty;
+
+                $orderDetails[] = [
+                    'product' => $product,
+                    'qty' => $qty,
+                    'harga' => $hargaProduk,
+                ];
+            }
+
+            // Hitung shipping
+            $weight = max(1, $totalQty) * max(1, $this->defaultItemWeight);
+            $shippingQuote = $this->shippingService->quote($defaultAddress, $weight);
+            $shippingQuote['weight'] = $weight;
+
+            $biayaAdmin  = $this->adminFee;
+            $biayaOngkir = $shippingQuote['cost'];
+            $total       = $subtotal + $biayaAdmin + $biayaOngkir;
+
+            // Buat order
+            $order = Order::create([
+                'id_user' => $user->id_user,
+                'id_alamat' => $defaultAddress->id_alamat,
+                'total_harga' => $total,
+                'shipping_cost' => $biayaOngkir,
+                'admin_fee' => $biayaAdmin,
+                'shipping_weight' => $shippingQuote['weight'],
+                'shipping_destination_city_id' => $shippingQuote['destination_city_id'] ?? null,
+                'shipping_courier' => $shippingQuote['courier'] ?? null,
+                'shipping_service' => $shippingQuote['service'] ?? null,
+                'shipping_etd' => $shippingQuote['etd'] ?? null,
+                'shipping_is_estimated' => $shippingQuote['is_estimated'] ?? false,
+                'status' => 'pending',
+            ]);
+
+            // Buat order details dan kurangi stok
+            foreach ($orderDetails as $detail) {
+                \App\Models\OrderDetail::create([
+                    'id_order' => $order->id_order,
+                    'id_produk' => $detail['product']->id_produk,
+                    'jumlah' => $detail['qty'],
+                    'harga' => $detail['harga'],
+                ]);
+
+                $detail['product']->decrement('stok', $detail['qty']);
+            }
+
+            // Hapus cart items setelah checkout
+            $cart->cartDetails()->delete();
+
+            DB::commit();
+
+            return redirect()->route('checkout.cart')->with([
+                'order_created' => true,
+                'order_id' => $order->id_order,
+                'total_harga' => $total,
+                'message' => 'Pesanan berhasil dibuat! Silakan upload bukti pembayaran.',
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage()]);
+        }
+    }
 }

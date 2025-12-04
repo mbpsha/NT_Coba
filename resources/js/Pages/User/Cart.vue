@@ -43,8 +43,12 @@ const summaryView = computed(() => {
 
 // Checkout single item
 function checkoutSingle(it){
-  if(!it?.id_produk) return
-  router.visit(route('checkout',{ id_produk: it.id_produk }) + '?qty=' + (it.qty || 1))
+  const productId = it?.product?.id_produk || it?.id_produk
+  if(!productId) {
+    console.error('Product ID not found:', it)
+    return
+  }
+  router.visit(route('checkout.show', { id_produk: productId }) + '?qty=' + (it.qty || 1))
 }
 
 // Checkout semua item (bulk)
@@ -72,6 +76,27 @@ function openAddressForm(){
   router.visit(route('checkout.address',{ id_produk: firstId }) + '?qty=1&from=cart')
 }
 
+// Update qty cart item
+function updateQty(cartDetailId, newQty) {
+  if (newQty < 1) return
+  router.post(route('cart.update.qty'), {
+    id_detail: cartDetailId,
+    qty: newQty
+  }, {
+    preserveScroll: true,
+    preserveState: true,
+  })
+}
+
+function incrementQty(item) {
+  updateQty(item.id_detail_keranjang, (item.qty || 1) + 1)
+}
+
+function decrementQty(item) {
+  if ((item.qty || 1) <= 1) return
+  updateQty(item.id_detail_keranjang, (item.qty || 1) - 1)
+}
+
 console.log('Render Cart.vue')
 </script>
 
@@ -95,27 +120,39 @@ console.log('Render Cart.vue')
         <div class="space-y-3">
           <div v-for="it in items" :key="it.id_detail_keranjang"
               class="flex items-center gap-4 bg-white rounded-xl border p-3">
-              <img 
+              <img
                 :src="imgUrl(it.product.gambar)"
                 alt=""
                 class="w-16 h-16 object-contain rounded border"
                 @error="$event.target.src = FALLBACK"
               />
-              
+
             <div class="flex-1">
               <p class="text-sm font-medium">{{ it.product?.nama_produk || 'Produk' }}</p>
-              <p class="text-[11px] text-gray-500">Qty: {{ it.qty }}</p>
-              <p class="text-[11px] text-gray-500">{{ fmt(it.product?.harga || 0) }} / pcs</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="decrementQty(it)"
+                        :disabled="(it.qty || 1) <= 1"
+                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                  -
+                </button>
+                <span class="text-sm font-medium w-8 text-center">{{ it.qty || 1 }}</span>
+                <button @click="incrementQty(it)"
+                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">
+                  +
+                </button>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">{{ fmt(it.product?.harga || 0) }} / pcs</p>
             </div>
 
-            <div class="text-sm font-semibold text-green-700">
-              {{ fmt((it.product?.harga || 0) * (it.qty || 0)) }}
+            <div class="flex flex-col items-end gap-2">
+              <div class="text-sm font-semibold text-green-700">
+                {{ fmt((it.product?.harga || 0) * (it.qty || 0)) }}
+              </div>
+              <button @click="checkoutSingle(it)"
+                      class="text-[11px] px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700">
+                Checkout
+              </button>
             </div>
-
-            <button @click="checkoutSingle(it)"
-                    class="text-[11px] px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700">
-              Checkout
-            </button>
           </div>
         </div>
 

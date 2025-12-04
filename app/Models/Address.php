@@ -1,35 +1,36 @@
 <?php
-    namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Model;
+namespace App\Models;
 
-    class Address extends Model
+use Illuminate\Database\Eloquent\Model;
+
+class Address extends Model
+{
+    protected $primaryKey = 'id_alamat';
+
+    protected $fillable = [
+        'id_user',
+        'label',
+        'nama_penerima',
+        'no_telp_penerima',
+        'nama_jalan',
+        'no_rumah',
+        'alamat_lengkap',
+        'kelurahan_desa',
+        'kecamatan',
+        'kabupaten',
+        'provinsi',
+        'kode_pos',
+        'city_id', // TAMBAHAN: untuk RajaOngkir shipping calculation
+        'is_default'
+    ];
+
+    protected $casts = [
+        'is_default' => 'boolean',
+    ];
+
+    public function user()
     {
-        protected $primaryKey = 'id_alamat';
-
-        protected $fillable = [
-            'id_user',
-            'label',
-            'nama_penerima',
-            'no_telp_penerima',
-            'nama_jalan',
-            'no_rumah',
-            'alamat_lengkap',
-            'kelurahan_desa',
-            'kecamatan',
-            'kabupaten',
-            'provinsi',
-            'kode_pos',
-            'city_id', // TAMBAHAN: untuk RajaOngkir shipping calculation
-            'is_default'
-        ];
-
-        protected $casts = [
-            'is_default' => 'boolean',
-        ];
-
-        public function user()
-        {
-            return $this->belongsTo(User::class, 'id_user', 'id_user');
-        }
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
+}
