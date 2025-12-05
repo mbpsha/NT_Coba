@@ -1,79 +1,72 @@
 <script setup>
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
+
+const props = defineProps({
+  pendingReviews: { type: Array, default: () => [] },
+  history: { type: Array, default: () => [] }
+})
 
 const activeTab = ref('review')
 const showToast = ref(false)
 const toastMsg = ref('')
 
-// Dummy: seluruh histori pesanan (rating null = belum dinilai)
-const orders = ref([
-  {
-    id: 101,
-    name: 'IoT Stech Smart Garden',
-    note: '(Belum include panel surya) + Buku panduan + Source Code',
-    date: '2 Maret 2024',
-    image: '/assets/dashboard/profil.png',
-    rating: null,
-    reviewText: ''
-  },
-  {
-    id: 102,
-    name: 'IoT Stech Smart Garden',
-    note: '(Include panel surya) + Buku panduan + Source Code',
-    date: '2 Maret 2024',
-    image: '/assets/dashboard/profil.png',
-    rating: null,
-    reviewText: ''
-  },
-  {
-    id: 103,
-    name: 'Pupuk Organik Cair 1L',
-    note: 'Cocok untuk sayur',
-    date: '1 Maret 2024',
-    image: '/assets/dashboard/profil.png',
-    rating: 4,
-    reviewText: 'Bagus, tanaman cepat segar.'
-  }
-])
+const pending = computed(() => props.pendingReviews ?? [])
+const historyList = computed(() => props.history ?? [])
 
-// Pesanan yang belum dinilai
-const pending = computed(() => orders.value.filter(o => o.rating === null))
+const selectedDetailId = ref(pending.value[0]?.detail_id ?? null)
 
-// Produk yang sedang dinilai (default: yang pertama pending)
-const selectedId = ref(pending.value[0]?.id ?? null)
-watch(pending, (p) => {
-  if (!p.length) selectedId.value = null
-  else if (!p.find(x => x.id === selectedId.value)) selectedId.value = p[0].id
+const currentItem = computed(() =>
+  pending.value.find(o => o.detail_id === selectedDetailId.value) || null
+)
+
+const form = useForm({
+  id_produk: currentItem.value?.id_produk ?? null,
+  rating: 0,
+  komentar: ''
 })
 
-const currentItem = computed(() => orders.value.find(o => o.id === selectedId.value) || null)
-const ratingModel = ref(0)
-const reviewModel = ref('')
-
-watch(currentItem, (it) => {
-  ratingModel.value = it?.rating || 0
-  reviewModel.value = it?.reviewText || ''
+watch(() => pending.value, (items) => {
+  if (!items.length) {
+    selectedDetailId.value = null
+    return
+  }
+  if (!items.find(x => x.detail_id === selectedDetailId.value)) {
+    selectedDetailId.value = items[0].detail_id
+  }
 }, { immediate: true })
 
-function setRating(v) { ratingModel.value = v }
+watch(currentItem, (item) => {
+  form.id_produk = item?.id_produk ?? null
+  form.rating = 0
+  form.komentar = ''
+}, { immediate: true })
+
+function setRating(v) {
+  form.rating = v
+}
 
 function submitReview() {
   if (!currentItem.value) return
-  if (!ratingModel.value) return toast('Pilih rating terlebih dahulu.')
+  if (!form.rating) return toast('Pilih rating terlebih dahulu.')
 
-  // Simpan dummy ke data lokal
-  currentItem.value.rating = ratingModel.value
-  currentItem.value.reviewText = reviewModel.value?.trim() || ''
-  toast('Terima kasih! Penilaianmu sudah terkirim.')
-  activeTab.value = 'history'
+  form.post(route('reviews.store'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast('Terima kasih! Penilaianmu sudah terkirim.')
+      activeTab.value = 'history'
+    },
+    onError: (errors) => {
+      if (errors.rating) toast(errors.rating)
+      else if (errors.id_produk) toast(errors.id_produk)
+    }
+  })
 }
 
 function buyAgain(it) {
-  // Arahkan ke checkout (dummy)
-  router.visit(`/checkout/${it.id}?qty=1`, { preserveScroll: true })
+  router.visit(`/checkout/${it.id_produk}?qty=1`, { preserveScroll: true })
 }
 
 function toast(message) {
@@ -101,19 +94,34 @@ function toast(message) {
           class="pb-2 text-sm font-semibold border-b-2"
           :class="activeTab==='history' ? 'text-green-700 border-green-600' : 'text-gray-500 border-transparent'"
           @click="activeTab='history'">
-          Histori pembelian
+          Histori Penilaian
         </button>
       </div>
 
       <!-- Beri Penilaian -->
       <section v-show="activeTab==='review'">
         <div v-if="currentItem" class="p-6 bg-white border shadow-sm rounded-2xl">
+          <div v-if="pending.length > 1" class="flex flex-wrap gap-2 mb-6">
+            <button
+              v-for="item in pending"
+              :key="item.detail_id"
+              type="button"
+              @click="selectedDetailId = item.detail_id"
+              class="px-3 py-1 text-xs font-medium rounded-full border transition"
+              :class="selectedDetailId === item.detail_id
+                ? 'bg-green-100 border-green-500 text-green-700'
+                : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-400'">
+              {{ item.name }}
+            </button>
+          </div>
+
           <!-- Header produk -->
           <div class="flex items-start gap-4">
             <img :src="currentItem.image" class="object-contain w-16 h-16 bg-white border rounded-md" alt="produk">
             <div class="flex-1">
               <p class="text-base font-semibold leading-tight">{{ currentItem.name }}</p>
-              <p class="text-xs text-gray-600">{{ currentItem.note }}</p>
+              <p class="text-xs text-gray-600">{{ currentItem.note || 'Pesanan siap dinilai' }}</p>
+              <p class="text-[11px] text-gray-400 mt-1">{{ currentItem.date }}</p>
             </div>
           </div>
 
@@ -122,30 +130,33 @@ function toast(message) {
             <p class="mb-3 text-sm font-semibold">Nilai Produk</p>
             <div class="flex items-center justify-center gap-3 text-4xl">
               <button v-for="i in 5" :key="i" @click="setRating(i)"
-                      :class="i<=ratingModel ? 'text-yellow-400' : 'text-gray-300'">★</button>
+                      :class="i<=form.rating ? 'text-yellow-400' : 'text-gray-300'">★</button>
             </div>
+            <p v-if="form.errors.rating" class="mt-2 text-sm text-red-600">{{ form.errors.rating }}</p>
 
             <!-- Ulasan -->
             <p class="mt-8 mb-2 text-sm font-semibold">Tulis Ulasan</p>
-            <textarea v-model="reviewModel" rows="6"
-                      class="w-full px-3 py-2 border rounded-xl bg-gray-50"
+            <textarea v-model="form.komentar" rows="6"
+                      class="w-full px-3 py-2 border rounded-xl bg-gray-50 focus:ring-green-500 focus:border-green-500"
                       placeholder="Ceritakan pengalamanmu (opsional)"></textarea>
+            <p v-if="form.errors.komentar" class="mt-1 text-sm text-red-600">{{ form.errors.komentar }}</p>
 
             <button @click="submitReview"
-                    class="h-10 px-6 mt-6 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-              Kirim
+                    :disabled="form.processing"
+                    class="h-10 px-6 mt-6 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400">
+              {{ form.processing ? 'Menyimpan...' : 'Kirim' }}
             </button>
           </div>
         </div>
 
         <p v-else class="py-10 text-sm text-center text-gray-500">
-          Tidak ada pesanan yang perlu dinilai.
+          Semua pesanan sudah dinilai. Terima kasih!
         </p>
       </section>
 
       <!-- Histori pembelian -->
       <section v-show="activeTab==='history'" class="space-y-4">
-        <div v-for="it in orders" :key="it.id" class="flex items-center gap-4 p-4 border border-green-100 bg-green-50/70 rounded-2xl">
+        <div v-for="it in historyList" :key="it.id" class="flex items-center gap-4 p-4 border border-green-100 bg-green-50/70 rounded-2xl">
           <img :src="it.image" alt="produk" class="object-contain w-16 h-16 bg-white border rounded-md" />
           <div class="flex-1">
             <p class="text-sm font-semibold leading-tight">
@@ -162,6 +173,9 @@ function toast(message) {
             Beli Lagi
           </button>
         </div>
+        <p v-if="!historyList.length" class="py-6 text-sm text-center text-gray-500">
+          Belum ada ulasan. Ayo beri penilaian setelah pesananmu selesai!
+        </p>
       </section>
     </main>
 

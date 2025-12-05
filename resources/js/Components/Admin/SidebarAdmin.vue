@@ -18,7 +18,7 @@ function logout() {
 </script>
 
 <template>
-    <aside class="fixed top-0 left-0 w-64 h-screen text-white shadow-xl bg-gradient-to-b from-green-600 to-green-700">
+    <aside class="fixed top-0 left-0 w-64 h-screen text-black shadow-xl bg-gradient-to-b from-green-200 to-green-260">
         <div class="p-6">
             <h1 class="text-2xl font-bold">ADMIN PANEL</h1>
         </div>

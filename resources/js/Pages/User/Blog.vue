@@ -2,88 +2,180 @@
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import { Head } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+
+import faqBG from '*/dashboard/blogfaq.png'
+
+const activeTab = ref('produk')
+const openedIndex = ref(null)
+
+const heroStyle = computed(() => ({
+  backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0)), url('${faqBG}')`,
+  height: '400px',
+  backgroundPosition: 'center 0px',
+  backgroundSize: 'cover'
+}))
+
+const faqs = {
+  produk: [
+    {
+      question: 'Apa itu Ngundur (Nguthik Tandur)?',
+      answer:
+        'Ngundur adalah perangkat IoT penyiram tanaman otomatis yang bekerja menggunakan sensor kelembapan tanah untuk menentukan kapan tanaman memerlukan air.'
+    },
+    {
+      question: 'Bagaimana cara kerja sistem penyiraman otomatis?',
+      answer:
+        'Sensor akan membaca tingkat kelembapan tanah. Jika tanah terlalu kering, sistem akan mengaktifkan pompa air secara otomatis. Jika sudah cukup lembap, pompa akan berhenti.'
+    },
+    {
+      question: 'Apakah alat ini bisa digunakan untuk berbagai jenis tanaman?',
+      answer:
+        'Ya, Ngundur dapat digunakan untuk berbagai jenis tanaman, baik skala rumah tangga, urban farming, hingga pertanian kecil'
+    },
+    {
+      question: 'Apakah alat Ngundur membutuhkan listrik untuk bekerja?',
+      answer: `Ya, Ngundur membutuhkan sumber energi. Terdapat dua pilihan jenis alat:
+              • Tipe Panel Surya  – cocok untuk lokasi jauh dari listrik.
+              • Tipe Listrik Langsung  - cocok untuk indoor atau area akses listrik stabil.`
+    },
+    {
+      question: 'Apakah Ngundur bisa tetap bekerja saat cuaca mendung jika menggunakan panel surya?',
+      answer:
+        'Ya, Ngundur tetap bisa bekerja karena panel surya menyimpan daya pada baterai internal. Namun durasi operasional bergantung pada intensitas cahaya matahari.'
+    }
+  ],
+
+  pembelian: [
+    {
+      question: 'Bagaimana cara membeli produk Ngundur “Nguthik Tandur”??',
+      answer:
+        'Anda dapat memilih produk pada halaman Toko Online, menambahkannya ke keranjang atau langsung klik Beli Sekarang, lalu menyelesaikan pembelian melalui proses checkout yang telah disediakan.'
+    },
+    {
+      question: ' Metode pembayaran apa yang tersedia?',
+      answer:
+        'Pembayaran dapat dilakukan melalui  scan barcode QRIS yang telah disediakan.  Setelah pembayaran dilakukan, sistem admin akan memverifikasi transaksi Anda.'
+    },
+    {
+      question: 'Apakah produk IoT tersedia ready stock atau pre-order?',
+      answer:
+        'Perangkat IoT Ngundur tersedia dalam sistem pre-order (PO) dengan estimasi waktu perakitan dan kalibrasi selama ±15 hari sebelum dikirimkan.'
+    },
+    {
+      question: 'Bagaimana cara melacak status pesanan saya?',
+      answer:
+        'Anda dapat memantau status pesanan melalui akun Anda di menu Tracking Pesanan, mulai dari “Pembayaran Terverifikasi”, “Dalam Produksi”, “Dalam Pengiriman”, hingga “Beri Penilaian” setelah pesanan diterima.'
+    },
+    {
+      question: 'Apakah produk memiliki garansi dan dukungan purna jual?',
+      answer:
+        'Ya. Produk mendapat garansi 30 hari untuk penggantian unit cacat dan 6 bulan garansi servis. Anda juga dapat menghubungi tim melalui kontak website untuk bantuan instalasi atau troubleshooting.'
+    }
+  ]
+}
+
+const visibleFaqs = computed(() => faqs[activeTab.value])
+
+function setTab(tab) {
+  activeTab.value = tab
+  openedIndex.value = null // tutup semua ketika ganti tab
+}
+
+function toggle(idx) {
+  openedIndex.value = openedIndex.value === idx ? null : idx
+}
 </script>
 
 <template>
-  <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
+  <div class="font-inter text-gray-800 bg-white min-h-screen">
     <Header />
-    <Head title="Blog" />
+    <Head title="FAQ" />
 
     <section
-      class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
-      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-blog.jpg'); background-size: cover; background-position: center;"
-    >
-      <div class="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-extrabold text-white md:text-5xl drop-shadow">Blog</h1>
+      class="relative w-full flex items-center justify-center bg-cover"
+        :style="heroStyle"
+        >
+      
+      <div class="text-center">
+        <h1
+          class="text-[40px] md:text-[60px] font-extrabold text-white tracking-tight drop-shadow-lg leading-tight"
+        >
+          <span class="text-white">Frequently</span>
+          <span class="text-[#a855f7] font-extrabold"> Asked Questions</span>
+        </h1>
+
+        <p class="text-white text-[18px] mt-2 tracking-wide">
+          Pertanyaan yang sering diajukan seputar alat IoT penyiram tanaman otomatis
+        </p>
       </div>
     </section>
 
-    <main class="relative max-w-6xl px-4 pb-16 mx-auto -mt-10 sm:px-6 lg:px-8">
-      <div class="relative overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-3xl">
-        <div
-          class="absolute inset-0 pointer-events-none"
-          style="background-image: url('/assets/dashboard/bg-blog.jpg'); background-size: cover; background-position: right center; opacity: 0.05; filter: blur(0.5px);"
-        ></div>
+    <!-- ================== CONTENT =================== -->
+    <main class="relative max-w-6xl mx-auto px-6 sm:px-6 lg:px-8 -mt-10 pb-16">
+      <div
+        class="relative overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-200 p-10 md:p-14"
+      >
+        <div class="relative z-30">
+          <h2 class="text-center text-5xl font-bold mb-10 tracking-wide">FAQ</h2>
 
-        <div class="relative z-10 p-6 sm:p-10 lg:p-14">
-          <div class="grid gap-10 md:grid-cols-[2fr_1fr] items-start">
-            <article class="space-y-6 text-base leading-relaxed text-gray-700">
-              <header class="space-y-3">
-                <h2 class="text-4xl md:text-[44px] font-bold text-green-700 leading-tight">Stech Smart Garden</h2>
-                <p class="text-sm text-gray-500">Penulis: Tim Ngundur — Selamat Berjuang Sukses</p>
-              </header>
+          <!-- TAB -->
+          <div class="flex justify-center gap-8 mb-12">
+            <button
+              class="text-sm font-semibold pb-1 tracking-wide transition"
+              :class="
+                activeTab === 'produk'
+                  ? 'text-[#a855f7] border-b-2 border-[#a855f7]'
+                  : 'text-gray-500'
+              "
+              @click="setTab('produk')"
+            >
+              PRODUK
+            </button>
 
-              <p>
-                Teknologi semakin dekat dengan kehidupan sehari-hari, termasuk dalam bidang pertanian. Melalui inovasi IoT penyiram tanaman “Ngundur (Nguthik Tandur)”, proses penyiraman kini bisa dilakukan secara otomatis berdasarkan kebutuhan air tanaman. Sistem ini dirancang untuk membantu petani dan masyarakat agar lebih efisien dalam mengelola air dan waktu.
-              </p>
-
-              <p>
-                Dengan sistem sensor kelembapan tanah dan kontrol otomatis, Ngundur mampu menentukan kapan tanaman membutuhkan air, sehingga penyiraman dilakukan hanya pada saat yang dibutuhkan. Hal ini tidak hanya menghemat air, tetapi juga meningkatkan kualitas hasil tanam.
-              </p>
-
-              <p>
-                Ngundur lahir dari semangat mahasiswa Universitas Sebelas Maret (UNS) yang ingin menghadirkan solusi nyata bagi pertanian modern di Indonesia. Proyek ini merupakan hasil dari program hibah inovasi mahasiswa UNS, yang mendukung pengembangan solusi berbasis teknologi untuk sektor pertanian.
-              </p>
-
-              <p>
-                Dengan dukungan dari PT Stechoq Robotika Indonesia, perusahaan yang berpengalaman di bidang sistem cerdas dan rekayasa manufaktur teknologi, tim mahasiswa UNS berhasil mewujudkan inovasi ini menjadi produk nyata yang dapat digunakan oleh masyarakat luas. Melalui kolaborasi antara dunia pendidikan, penelitian, dan industri, Ngundur (Nguthik Tandur) diharapkan mampu menjadi langkah kecil menuju pertanian cerdas yang lebih efisien, berkelanjutan, dan ramah lingkungan.
-              </p>
-            </article>
-
-            <aside class="space-y-6">
-              <figure class="overflow-hidden shadow-md rounded-2xl ring-1 ring-gray-200">
-                <img src="/assets/dashboard/KITAA.jpg" alt="Team" class="object-cover w-full h-64 md:h-full" />
-              </figure>
-
-              <div class="p-6 border border-green-200 shadow-sm rounded-2xl bg-green-50">
-                <h4 class="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">Sistem Penyiraman Cerdas</h4>
-                <h3 class="mt-2 text-2xl font-bold text-green-700">NGUNDUR</h3>
-                <p class="mt-4 text-sm text-gray-700">
-                  Stech Smart Garden adalah sistem irigasi otomatis berbasis IoT yang memantau kelembaban tanah secara real-time
-                  dan mengaktifkan pompa hanya saat diperlukan. Hadir dengan varian panel surya, produk ini ramah lingkungan, hemat
-                  energi, dan siap mendukung pertanian modern maupun hobi berkebun Anda.
-                </p>
-              </div>
-            </aside>
+            <button
+              class="text-sm font-semibold pb-1 tracking-wide transition"
+              :class="
+                activeTab === 'pembelian'
+                  ? 'text-[#a855f7] border-b-2 border-[#a855f7]'
+                  : 'text-gray-500'
+              "
+              @click="setTab('pembelian')"
+            >
+              PEMBELIAN
+            </button>
           </div>
 
-          <section class="mt-12 grid gap-8 rounded-2xl border border-green-100 bg-gradient-to-r from-green-700 via-green-600 to-green-500 p-8 text-white shadow-lg md:grid-cols-[1.2fr_0.8fr]">
-            <div class="space-y-3">
-              <span class="text-xs font-semibold uppercase tracking-[0.3em] text-green-100">Ngundur</span>
-              <h3 class="text-3xl font-bold leading-snug">Smart Garden untuk Pertanian Modern</h3>
-              <p class="text-sm md:text-base text-green-100/90">
-                Integrasi sensor, kontrol otomatis, dan manajemen energi terbarukan menghadirkan pengalaman berkebun yang praktis
-                sekaligus berkelanjutan. Solusi ini membantu mempertahankan kelembaban ideal dan meminimalkan penggunaan air.
-              </p>
-            </div>
+          <!-- FAQ LIST -->
+          <div class="space-y-4">
+            <div
+              v-for="(item, idx) in visibleFaqs"
+            :key="idx"
+            class="relative rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200"
+            >
 
-            <div class="relative p-6 rounded-xl bg-white/10 backdrop-blur">
-              <p class="text-sm text-green-50">
-                Sistem mampu mengirim data ke dashboard monitoring, sehingga pengguna dapat memantau kondisi tanaman kapan saja.
-                Fitur jadwal pintar memungkinkan penyesuaian sesuai kebutuhan varietas tanaman yang berbeda.
-              </p>
+            <button
+                class="w-full px-6 py-5 flex items-center justify-between text-left"
+                @click="toggle(idx)"
+              >
+                <h3 class="font-semibold text-[16px]">
+                  {{ item.question }}
+                </h3>
+                <span class="text-xl text-gray-500">
+                  {{ openedIndex === idx ? '−' : '+' }}
+                </span>
+            </button>
+
+              <transition name="accordion">
+                <div
+                  v-if="openedIndex === idx"
+                  class="px-6 pt-6 pb-6 bg-[#E2F2DA] border-t border-green-100 text-sm text-gray-700 whitespace-pre-line"
+                >
+                  {{ item.answer }}
+                </div>
+              </transition>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </main>
@@ -91,3 +183,26 @@ import { Head } from '@inertiajs/vue3'
     <Footer />
   </div>
 </template>
+
+<style scoped>
+.accordion-enter-active,
+.accordion-leave-active {
+  overflow: hidden;
+  /* atur kecepatan di sini */
+  transition:
+    max-height 0.35s ease,
+    opacity 0.35s ease;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.accordion-enter-to,
+.accordion-leave-from {
+  max-height: 500px; /* cukup besar untuk isi jawaban */
+  opacity: 1;
+}
+</style>

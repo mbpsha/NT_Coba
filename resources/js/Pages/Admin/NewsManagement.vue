@@ -12,6 +12,7 @@ const props = defineProps({
 const showModal = ref(false)
 const isEdit = ref(false)
 const selectedNews = ref(null)
+const imagePreview = ref(null)
 
 // Form untuk create/edit
 const form = useForm({
@@ -27,6 +28,7 @@ function openCreateModal() {
     isEdit.value = false
     form.reset()
     form.clearErrors()
+    imagePreview.value = null
     showModal.value = true
 }
 
@@ -39,6 +41,7 @@ function openEditModal(article) {
     form.content = article.content
     form.is_published = article.is_published
     form.image = null // reset image input
+    imagePreview.value = resolveImageUrl(article.image)
     showModal.value = true
 }
 
@@ -48,11 +51,35 @@ function closeModal() {
     form.reset()
     form.clearErrors()
     selectedNews.value = null
+    imagePreview.value = null
 }
 
 // Handle image file
 function handleFileChange(e) {
-    form.image = e.target.files[0]
+    const file = e.target.files?.[0] ?? null
+    form.image = file
+
+    if (!file) {
+        if (isEdit.value && selectedNews.value?.image) {
+            imagePreview.value = resolveImageUrl(selectedNews.value.image)
+        } else {
+            imagePreview.value = null
+        }
+        return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+        imagePreview.value = event.target?.result ?? null
+    }
+    reader.readAsDataURL(file)
+}
+
+function resolveImageUrl(path) {
+    if (!path) return null
+    if (path.startsWith('http://') || path.startsWith('https://')) return path
+    const normalized = path.replace(/^\/?storage\//, '')
+    return `/storage/${normalized}`
 }
 
 // Submit form
@@ -234,6 +261,12 @@ function togglePublished(article) {
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
                         <p class="mt-1 text-xs text-gray-500">{{ isEdit ? 'Leave blank to keep current image' : 'Upload gambar berita' }}</p>
                         <p v-if="form.errors.image" class="mt-1 text-sm text-red-600">{{ form.errors.image }}</p>
+                        <div v-if="imagePreview" class="mt-4">
+                            <span class="text-xs font-medium text-gray-600 uppercase">Preview</span>
+                            <img :src="imagePreview" alt="Preview image"
+                                class="object-cover w-full max-w-sm mt-2 border rounded-lg shadow-sm">
+                            <p v-if="isEdit && !form.image" class="mt-1 text-xs text-gray-500">Menampilkan gambar yang tersimpan saat ini.</p>
+                        </div>
                     </div>
 
                     <!-- Published Status -->

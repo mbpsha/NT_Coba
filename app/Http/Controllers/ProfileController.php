@@ -60,7 +60,7 @@ class ProfileController extends Controller
                     'nama_penerima' => $data['nama'] ?? $user->nama ?? $user->username,
                     'no_telp_penerima' => $data['no_telp'] ?? $user->no_telp ?? '',
                     'alamat_lengkap' => $data['alamat'],
-                    'kota' => 'Tidak diketahui', // bisa diisi manual nanti
+                    'kabupaten' => 'Tidak diketahui',
                     'provinsi' => 'Tidak diketahui',
                     'kode_pos' => '00000',
                     'is_default' => true,

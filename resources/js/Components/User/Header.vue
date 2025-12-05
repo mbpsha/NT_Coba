@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Link, usePage, useForm, router } from '@inertiajs/vue3'
+
 import Logo from '*/dashboard/logo-ngundur.png'
 
 const page = usePage()
@@ -33,21 +34,15 @@ function logout() {
         }
     })
 }
+
+function goCart() {
+  router.visit(route('cart.index'))
+}
 </script>
 
 <template>
-  <header class="fixed inset-x-0 top-0 z-50 bg-white shadow-sm">
-    <!-- Email Verification Warning Banner -->
-    <div v-if="isAuth && user && !user.email_verified_at"
-         class="px-4 py-2 text-sm text-center text-yellow-900 bg-yellow-100 border-b border-yellow-200">
-      <span class="font-medium">⚠️ Email belum diverifikasi.</span>
-      <span class="hidden sm:inline">Verifikasi diperlukan untuk akses profil dan membuat pesanan.</span>
-      <Link :href="route('verification.notice')" class="ml-2 font-semibold underline hover:text-yellow-800">
-        Verifikasi Sekarang →
-      </Link>
-    </div>
-
-    <nav class="flex items-center justify-between h-16 px-4 mx-auto bg-white/90 backdrop-blur max-w-7xl">
+  <header class="fixed inset-x-0 top-0 z-50 shadow-sm bg-white/90 backdrop-blur">
+    <nav class="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
       <div class="flex items-center gap-3">
         <Link :href="route('dashboard')" class="flex items-center gap-2">
           <img :src="Logo" alt="NGUNDUR" class="h-11" />
@@ -59,7 +54,7 @@ function logout() {
         <li><Link :href="route('toko')" :class="page.url.startsWith('/toko')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Toko</Link></li>
         <li><Link :href="route('berita')" :class="page.url.startsWith('/berita')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Berita</Link></li>
         <li><Link :href="route('about')" :class="route().current('about')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Tentang</Link></li>
-        <li><Link :href="route('blog')" :class="page.url.startsWith('/blog')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">Blog</Link></li>
+        <li><Link :href="route('blog')" :class="page.url.startsWith('/blog')?'text-green-700 font-semibold':'text-gray-800 hover:text-green-700'">FAQ</Link></li>
       </ul>
 
       <div class="flex items-center gap-3">
@@ -80,6 +75,7 @@ function logout() {
                 {{ cartCount }}
               </span>
             </Link>
+
 
           <!-- Profil -->
           <div class="relative">

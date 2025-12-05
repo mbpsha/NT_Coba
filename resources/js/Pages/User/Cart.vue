@@ -1,9 +1,15 @@
 <script setup>
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
 const props = defineProps({
+  user: { type: Object, default: () => ({}) },
+  shipping: { type: Object, default: () => ({ name:'', text:'', phone:'', is_temp:false }) },
+  product: { type: Object, default: null },
+  qty: { type: Number, default: 1 },
+  summary: { type: Object, default: () => ({ admin:0, ongkir:0, subtotal:0, total:0 }) },
   items: { type: Array, default: () => [] }
 })
 
@@ -20,108 +26,150 @@ const imgUrl = (g) => {
   return '/storage/' + s
 }
 
-const currency = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
+const fmt = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
 
-function starArray(avg) {
-  const a = Math.round(avg || 0)
-  return Array.from({ length: 5 }, (_, i) => i < a)
+// Fallback hitung subtotal jika backend kirim 0
+const subtotalCalc = computed(() =>
+  props.items.reduce((s,it)=> s + ((it.product?.harga||0) * (it.qty || it.jumlah || 0)), 0)
+)
+
+const summaryView = computed(() => {
+  const sub = props.summary.subtotal || subtotalCalc.value
+  const admin = props.summary.admin || (sub ? 5000 : 0)
+  const ongkir = props.summary.ongkir || (sub ? 20000 : 0)
+  const total = props.summary.total || (sub + admin + ongkir)
+  return { subtotal: sub, admin, ongkir, total }
+})
+
+// Checkout single item
+function checkoutSingle(it){
+  const productId = it?.product?.id_produk || it?.id_produk
+  if(!productId) {
+    console.error('Product ID not found:', it)
+    return
+  }
+  router.visit(route('checkout.show', { id_produk: productId }) + '?qty=' + (it.qty || 1))
 }
 
-function changeQty(item, delta) {
-  const newQty = item.qty + delta
+// Checkout semua item (bulk)
+function checkoutAll(){
+  if(!props.items.length) return
+  router.visit(route('checkout.cart'))
+}
+
+// (Jika tetap diperlukan oleh fitur lain)
+const payForm = useForm({
+  qty: props.qty,
+  trx_id: '',
+  bukti_transfer: null,
+  agree: false,
+})
+
+function onFileChange(e){
+  payForm.bukti_transfer = e.target.files?.[0] || null
+}
+
+// Address form handler (perbaiki firstId)
+function openAddressForm(){
+  const firstId = props.items[0]?.id_produk ?? props.items[0]?.product?.id_produk
+  if(!firstId) return
+  router.visit(route('checkout.address',{ id_produk: firstId }) + '?qty=1&from=cart')
+}
+
+// Update qty cart item
+function updateQty(cartDetailId, newQty) {
   if (newQty < 1) return
-  router.put(route('cart.update', item.id_detail_keranjang), { qty: newQty }, { preserveScroll: true })
+  router.post(route('cart.update.qty'), {
+    id_detail: cartDetailId,
+    qty: newQty
+  }, {
+    preserveScroll: true,
+    preserveState: true,
+  })
 }
 
-function removeItem(item) {
-  router.delete(route('cart.remove', item.id_detail_keranjang), { preserveScroll: true })
+function incrementQty(item) {
+  updateQty(item.id_detail_keranjang, (item.qty || 1) + 1)
 }
+
+function decrementQty(item) {
+  if ((item.qty || 1) <= 1) return
+  updateQty(item.id_detail_keranjang, (item.qty || 1) - 1)
+}
+
+console.log('Render Cart.vue')
 </script>
 
 <template>
   <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
     <Header />
     <Head title="Keranjang" />
-
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-      <h1 class="text-xl font-semibold mb-6">Keranjang</h1>
-
-      <div v-if="!items.length" class="bg-white rounded-xl p-8 text-center shadow">
-        <p class="text-gray-600">Keranjang Anda masih kosong.</p>
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-lg font-semibold">Keranjang</h1>
+        <button @click="router.visit('/toko')" class="px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300">Kembali</button>
       </div>
 
-      <div v-else class="space-y-6">
-        <div
-          v-for="it in items"
-          :key="it.id_detail_keranjang"
-          class="rounded-xl bg-green-50/70 border border-green-100 shadow-sm p-5 flex gap-5"
-        >
-          <img
-            :src="imgUrl(it.product.gambar)"
-            alt=""
-            class="w-28 h-28 object-contain flex-shrink-0"
-            @error="$event.target.src = FALLBACK"
-          />
+      <!-- Empty -->
+      <div v-if="!items.length" class="p-6 bg-white rounded-xl border text-sm text-gray-600">
+        Keranjang kosong.
+      </div>
 
-          <div class="flex flex-col justify-between flex-1">
-            <div>
-              <h2 class="text-sm font-bold leading-snug">
-                {{ it.product.nama_produk }}
-              </h2>
-              <p class="text-xs text-gray-600 mt-1 line-clamp-2">
-                {{ it.product.deskripsi || '(Include panel surya) + Buku panduan + Source Code' }}
-              </p>
+      <!-- Items + Summary -->
+      <div v-else class="grid md:grid-cols-[1fr_280px] gap-6">
+        <div class="space-y-3">
+          <div v-for="it in items" :key="it.id_detail_keranjang"
+              class="flex items-center gap-4 bg-white rounded-xl border p-3">
+              <img
+                :src="imgUrl(it.product.gambar)"
+                alt=""
+                class="w-16 h-16 object-contain rounded border"
+                @error="$event.target.src = FALLBACK"
+              />
 
-              <!-- Stars -->
-              <div class="flex items-center gap-1 mt-3">
-                <span v-for="(filled,i) in starArray(it.avg_rating)" :key="i" class="inline-flex">
-                  <svg
-                    :class="filled ? 'text-yellow-500' : 'text-gray-300'"
-                    class="w-5 h-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.785.57-1.84-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
-                  </svg>
-                </span>
-                <span class="text-xs text-gray-500 ml-1">
-                  {{ it.avg_rating ? (it.avg_rating.toFixed(1)+' / 5') : 'Menunggu ulasan' }}
-                </span>
+            <div class="flex-1">
+              <p class="text-sm font-medium">{{ it.product?.nama_produk || 'Produk' }}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="decrementQty(it)"
+                        :disabled="(it.qty || 1) <= 1"
+                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                  -
+                </button>
+                <span class="text-sm font-medium w-8 text-center">{{ it.qty || 1 }}</span>
+                <button @click="incrementQty(it)"
+                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">
+                  +
+                </button>
               </div>
-
-              <p class="text-[11px] text-gray-500 mt-2">
-                {{ it.added_at || '—' }}
-              </p>
+              <p class="text-[11px] text-gray-500 mt-1">{{ fmt(it.product?.harga || 0) }} / pcs</p>
             </div>
 
-            <!-- Controls -->
-            <div class="flex items-center gap-3 mt-4">
-              <div class="flex items-center bg-green-600 text-white rounded-md overflow-hidden">
-                <button @click="changeQty(it,-1)" class="px-3 py-2 hover:bg-green-700">-</button>
-                <span class="px-4 select-none">{{ it.qty }}</span>
-                <button @click="changeQty(it,1)" class="px-3 py-2 hover:bg-green-700">+</button>
+            <div class="flex flex-col items-end gap-2">
+              <div class="text-sm font-semibold text-green-700">
+                {{ fmt((it.product?.harga || 0) * (it.qty || 0)) }}
               </div>
-              <button
-                @click="removeItem(it)"
-                class="text-xs px-3 py-2 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
-              >
-                Hapus
+              <button @click="checkoutSingle(it)"
+                      class="text-[11px] px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700">
+                Checkout
               </button>
-              <button
-                @click="router.visit(`/checkout/${it.product.id_produk}?qty=${it.qty}`)"
-                class="text-xs px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
-              >
-                Beli Sekarang
-              </button>
-              <span class="ml-auto text-sm font-medium text-green-700">
-                {{ currency(it.product.harga * it.qty) }}
-              </span>
             </div>
           </div>
         </div>
+
+        <aside class="bg-white rounded-xl border p-4 space-y-3 text-sm">
+          <h2 class="font-semibold">Ringkasan</h2>
+          <div class="flex justify-between"><span>Subtotal</span><span>{{ fmt(summaryView.subtotal) }}</span></div>
+          <div class="flex justify-between"><span>Biaya Admin</span><span>{{ fmt(summaryView.admin) }}</span></div>
+          <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summaryView.ongkir) }}</span></div>
+          <div class="border-t my-2"></div>
+          <div class="flex justify-between font-semibold"><span>Total</span><span>{{ fmt(summaryView.total) }}</span></div>
+          <button @click="checkoutAll"
+                  class="w-full h-10 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm">
+            Checkout All
+          </button>
+        </aside>
       </div>
     </main>
-
     <Footer />
   </div>
 </template>

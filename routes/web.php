@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Models\News;
 use App\Models\User;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\UserMiddleware;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -15,8 +16,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Auth\VerificationController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -44,42 +47,57 @@ Route::middleware('auth')->group(function () {
 
 // Halaman publik
 Route::get('/dashboard', function () {
-    $latestNews = News::published()->latest()->take(5)->get(); // kirim untuk carousel
+    if (auth()->check()) {
+        // Jika admin -> redirect ke admin dashboard
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+    }
+    // Jika bukan admin (termasuk guest), tampilkan dashboard user seperti biasa
+    $latestNews = News::published()->latest()->take(5)->get();
+
     return Inertia::render('User/Dashboard', [
         'welcome'     => 'Halo',
         'latestNews'  => $latestNews,
     ]);
 })->name('dashboard');
 
-// Produk - detail publik
-Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
-
 // Berita Dinamis
-Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
-Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
-Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
-Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
+    Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
+    Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
+    Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
+    Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
 
-// Toko
-Route::get('/toko', [TokoController::class, 'index'])->name('toko');
-Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+
+Route::middleware(['auth', 'user'])->group(function () {
+    // Produk - detail publik
+    Route::get('/produk/{id_produk}', [ProductController::class, 'show'])->name('produk.show');
+
+    // Toko
+    Route::get('/toko', [TokoController::class, 'index'])->name('toko');
+    Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+});
 
 // Protected - No verification required (browsing, cart, etc)
 Route::middleware('auth')->group(function () {
     // Cart (bebas akses tanpa verifikasi)
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update-qty', [CartController::class, 'updateQty'])->name('cart.update.qty');
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
 });
 
 // Protected - Require email verification (profil & checkout/order)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'user'])->group(function () {
     // Profil - WAJIB VERIFIKASI EMAIL
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Checkout & Order - WAJIB VERIFIKASI EMAIL
+    Route::get('/checkout/cart', [CheckoutController::class, 'showCartCheckout'])->name('checkout.cart');
+    Route::get('/checkout/cart/address', [CheckoutController::class, 'showCartAddressForm'])->name('checkout.cart.address');
+    Route::post('/checkout/cart/address', [CheckoutController::class, 'saveCartAddress'])->name('checkout.cart.address.save');
     Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
     Route::post('/checkout/{id_produk}/address', [CheckoutController::class, 'saveAddress'])->name('checkout.address.save');
@@ -87,10 +105,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Order & Payment - WAJIB VERIFIKASI EMAIL
     Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
+    Route::post('/order/cart/create', [OrderController::class, 'createFromCart'])->name('order.cart.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+
+    // Reviews
+    Route::get('/review', [ReviewController::class, 'ratingPage'])->name('reviews.index');
+    Route::post('/review', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
 });
 
 // Logout (tidak perlu email verification)

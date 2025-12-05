@@ -1,14 +1,11 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 
 const props = defineProps({
-  id_produk: { type: [Number, String], required: true },
-  qty: { type: Number, default: 1 },
   prefill: { type: Object, default: () => ({}) },
-  from_cart: { type: Boolean, default: false }
 })
 
 const provinces = ref([])
@@ -24,15 +21,13 @@ const form = useForm({
   phone: props.prefill.phone || '',
   provinsi: '',
   kabupaten: '',
-  kecamatan: '',
+  kecamatan: props.prefill.detail || '',
   kelurahan_desa: '',
   kode_pos: '',
   city_id: props.prefill.city_id || null,
   nama_jalan: '',
   no_rumah: '',
   detail: '',
-  qty: props.qty,
-  from_cart: props.from_cart
 })
 
 // Load provinces on mount
@@ -95,17 +90,13 @@ function submit() {
     return
   }
 
-  form.post(route('checkout.address.save', { id_produk: props.id_produk }), {
+  form.post(route('checkout.cart.address.save'), {
     preserveScroll: true,
     onError: (errors) => {
       console.error('Validation errors:', errors)
       alert('Gagal menyimpan alamat. Periksa data Anda.')
     }
   })
-}
-
-function backToCheckout() {
-  router.visit(route('checkout.show', { id_produk: props.id_produk, qty: props.qty }))
 }
 
 // Load provinces on mount
@@ -115,12 +106,12 @@ loadProvinces()
 <template>
   <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
     <Header />
-    <Head title="Tambah Alamat" />
+    <Head title="Tambah Alamat - Cart" />
 
     <main class="max-w-2xl px-4 pt-24 pb-16 mx-auto">
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-lg font-semibold">Tambah Alamat Pengiriman</h1>
-        <button @click="backToCheckout"
+        <button @click="router.visit(route('checkout.cart'))"
                 class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
           Kembali
         </button>
@@ -151,7 +142,7 @@ loadProvinces()
             <label class="block mb-1 text-sm font-medium">Provinsi <span class="text-red-500">*</span></label>
             <select v-model="selectedProvinceId" required :disabled="loadingProvinces"
                     class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
-              <option :value="null">{{ loadingProvinces ? 'Memuat...' : 'Pilih Provinsi' }}</option>
+              <option value="">{{ loadingProvinces ? 'Memuat...' : 'Pilih Provinsi' }}</option>
               <option v-for="prov in provinces" :key="prov.id" :value="prov.id">{{ prov.name }}</option>
             </select>
             <p v-if="form.errors.provinsi" class="mt-1 text-xs text-red-600">{{ form.errors.provinsi }}</p>
@@ -162,7 +153,7 @@ loadProvinces()
             <label class="block mb-1 text-sm font-medium">Kota/Kabupaten <span class="text-red-500">*</span></label>
             <select v-model="selectedCityId" required :disabled="!selectedProvinceId || loadingCities"
                     class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
-              <option :value="null">{{ loadingCities ? 'Memuat...' : 'Pilih Kota/Kabupaten' }}</option>
+              <option value="">{{ loadingCities ? 'Memuat...' : 'Pilih Kota/Kabupaten' }}</option>
               <option v-for="city in cities" :key="city.id" :value="city.id">{{ city.name }}</option>
             </select>
             <p v-if="form.errors.kabupaten" class="mt-1 text-xs text-red-600">{{ form.errors.kabupaten }}</p>
@@ -220,7 +211,7 @@ loadProvinces()
 
           <!-- Submit Button -->
           <div class="flex gap-3 pt-4">
-            <button type="button" @click="backToCheckout"
+            <button type="button" @click="router.visit(route('checkout.cart'))"
                     class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
               Batal
             </button>

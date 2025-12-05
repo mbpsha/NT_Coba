@@ -12,8 +12,8 @@ class CheckRajaOngkir extends Command
 
     public function handle()
     {
-        $baseUrl = rtrim(config('rajaongkir.base_url', 'https://rajaongkir.komerce.id/api/v1'), '/');
-        $apiKey = config('rajaongkir.api_key');
+        $baseUrl = rtrim(config('services.rajaongkir.base_url', 'https://rajaongkir.komerce.id/api/v1'), '/');
+        $apiKey = config('services.rajaongkir.key'); // FIX: Pake services.rajaongkir.key
         $action = $this->argument('action');
         $search = $this->option('search');
         $id = $this->option('id');
@@ -61,7 +61,7 @@ class CheckRajaOngkir extends Command
 
             // Filter by search if provided
             if ($search) {
-                $results = array_filter($results, function($item) use ($search) {
+                $results = array_filter($results, function ($item) use ($search) {
                     $cityName = $item['city_name'] ?? $item['name'] ?? $item['province'] ?? '';
                     return stripos($cityName, $search) !== false;
                 });
@@ -72,7 +72,7 @@ class CheckRajaOngkir extends Command
                 $this->info("🏙️  Cities:");
                 $this->table(
                     ['City ID', 'Type', 'City Name', 'Province', 'Postal Code'],
-                    array_map(function($city) {
+                    array_map(function ($city) {
                         return [
                             $city['city_id'] ?? $city['id'] ?? '',
                             $city['type'] ?? '',
@@ -86,7 +86,7 @@ class CheckRajaOngkir extends Command
                 $this->info("🗺️  Provinces:");
                 $this->table(
                     ['Province ID', 'Province Name'],
-                    array_map(function($province) {
+                    array_map(function ($province) {
                         return [
                             $province['province_id'] ?? $province['id'] ?? '',
                             $province['province'] ?? $province['name'] ?? ''
@@ -96,7 +96,6 @@ class CheckRajaOngkir extends Command
             }
 
             $this->info("\n✅ Total: " . count($results) . " records");
-
         } catch (\Exception $e) {
             $this->error('❌ Error: ' . $e->getMessage());
             return 1;
