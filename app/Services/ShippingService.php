@@ -13,16 +13,28 @@ class ShippingService
 
     public function quote($address, int $weightGram): array
     {
-        // Cek apakah $address adalah objek Address atau array
-        if (is_array($address)) {
-            $cityName = $address['city'] ?? null;
-        } elseif ($address instanceof Address) {
-            $cityName = $address->kabupaten ?? null;  // Atur sesuai field yang ada
-        } else {
-            $cityName = null;
-        }
+        $destinationCityId = null;
 
-        $destinationCityId = $this->rajaOngkir->resolveCityId($cityName);
+        // PERBAIKAN: Prioritaskan city_id langsung dari address
+        if (is_array($address)) {
+            // Cek apakah ada city_id langsung (dari form baru)
+            $destinationCityId = $address['city_id'] ?? null;
+
+            // Fallback: coba resolve dari nama kota
+            if (!$destinationCityId) {
+                $cityName = $address['city'] ?? $address['kabupaten'] ?? null;
+                if ($cityName) {
+                    $destinationCityId = $this->rajaOngkir->resolveCityId($cityName);
+                }
+            }
+        } elseif ($address instanceof \App\Models\Address) {
+            // Untuk model Address, coba ambil dari field city_id atau resolve dari kabupaten
+            $destinationCityId = $address->city_id ?? null;
+
+            if (!$destinationCityId && $address->kabupaten) {
+                $destinationCityId = $this->rajaOngkir->resolveCityId($address->kabupaten);
+            }
+        }
 
         if (!$destinationCityId) {
             return [

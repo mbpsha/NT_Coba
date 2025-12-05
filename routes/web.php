@@ -83,6 +83,7 @@ Route::middleware('auth')->group(function () {
     // Cart (bebas akses tanpa verifikasi)
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update-qty', [CartController::class, 'updateQty'])->name('cart.update.qty');
     Route::put('/cart/detail/{id_detail_keranjang}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/detail/{id_detail_keranjang}', [CartController::class, 'remove'])->name('cart.remove');
 });
@@ -94,6 +95,9 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Checkout & Order - WAJIB VERIFIKASI EMAIL
+    Route::get('/checkout/cart', [CheckoutController::class, 'showCartCheckout'])->name('checkout.cart');
+    Route::get('/checkout/cart/address', [CheckoutController::class, 'showCartAddressForm'])->name('checkout.cart.address');
+    Route::post('/checkout/cart/address', [CheckoutController::class, 'saveCartAddress'])->name('checkout.cart.address.save');
     Route::get('/checkout/{id_produk}', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::get('/checkout/{id_produk}/address', [CheckoutController::class, 'showAddressForm'])->name('checkout.address');
     Route::post('/checkout/{id_produk}/address', [CheckoutController::class, 'saveAddress'])->name('checkout.address.save');
@@ -101,6 +105,7 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
 
     // Order & Payment - WAJIB VERIFIKASI EMAIL
     Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
+    Route::post('/order/cart/create', [OrderController::class, 'createFromCart'])->name('order.cart.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL

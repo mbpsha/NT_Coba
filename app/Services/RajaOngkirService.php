@@ -61,11 +61,10 @@ class RajaOngkirService
         if (!$provinceId) return [];
 
         try {
+            // PERBAIKAN: API endpoint yang benar adalah /destination/city/{provinceId}
             $res = Http::withHeaders($this->authHeaders)
                 ->timeout(15)
-                ->get("{$this->baseUrl}/destination/cities", [
-                    'province_id' => $provinceId
-                ]);
+                ->get("{$this->baseUrl}/destination/city/{$provinceId}");
 
             $json = $res->json();
 
@@ -73,6 +72,7 @@ class RajaOngkirService
                 return [];
             }
 
+            // Return format: array of cities with consistent structure
             return $json['data'] ?? [];
 
         } catch (\Throwable $e) {

@@ -79,4 +79,21 @@ class CartController extends Controller
         $detail->delete();
         return back();
     }
+
+    public function updateQty(Request $request)
+    {
+        $validated = $request->validate([
+            'id_detail' => 'required|integer|exists:cart_details,id_detail_keranjang',
+            'qty' => 'required|integer|min:1'
+        ]);
+
+        $detail = CartDetail::findOrFail($validated['id_detail']);
+
+        // Pastikan user owns this cart
+        abort_unless($detail->cart->id_user === Auth::id(), 403);
+
+        $detail->update(['jumlah' => $validated['qty']]);
+
+        return back()->with('success', 'Qty berhasil diupdate');
+    }
 }
