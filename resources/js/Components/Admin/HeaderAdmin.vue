@@ -14,7 +14,7 @@ const onLogout = () => {
 </script>
 
 <template>
-    <header class="fixed top-0 right-0 left-64 h-16 bg-gradient-to-r from-green-300 to-green-300 shadow-md z-15">
+    <header class="fixed top-0 right-0 left-64 h-16 bg-gradient-to-b from-green-200 to-green-260 shadow-md z-15">
         <div class="flex items-center justify-between h-full px-8">
             <div class="flex items-center gap-3">
                 <img :src="Logo" alt="NGUNDUR" class="h-12" />
