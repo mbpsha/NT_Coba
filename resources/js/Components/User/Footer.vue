@@ -19,7 +19,7 @@ import FooterBg from '*/dashboard/footer-logo.png'
             <div class="mt-4 space-y-1 text-sm text-white/90">
                 <p><span class="font-semibold">Phone</span> +62 000-000-000</p>
                 <p><span class="font-semibold">WA</span> +62 000-000-000</p>
-                <p><span class="font-semibold">Hours</span> Senin–Jum'at 09.00–16.00</p>
+                <p><span class="font-semibold">Service Hours</span> Senin–Jum'at 09.00–16.00</p>
             </div>
             <div class="mt-6 h-px bg-white/30 max-w-sm"></div>
             <p class="mt-4 text-xs text-white/70">© 2025 NGUNDUR</p>

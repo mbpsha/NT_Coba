@@ -76,7 +76,7 @@ function logout() {
             <button
                 @click="logout"
                 :disabled="logoutForm.processing"
-                class="flex items-center w-full px-6 py-3 mt-4 text-left transition hover:bg-red-500"
+                class="flex items-center w-full px-6 py-3 mt-4 text-left transition bg-red-500"
             >
                 {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
             </button>
