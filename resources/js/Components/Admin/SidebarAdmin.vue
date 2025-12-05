@@ -33,14 +33,6 @@ function logout() {
             </Link>
 
             <Link
-                :href="route('admin.users.index')"
-                class="flex items-center px-6 py-3 transition hover:bg-green-500"
-                :class="{ 'bg-green-500': isActive('admin.users.index') }"
-            >
-                Users
-            </Link>
-
-            <Link
                 :href="route('admin.products.index')"
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.products.index') }"

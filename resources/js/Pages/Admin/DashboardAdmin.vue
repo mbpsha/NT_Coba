@@ -125,9 +125,6 @@ const props = defineProps({
                 <div class="p-6 bg-white rounded-lg shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-semibold text-gray-800">Recent Users</h2>
-                        <a :href="route('admin.users.index')" class="px-4 py-2 text-sm text-white bg-green-500 rounded hover:bg-green-600">
-                            View All
-                        </a>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
