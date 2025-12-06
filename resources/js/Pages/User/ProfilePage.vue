@@ -86,7 +86,17 @@ function backToCheckout(){
             </div>
             <div>
                 <label class="block mb-1 text-sm">Alamat</label>
-                <input v-model="form.alamat" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80" />
+
+                <!-- Contoh penulisan alamat (baru, lebih tebal, abu, di atas) -->
+                <div class="mb-2 text-[12px] text-gray-600">
+                  <div class="font-semibold text-gray-600">(Nama Jalan, Kelurahan, Kecamatan, Kabupaten, Provinsi, Kode Pos)</div>
+                </div>
+                <p class="mb-2 text-xs text-gray-500">
+                  (Contoh: Jl. Ringroad Barat No. 123, Banyuraden, Gamping, Sleman, DI Yogyakarta, 55284)
+                </p>
+
+                <input v-model="form.alamat" class="w-full px-3 py-2 border border-green-200 rounded-md bg-white/80"
+                       placeholder="Jl. Nama Jalan No., RT/RW, Dusun/Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos" />
                 <p v-if="form.errors.alamat" class="mt-1 text-sm text-red-600">{{ form.errors.alamat }}</p>
             </div>
 

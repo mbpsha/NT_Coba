@@ -38,9 +38,10 @@ class AdminDashboardController extends Controller
         $monthlySales = [];
         for ($i = 11; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
+            // Include all non-cancelled orders so chart shows when purchases exist
             $sales = Order::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
-                ->where('status', 'selesai')
+                ->where('status', '!=', 'dibatalkan')
                 ->sum('total_harga');
 
             $monthlySales[] = [

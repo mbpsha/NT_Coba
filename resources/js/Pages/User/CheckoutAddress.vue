@@ -79,7 +79,7 @@ watch(selectedProvinceId, async (newVal) => {
 function buildProvKab() {
   const prov = provinces.value.find(p => p.id === selectedProvinceId.value)
   const city = cities.value.find(c => c.id === selectedCityId.value)
-  
+
   if (prov) form.provinsi = prov.name
   if (city) {
     form.kabupaten = city.name
@@ -89,7 +89,7 @@ function buildProvKab() {
 
 function submit() {
   buildProvKab()
-  
+
   if (!form.provinsi || !form.kabupaten) {
     alert('Pilih provinsi dan kota/kabupaten terlebih dahulu')
     return
@@ -120,7 +120,7 @@ loadProvinces()
     <main class="max-w-2xl px-4 pt-24 pb-16 mx-auto">
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-lg font-semibold">Tambah Alamat Pengiriman</h1>
-        <button @click="backToCheckout" 
+        <button @click="backToCheckout"
                 class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
           Kembali
         </button>

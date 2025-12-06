@@ -13,10 +13,9 @@ import Profil from '*/dashboard/profil.png'
     <Header />
     <Head title="Profil" />
 
-    <!-- HERO (gaya seperti Blog.vue) -->
     <section
-      class="mt-16 h-[260px] md:h-[320px] relative flex items-center bg-cover bg-right"
-      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.65), rgba(128,128,128,0.65)), url('/assets/dashboard/bg-profil.jpg'); background-size: cover; background-position: center;"
+      class="mt-16 h-[220px] md:h-[337px] relative flex items-center bg-cover bg-right"
+      style="background-image: linear-gradient(to bottom, rgba(128,128,128,0.25), rgba(128,128,128,0.25)), url('/assets/dashboard/bg-profil.jpg'); background-size: cover; background-position: center;"
     >
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow">Profil</h1>

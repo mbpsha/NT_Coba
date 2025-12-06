@@ -22,11 +22,24 @@ const paymentStatusColor = (status) => {
 
 const paymentStatusText = (status) => {
   const text = {
-    'pending': 'Menunggu Verifikasi',
+    'pending': 'Menunggu Pembayaran',
     'verified': 'Terverifikasi',
     'rejected': 'Ditolak'
   }
   return text[status] || status
+}
+
+function isShipping(order){
+  const s = (order?.status ?? '').toString().toLowerCase()
+  // cocokkan beberapa kemungkinan
+  return ['shipping','dikirim','dalam pengiriman','pengiriman','shipped'].some(k => s.includes(k))
+}
+
+function confirmReceived(orderId) {
+  router.post(route('orders.confirm-received', orderId), {}, {
+    preserveScroll: true,
+    onSuccess: () => router.visit(route('orders.index'))
+  })
 }
 </script>
 
@@ -87,12 +100,23 @@ const paymentStatusText = (status) => {
               </div>
             </div>
 
-            <!-- ⬇️ STATUS BAR BARU -->
-            <OrderStatusAction
-              :status="order.status"
-              :payment-status="order.payment_status"
-              :order-id="order.id_order"
-            />
+            <div class="flex items-center gap-3">
+              <!-- status steps -->
+              <OrderStatusAction
+                :status="order.status"
+                :payment-status="order.payment_status"
+                :order-id="order.id_order"
+              />
+              <!-- Tampilkan tombol saat status pengiriman terdeteksi -->
+              <button
+                v-if="isShipping(order)"
+                @click="confirmReceived(order.id_order)"
+                class="px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                title="Konfirmasikan bahwa pesanan sudah diterima"
+              >
+                Konfirmasi pesanan diterima
+              </button>
+            </div>
           </div>
 
           <!-- CONTENT -->

@@ -50,7 +50,7 @@ const props = defineProps({
                             <svg class="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
                             </svg>
-                        </div>
+                            </div>
                     </div>
                 </div>
 
@@ -125,9 +125,6 @@ const props = defineProps({
                 <div class="p-6 bg-white rounded-lg shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-semibold text-gray-800">Recent Users</h2>
-                        <a :href="route('admin.users.index')" class="px-4 py-2 text-sm text-white bg-green-500 rounded hover:bg-green-600">
-                            View All
-                        </a>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -163,21 +160,47 @@ const props = defineProps({
             <!-- Monthly Sales Chart -->
             <div class="p-6 bg-white rounded-lg shadow-md">
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Monthly Sales Overview</h2>
-                <div class="flex items-end justify-between h-64 gap-2">
-                    <div v-for="(sale, index) in monthlySales" :key="index" class="flex flex-col items-center flex-1">
-                        <div class="relative w-full transition-colors bg-green-500 rounded-t hover:bg-green-600 group"
-                             :style="{ height: (sale.amount / Math.max(...monthlySales.map(s => s.amount)) * 100) + '%' }">
-                            <div class="absolute px-2 py-1 text-xs text-white transition-opacity transform -translate-x-1/2 bg-gray-800 rounded opacity-0 -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-                                Rp {{ sale.amount?.toLocaleString('id-ID') }}
-                            </div>
-                        </div>
-                        <span class="mt-2 text-xs text-gray-600">{{ sale.month }}</span>
-                    </div>
+
+                <!-- Empty state -->
+                <div v-if="!monthlySales || monthlySales.length === 0" class="h-40 flex items-center justify-center text-gray-500">
+                    Belum ada penjualan.
                 </div>
-                <div class="flex items-center justify-center mt-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 bg-green-500 rounded"></div>
-                        <span class="text-sm text-gray-600">Sales</span>
+
+                <!-- Chart -->
+                <div v-else>
+                    <div class="flex items-end justify-between h-64 gap-3">
+                        <div
+                          v-for="(sale, index) in monthlySales"
+                          :key="index"
+                          class="flex flex-col items-center"
+                        >
+                            <!-- wrapper tinggi penuh agar persen berfungsi -->
+                            <div class="h-full flex items-end">
+                              <div
+                                class="relative w-3 sm:w-4 bg-green-500 rounded-t hover:bg-green-600 group transition-colors"
+                                :style="{
+                                  height: (() => {
+                                    const max = Math.max(...monthlySales.map(s => Number(s.amount) || 0), 1)
+                                    const val = Number(sale.amount) || 0
+                                    const pct = (val / max) * 100
+                                    return val > 0 ? Math.max(pct, 6) + '%' : '0%'
+                                  })()
+                                }"
+                                :title="`Rp ${Number(sale.amount || 0).toLocaleString('id-ID')}`"
+                              >
+                                <div class="absolute px-2 py-1 text-xs text-white transition-opacity transform -translate-x-1/2 bg-gray-800 rounded opacity-0 -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
+                                  Rp {{ Number(sale.amount || 0).toLocaleString('id-ID') }}
+                                </div>
+                              </div>
+                            </div>
+                            <span class="mt-2 text-xs text-gray-600">{{ sale.month }}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center mt-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span class="text-sm text-gray-600">Sales</span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -33,14 +33,6 @@ function logout() {
             </Link>
 
             <Link
-                :href="route('admin.users.index')"
-                class="flex items-center px-6 py-3 transition hover:bg-green-500"
-                :class="{ 'bg-green-500': isActive('admin.users.index') }"
-            >
-                Users
-            </Link>
-
-            <Link
                 :href="route('admin.products.index')"
                 class="flex items-center px-6 py-3 transition hover:bg-green-500"
                 :class="{ 'bg-green-500': isActive('admin.products.index') }"
@@ -76,7 +68,7 @@ function logout() {
             <button
                 @click="logout"
                 :disabled="logoutForm.processing"
-                class="flex items-center w-full px-6 py-3 mt-4 text-left transition hover:bg-red-500"
+                class="flex items-center w-full px-6 py-3 mt-4 text-left transition bg-red-500"
             >
                 {{ logoutForm.processing ? 'Logging out...' : 'Logout' }}
             </button>

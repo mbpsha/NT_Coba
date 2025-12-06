@@ -31,18 +31,27 @@ onMounted(() => window.scrollTo({ top: 0 }))
 
         <!-- NEWS -->
         <section id="news-section" class="py-12">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative w-full rounded-2xl overflow-hidden shadow-xl ring-1 ring-green-200">
+              <div class="absolute inset-0 bg-gradient-to-r from-green-50 to-green-100"></div>
+              <h2 class="relative px-6 py-6 md:px-8 md:py-7 text-3xl md:text-4xl font-extrabold text-[#285F3C] text-center">
+                  Berita Pertanian
+                </h2>
+              </div>
                 <NewsCarousel />
             </div>
         </section>
 
         <!-- TITLE CHIP -->
-        <section class="mt-2">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="inline-block bg-green-100 text-green-800 px-5 py-2 rounded-xl shadow-sm border border-green-200">
-                <span class="font-semibold">Keunggulan Alat</span>
-                </div>
+        <section class="mt-6">
+          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="relative w-full rounded-2xl overflow-hidden shadow-xl ring-1 ring-green-200">
+              <div class="absolute inset-0 bg-gradient-to-r from-green-50 to-green-100"></div>
+              <h2 class="relative px-6 py-6 md:px-8 md:py-7 text-3xl md:text-4xl font-extrabold text-[#285F3C] text-center">
+                Keunggulan Alat
+              </h2>
             </div>
+          </div>
         </section>
 
         <!-- FEATURES -->
