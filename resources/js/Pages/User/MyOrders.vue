@@ -41,6 +41,15 @@ function completeOrder(orderId) {
 function goToReview(orderId) {
   router.visit(route('reviews.create', orderId))
 }
+
+function getProductImage(product) {
+  if (!product.gambar) return '/assets/dashboard/profil.png'
+  // If gambar is raw path from storage, add asset prefix
+  if (product.gambar && !product.gambar.startsWith('http') && !product.gambar.startsWith('/')) {
+    return '/storage/' + product.gambar.replace(/^\//, '')
+  }
+  return product.gambar
+}
 </script>
 
 <template>
@@ -141,7 +150,7 @@ function goToReview(orderId) {
                 class="flex gap-4 pb-3 border-b last:border-b-0"
               >
                 <img
-                  :src="product.gambar"
+                  :src="getProductImage(product)"
                   @error="$event.target.src='/assets/dashboard/profil.png'"
                   class="object-contain w-20 h-20 border rounded-md"
                   alt="produk"

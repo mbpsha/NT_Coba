@@ -131,13 +131,10 @@ class OrderController extends Controller
                         'is_estimated' => $order->shipping_is_estimated,
                     ],
                     'products' => $order->orderDetails->map(function ($detail) {
-                        $gambar = $detail->product->gambar
-                            ? asset('storage/' . ltrim($detail->product->gambar, '/'))
-                            : asset('/assets/dashboard/profil.png');
-
+                        // Gunakan raw path dari database - Vue template akan handle
                         return [
                             'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
-                            'gambar' => $gambar,
+                            'gambar' => $detail->product->gambar ?? '/assets/dashboard/profil.png',
                             'harga' => $detail->harga,
                             'jumlah' => $detail->jumlah,
                             'subtotal' => $detail->harga * $detail->jumlah

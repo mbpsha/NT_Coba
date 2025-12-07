@@ -85,9 +85,22 @@ function resolveImageUrl(path) {
 // Submit form
 function submitForm() {
     if (isEdit.value) {
-        // Gunakan form.post dengan forceFormData untuk support file upload
-        form.transform((data) => ({
-            ...data,
+        // Exclude image from data if not changed
+        const data = {
+            title: form.title,
+            excerpt: form.excerpt,
+            content: form.content,
+            is_published: form.is_published
+        }
+        
+        // Only include image if a new file was selected
+        if (form.image instanceof File) {
+            data.image = form.image
+        }
+        
+        const editForm = useForm(data)
+        editForm.transform((formData) => ({
+            ...formData,
             _method: 'PUT'
         })).post(route('admin.news.update', selectedNews.value.id), {
             preserveScroll: true,
