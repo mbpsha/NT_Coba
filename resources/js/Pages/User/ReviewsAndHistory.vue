@@ -24,8 +24,11 @@ const currentItem = computed(() => {
   const item = pending.value[selectedIndex.value]
   if (!item) return null
   
-  // Handle new structure from createFromOrder
-  if (item.id_produk && !item.detail_id) {
+  // Debug: log the item to see what data we have
+  console.log('Current item data:', item)
+  
+  // Handle new structure from createFromOrder (has 'nama' and 'gambar' fields)
+  if (item.nama && item.gambar) {
     return {
       detail_id: item.id_produk,
       id_produk: item.id_produk,
@@ -38,7 +41,7 @@ const currentItem = computed(() => {
     }
   }
   
-  // Old structure
+  // Old structure from ratingPage (has 'name' and 'image' fields)
   return item
 })
 
@@ -99,6 +102,31 @@ function toast(message) {
   showToast.value = true
   setTimeout(() => (showToast.value = false), 2200)
 }
+
+function getProductImage(imagePath) {
+  console.log('getProductImage called with:', imagePath)
+  
+  if (!imagePath) {
+    console.log('No image path, returning default')
+    return '/assets/dashboard/profil.png'
+  }
+  
+  // If already a complete URL (from asset() helper)
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    console.log('Full URL detected:', imagePath)
+    return imagePath
+  }
+  
+  // If already starts with /storage/ or /assets/
+  if (imagePath.startsWith('/storage/') || imagePath.startsWith('/assets/')) {
+    console.log('Path with prefix detected:', imagePath)
+    return imagePath
+  }
+  
+  // Otherwise return as-is (backend should handle it)
+  console.log('Returning path as-is:', imagePath)
+  return imagePath
+}
 </script>
 
 <template>
@@ -142,7 +170,7 @@ function toast(message) {
 
           <!-- Header produk -->
           <div class="flex items-start gap-4">
-            <img :src="currentItem.image" class="object-contain w-16 h-16 bg-white border rounded-md" alt="produk">
+            <img :src="getProductImage(currentItem.image)" class="object-contain w-16 h-16 bg-white border rounded-md" alt="produk">
             <div class="flex-1">
               <p class="text-base font-semibold leading-tight">{{ currentItem.name }}</p>
               <p class="text-xs text-gray-600">{{ currentItem.note || 'Pesanan siap dinilai' }}</p>
@@ -182,7 +210,7 @@ function toast(message) {
       <!-- Histori pembelian -->
       <section v-show="activeTab==='history'" class="space-y-4">
         <div v-for="it in historyList" :key="it.id" class="flex items-center gap-4 p-4 border border-green-100 bg-green-50/70 rounded-2xl">
-          <img :src="it.image" alt="produk" class="object-contain w-16 h-16 bg-white border rounded-md" />
+          <img :src="getProductImage(it.image)" alt="produk" class="object-contain w-16 h-16 bg-white border rounded-md" />
           <div class="flex-1">
             <p class="text-sm font-semibold leading-tight">
               {{ it.name }} <span class="font-normal text-gray-600"> {{ it.note }}</span>

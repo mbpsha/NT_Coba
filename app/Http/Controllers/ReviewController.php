@@ -67,7 +67,14 @@ class ReviewController extends Controller
             $product = $detail->product;
             $order   = $detail->order;
 
-            $image = $product?->gambar ?: '/assets/dashboard/profil.png';
+            // Remove /storage/ prefix if exists before adding it with asset()
+            $imagePath = $product?->gambar ?: '';
+            if ($imagePath) {
+                $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                $image = asset('storage/' . $imagePath);
+            } else {
+                $image = asset('/assets/dashboard/profil.png');
+            }
 
             return [
                 'detail_id'   => $detail->id_order_detail,
@@ -86,7 +93,15 @@ class ReviewController extends Controller
             ->get()
             ->map(function ($review) {
                 $product = $review->product;
-                $image   = $product?->gambar ?: '/assets/dashboard/profil.png';
+                
+                // Remove /storage/ prefix if exists before adding it with asset()
+                $imagePath = $product?->gambar ?: '';
+                if ($imagePath) {
+                    $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                    $image = asset('storage/' . $imagePath);
+                } else {
+                    $image = asset('/assets/dashboard/profil.png');
+                }
 
                 return [
                     'id'         => $review->id_review,
@@ -169,9 +184,15 @@ class ReviewController extends Controller
         // Get products from order with existing reviews
         $products = $order->orderDetails->map(function ($detail) use ($user) {
             $product = $detail->product;
-            $image = $product->gambar
-                ? asset('storage/' . ltrim($product->gambar, '/'))
-                : asset('/assets/dashboard/profil.png');
+            
+            // Remove /storage/ prefix if exists before adding it with asset()
+            $imagePath = $product->gambar ?: '';
+            if ($imagePath) {
+                $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                $image = asset('storage/' . $imagePath);
+            } else {
+                $image = asset('/assets/dashboard/profil.png');
+            }
 
             // Check if user already reviewed this product
             $existingReview = \App\Models\Review::where('id_produk', $product->id_produk)
