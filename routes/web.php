@@ -104,8 +104,8 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 
     // Order & Payment - WAJIB VERIFIKASI EMAIL
-    Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/order/cart/create', [OrderController::class, 'createFromCart'])->name('order.cart.create');
+    Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL

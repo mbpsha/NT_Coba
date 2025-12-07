@@ -46,7 +46,7 @@ class AdminDashboardController extends Controller
 
             $monthlySales[] = [
                 'month' => $month->format('M'),
-                'amount' => $sales ?? 0
+                'amount' => (int) ($sales ?? 0)
             ];
         }
 

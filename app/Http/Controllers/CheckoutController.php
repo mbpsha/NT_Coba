@@ -170,7 +170,7 @@ class CheckoutController extends Controller
         // Ambil cart items
         $cart = Cart::where('id_user', $user->id_user)->first();
         if (!$cart || !$cart->cartDetails()->exists()) {
-            return redirect()->route('cart')->with('error', 'Keranjang kosong');
+            return redirect()->route('cart.index')->with('error', 'Keranjang kosong');
         }
 
         $cartItems = $cart->cartDetails()
@@ -556,7 +556,6 @@ class CheckoutController extends Controller
             'city_id' => $validated['city_id'] ?? null,
             'nama_jalan' => $validated['nama_jalan'] ?? '',
             'no_rumah' => $validated['no_rumah'] ?? '',
-            'catatan' => $validated['detail'] ?? '',
             'is_default' => false,
         ]);
 

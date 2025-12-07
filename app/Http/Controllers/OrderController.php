@@ -119,7 +119,7 @@ class OrderController extends Controller
 
                         return [
                             'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
-                            'gambar_url' => $gambar, // gunakan URL siap pakai
+                            'gambar' => $gambar,
                             'harga' => $detail->harga,
                             'jumlah' => $detail->jumlah,
                             'subtotal' => $detail->harga * $detail->jumlah

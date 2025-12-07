@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import SidebarAdmin from '@/Components/Admin/SidebarAdmin.vue'
 import HeaderAdmin from '@/Components/Admin/HeaderAdmin.vue'
 
@@ -8,6 +8,10 @@ const props = defineProps({
     recentProducts: Array,
     recentUsers: Array,
     monthlySales: Array
+})
+
+onMounted(() => {
+  console.log('Monthly Sales Data:', props.monthlySales)
 })
 </script>
 
@@ -161,39 +165,67 @@ const props = defineProps({
             <div class="p-6 bg-white rounded-lg shadow-md">
                 <h2 class="mb-4 text-xl font-semibold text-gray-800">Monthly Sales Overview</h2>
 
-                <!-- Empty state -->
-                <div v-if="!monthlySales || monthlySales.length === 0" class="h-40 flex items-center justify-center text-gray-500">
+                <!-- Check total sales -->
+                <div v-if="!monthlySales || monthlySales.length === 0 || monthlySales.every(s => !s.amount || s.amount === 0)" class="h-40 flex items-center justify-center text-gray-500">
                     Belum ada penjualan.
                 </div>
 
                 <!-- Chart -->
                 <div v-else>
-                    <div class="flex items-end justify-between h-64 gap-3">
-                        <div
-                          v-for="(sale, index) in monthlySales"
-                          :key="index"
-                          class="flex flex-col items-center"
-                        >
-                            <!-- wrapper tinggi penuh agar persen berfungsi -->
-                            <div class="h-full flex items-end">
-                              <div
-                                class="relative w-3 sm:w-4 bg-green-500 rounded-t hover:bg-green-600 group transition-colors"
-                                :style="{
-                                  height: (() => {
-                                    const max = Math.max(...monthlySales.map(s => Number(s.amount) || 0), 1)
-                                    const val = Number(sale.amount) || 0
-                                    const pct = (val / max) * 100
-                                    return val > 0 ? Math.max(pct, 6) + '%' : '0%'
-                                  })()
-                                }"
-                                :title="`Rp ${Number(sale.amount || 0).toLocaleString('id-ID')}`"
-                              >
-                                <div class="absolute px-2 py-1 text-xs text-white transition-opacity transform -translate-x-1/2 bg-gray-800 rounded opacity-0 -top-8 left-1/2 group-hover:opacity-100 whitespace-nowrap">
-                                  Rp {{ Number(sale.amount || 0).toLocaleString('id-ID') }}
-                                </div>
-                              </div>
+                    <!-- Chart Container -->
+                    <div class="space-y-4">
+                        <!-- Y-axis labels and bars -->
+                        <div class="flex gap-4">
+                            <!-- Y-axis -->
+                            <div class="flex flex-col justify-between text-xs text-gray-600 w-12 text-right pr-2 font-semibold">
+                                <div>Rp {{ (Math.max(...monthlySales.map(s => Number(s.amount) || 0)) / 1000).toFixed(0) }}k</div>
+                                <div>Rp {{ (Math.max(...monthlySales.map(s => Number(s.amount) || 0)) / 2000).toFixed(0) }}k</div>
+                                <div>Rp 0</div>
                             </div>
-                            <span class="mt-2 text-xs text-gray-600">{{ sale.month }}</span>
+                            
+                            <!-- Bars Container -->
+                            <div class="flex-1">
+                                <!-- Chart Grid Lines -->
+                                <div class="relative" style="height: 320px;">
+                                    <!-- Grid lines -->
+                                    <div class="absolute top-0 left-0 right-0 border-t border-gray-200"></div>
+                                    <div class="absolute top-1/2 left-0 right-0 border-t border-gray-200" style="transform: translateY(-50%)"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 border-t border-gray-300 border-b-2"></div>
+                                    
+                                    <!-- Bars -->
+                                    <div class="absolute inset-0 flex items-end justify-around gap-3 px-4 pb-0">
+                                        <div
+                                          v-for="(sale, index) in monthlySales"
+                                          :key="index"
+                                          class="flex flex-col items-center flex-1 h-full justify-end"
+                                        >
+                                            <!-- Bar with proper height calculation -->
+                                            <div
+                                              class="relative bg-gradient-to-t from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 rounded-t-lg group transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
+                                              :style="{
+                                                width: '100%',
+                                                maxWidth: '48px',
+                                                height: (() => {
+                                                  const max = Math.max(...monthlySales.map(s => Number(s.amount) || 0), 40000)
+                                                  const val = Number(sale.amount) || 0
+                                                  const pct = (val / max) * 100
+                                                  return Math.max(pct, val > 0 ? 3 : 0) + '%'
+                                                })()
+                                              }"
+                                              :title="`${sale.month}: Rp ${Number(sale.amount || 0).toLocaleString('id-ID')}`"
+                                            >
+                                              <!-- Tooltip on hover -->
+                                              <div v-if="sale.amount > 0" class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-xl z-10">
+                                                Rp {{ Number(sale.amount || 0).toLocaleString('id-ID') }}
+                                                <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                              </div>
+                                            </div>
+                                            <!-- Month label -->
+                                            <span class="mt-4 text-xs font-semibold text-gray-700 whitespace-nowrap">{{ sale.month }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center justify-center mt-4">
