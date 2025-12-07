@@ -35,13 +35,13 @@ class AdminDashboardController extends Controller
             ->get();
 
         // Monthly sales for chart (last 12 months)
+        // Only include completed orders (status: selesai) - verifikasi pembayaran & pengiriman sukses
         $monthlySales = [];
         for ($i = 11; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
-            // Include all non-cancelled orders so chart shows when purchases exist
             $sales = Order::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
-                ->where('status', '!=', 'dibatalkan')
+                ->where('status', 'selesai')
                 ->sum('total_harga');
 
             $monthlySales[] = [
@@ -133,7 +133,7 @@ class AdminDashboardController extends Controller
         // Update order status jika payment berhasil
         if ($request->status === 'berhasil') {
             $order = Order::find($payment->id_pemesanan);
-            $order->status = 'dikonfirmasi';
+            $order->status = 'diproses';
             $order->save();
         }
 

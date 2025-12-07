@@ -27,9 +27,18 @@ function closeModal() {
 }
 
 function updateStatus() {
-    form.put(route('admin.orders.updateStatus', selectedOrder.value.id_order), {
+    form.post(route('admin.orders.updateStatus', selectedOrder.value.id_order), {
         onSuccess: () => {
-            closeModal()
+            // Update selectedOrder status untuk reflect perubahan di UI
+            selectedOrder.value.status = form.status
+            // Reload halaman setelah 1 detik
+            setTimeout(() => {
+                window.location.reload()
+            }, 500)
+        },
+        onError: (errors) => {
+            console.error('Update status error:', errors)
+            alert('Error updating status: ' + JSON.stringify(errors))
         }
     })
 }

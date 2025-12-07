@@ -29,17 +29,17 @@ const paymentStatusText = (status) => {
   return text[status] || status
 }
 
-function isShipping(order){
-  const s = (order?.status ?? '').toString().toLowerCase()
-  // cocokkan beberapa kemungkinan
-  return ['shipping','dikirim','dalam pengiriman','pengiriman','shipped'].some(k => s.includes(k))
+function completeOrder(orderId) {
+  if (confirm('Apakah pesanan sudah selesai dan ingin menyelesaikan transaksi ini?')) {
+    router.post(route('orders.complete', orderId), {}, {
+      preserveScroll: true,
+      onSuccess: () => router.visit(route('orders.index'))
+    })
+  }
 }
 
-function confirmReceived(orderId) {
-  router.post(route('orders.confirm-received', orderId), {}, {
-    preserveScroll: true,
-    onSuccess: () => router.visit(route('orders.index'))
-  })
+function goToReview(orderId) {
+  router.visit(route('reviews.create', orderId))
 }
 </script>
 
@@ -107,14 +107,25 @@ function confirmReceived(orderId) {
                 :payment-status="order.payment_status"
                 :order-id="order.id_order"
               />
-              <!-- Tampilkan tombol saat status pengiriman terdeteksi -->
+              
+              <!-- Tombol selesaikan pesanan saat status sudah dikirim -->
               <button
-                v-if="isShipping(order)"
-                @click="confirmReceived(order.id_order)"
-                class="px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
-                title="Konfirmasikan bahwa pesanan sudah diterima"
+                v-if="order.status === 'dikirim'"
+                @click="completeOrder(order.id_order)"
+                class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                title="Tandai pesanan sudah selesai"
               >
-                Konfirmasi pesanan diterima
+                Selesaikan Pesanan
+              </button>
+              
+              <!-- Tombol review saat pesanan selesai -->
+              <button
+                v-if="order.status === 'selesai'"
+                @click="goToReview(order.id_order)"
+                class="px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                title="Berikan review untuk produk"
+              >
+                Beri Review
               </button>
             </div>
           </div>

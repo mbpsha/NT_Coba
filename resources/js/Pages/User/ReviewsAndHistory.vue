@@ -6,7 +6,8 @@ import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   pendingReviews: { type: Array, default: () => [] },
-  history: { type: Array, default: () => [] }
+  history: { type: Array, default: () => [] },
+  fromOrder: { type: Number, default: null }
 })
 
 const activeTab = ref('review')
@@ -16,32 +17,50 @@ const toastMsg = ref('')
 const pending = computed(() => props.pendingReviews ?? [])
 const historyList = computed(() => props.history ?? [])
 
-const selectedDetailId = ref(pending.value[0]?.detail_id ?? null)
+// Support both old structure (detail_id) and new structure (id_produk from order)
+const selectedIndex = ref(0)
 
-const currentItem = computed(() =>
-  pending.value.find(o => o.detail_id === selectedDetailId.value) || null
-)
+const currentItem = computed(() => {
+  const item = pending.value[selectedIndex.value]
+  if (!item) return null
+  
+  // Handle new structure from createFromOrder
+  if (item.id_produk && !item.detail_id) {
+    return {
+      detail_id: item.id_produk,
+      id_produk: item.id_produk,
+      name: item.nama,
+      image: item.gambar,
+      note: item.deskripsi ? item.deskripsi.substring(0, 80) : '',
+      date: new Date().toLocaleDateString('id-ID'),
+      rating_existing: item.rating_existing,
+      komentar_existing: item.komentar_existing
+    }
+  }
+  
+  // Old structure
+  return item
+})
 
 const form = useForm({
   id_produk: currentItem.value?.id_produk ?? null,
-  rating: 0,
-  komentar: ''
+  rating: currentItem.value?.rating_existing ?? 0,
+  komentar: currentItem.value?.komentar_existing ?? ''
 })
 
 watch(() => pending.value, (items) => {
   if (!items.length) {
-    selectedDetailId.value = null
+    selectedIndex.value = -1
     return
   }
-  if (!items.find(x => x.detail_id === selectedDetailId.value)) {
-    selectedDetailId.value = items[0].detail_id
-  }
+  selectedIndex.value = 0
 }, { immediate: true })
 
 watch(currentItem, (item) => {
-  form.id_produk = item?.id_produk ?? null
-  form.rating = 0
-  form.komentar = ''
+  if (!item) return
+  form.id_produk = item.id_produk ?? null
+  form.rating = item.rating_existing ?? 0
+  form.komentar = item.komentar_existing ?? ''
 }, { immediate: true })
 
 function setRating(v) {
@@ -56,11 +75,17 @@ function submitReview() {
     preserveScroll: true,
     onSuccess: () => {
       toast('Terima kasih! Penilaianmu sudah terkirim.')
-      activeTab.value = 'history'
+      if (props.fromOrder) {
+        // Kembali ke pesanan setelah review
+        setTimeout(() => router.visit(route('orders.my')), 1500)
+      } else {
+        activeTab.value = 'history'
+      }
     },
     onError: (errors) => {
       if (errors.rating) toast(errors.rating)
       else if (errors.id_produk) toast(errors.id_produk)
+      else toast('Terjadi kesalahan saat menyimpan review')
     }
   })
 }
@@ -103,15 +128,15 @@ function toast(message) {
         <div v-if="currentItem" class="p-6 bg-white border shadow-sm rounded-2xl">
           <div v-if="pending.length > 1" class="flex flex-wrap gap-2 mb-6">
             <button
-              v-for="item in pending"
-              :key="item.detail_id"
+              v-for="(item, idx) in pending"
+              :key="idx"
               type="button"
-              @click="selectedDetailId = item.detail_id"
+              @click="selectedIndex = idx"
               class="px-3 py-1 text-xs font-medium rounded-full border transition"
-              :class="selectedDetailId === item.detail_id
+              :class="selectedIndex === idx
                 ? 'bg-green-100 border-green-500 text-green-700'
                 : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-400'">
-              {{ item.name }}
+              {{ item.name || item.nama }}
             </button>
           </div>
 
