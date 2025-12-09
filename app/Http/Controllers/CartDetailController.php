@@ -73,10 +73,20 @@ class CartDetailController extends Controller
 
     public function updateQuantity(Request $request, $id)
     {
-        $request->validate(['jumlah' => 'required|integer|min:1']);
+        // allow zero so frontend can decrement to 0 -> remove item
+        $request->validate(['jumlah' => 'required|integer|min:0']);
 
         $cartDetail = CartDetail::findOrFail($id);
-        $cartDetail->jumlah = $request->jumlah;
+
+        $newQty = (int) $request->jumlah;
+
+        if ($newQty <= 0) {
+            // remove item from cart when quantity becomes zero
+            $cartDetail->delete();
+            return response()->json(null, 204);
+        }
+
+        $cartDetail->jumlah = $newQty;
         $cartDetail->save();
 
         return response()->json($cartDetail);

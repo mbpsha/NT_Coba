@@ -65,10 +65,18 @@ class CartController extends Controller
 
     public function update(Request $request, $id_detail_keranjang)
     {
-        $request->validate(['qty' => 'required|integer|min:1']);
+        // allow zero so decrementing to 0 removes the item
+        $request->validate(['qty' => 'required|integer|min:0']);
         $detail = CartDetail::findOrFail($id_detail_keranjang);
         abort_unless($detail->cart->id_user === Auth::id(), 403);
-        $detail->update(['jumlah' => $request->qty]);
+
+        $qty = (int) $request->qty;
+        if ($qty <= 0) {
+            $detail->delete();
+            return back();
+        }
+
+        $detail->update(['jumlah' => $qty]);
         return back();
     }
 
@@ -82,9 +90,10 @@ class CartController extends Controller
 
     public function updateQty(Request $request)
     {
+        // allow qty zero to remove item
         $validated = $request->validate([
             'id_detail' => 'required|integer|exists:cart_details,id_detail_keranjang',
-            'qty' => 'required|integer|min:1'
+            'qty' => 'required|integer|min:0'
         ]);
 
         $detail = CartDetail::findOrFail($validated['id_detail']);
@@ -92,7 +101,14 @@ class CartController extends Controller
         // Pastikan user owns this cart
         abort_unless($detail->cart->id_user === Auth::id(), 403);
 
-        $detail->update(['jumlah' => $validated['qty']]);
+        $qty = (int) $validated['qty'];
+
+        if ($qty <= 0) {
+            $detail->delete();
+            return back()->with('success', 'Item removed from cart');
+        }
+
+        $detail->update(['jumlah' => $qty]);
 
         return back()->with('success', 'Qty berhasil diupdate');
     }

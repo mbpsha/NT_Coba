@@ -106,6 +106,22 @@ function normalizeNumber(value) {
   return Number.isFinite(parsed) ? parsed : value
 }
 
+function formatHargaDisplay(value) {
+  // Format dengan koma untuk display
+  const num = normalizeNumber(value)
+  if (!Number.isFinite(num)) return ''
+  return num.toLocaleString('id-ID')
+}
+
+function handleHargaInput(event) {
+  // Hanya ambil digit
+  const raw = event.target.value.replace(/\D/g, '')
+  // Update input display dengan format koma
+  event.target.value = raw ? Number(raw).toLocaleString('id-ID') : ''
+  // Update form value dengan angka mentah
+  form.harga = raw
+}
+
 function prepareNumericFields() {
   form.harga = normalizeNumber(form.harga)
   const stokParsed = parseInt(form.stok ?? 0, 10)
@@ -237,7 +253,14 @@ function deleteProduct(id) {
                 <div class="grid grid-cols-3 gap-3">
                   <div>
                     <label class="text-xs font-medium">Harga</label>
-                    <input v-model="form.harga" type="number" min="0" class="w-full mt-1 border rounded px-3 py-2 text-sm" required>
+                    <input 
+                      type="text" 
+                      @input="handleHargaInput"
+                      :value="formatHargaDisplay(form.harga)"
+                      placeholder="Contoh: 1.000.000" 
+                      class="w-full mt-1 border rounded px-3 py-2 text-sm" 
+                      required
+                    >
                   </div>
                   <div>
                     <label class="text-xs font-medium">Stok</label>

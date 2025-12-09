@@ -6,7 +6,8 @@ import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   pendingReviews: { type: Array, default: () => [] },
-  history: { type: Array, default: () => [] }
+  history: { type: Array, default: () => [] },
+  fromOrder: { type: Number, default: null }
 })
 
 const activeTab = ref('review')
@@ -16,32 +17,53 @@ const toastMsg = ref('')
 const pending = computed(() => props.pendingReviews ?? [])
 const historyList = computed(() => props.history ?? [])
 
-const selectedDetailId = ref(pending.value[0]?.detail_id ?? null)
+// Support both old structure (detail_id) and new structure (id_produk from order)
+const selectedIndex = ref(0)
 
-const currentItem = computed(() =>
-  pending.value.find(o => o.detail_id === selectedDetailId.value) || null
-)
+const currentItem = computed(() => {
+  const item = pending.value[selectedIndex.value]
+  if (!item) return null
+  
+  // Debug: log the item to see what data we have
+  console.log('Current item data:', item)
+  
+  // Handle new structure from createFromOrder (has 'nama' and 'gambar' fields)
+  if (item.nama && item.gambar) {
+    return {
+      detail_id: item.id_produk,
+      id_produk: item.id_produk,
+      name: item.nama,
+      image: item.gambar,
+      note: item.deskripsi ? item.deskripsi.substring(0, 80) : '',
+      date: new Date().toLocaleDateString('id-ID'),
+      rating_existing: item.rating_existing,
+      komentar_existing: item.komentar_existing
+    }
+  }
+  
+  // Old structure from ratingPage (has 'name' and 'image' fields)
+  return item
+})
 
 const form = useForm({
   id_produk: currentItem.value?.id_produk ?? null,
-  rating: 0,
-  komentar: ''
+  rating: currentItem.value?.rating_existing ?? 0,
+  komentar: currentItem.value?.komentar_existing ?? ''
 })
 
 watch(() => pending.value, (items) => {
   if (!items.length) {
-    selectedDetailId.value = null
+    selectedIndex.value = -1
     return
   }
-  if (!items.find(x => x.detail_id === selectedDetailId.value)) {
-    selectedDetailId.value = items[0].detail_id
-  }
+  selectedIndex.value = 0
 }, { immediate: true })
 
 watch(currentItem, (item) => {
-  form.id_produk = item?.id_produk ?? null
-  form.rating = 0
-  form.komentar = ''
+  if (!item) return
+  form.id_produk = item.id_produk ?? null
+  form.rating = item.rating_existing ?? 0
+  form.komentar = item.komentar_existing ?? ''
 }, { immediate: true })
 
 function setRating(v) {
@@ -56,11 +78,17 @@ function submitReview() {
     preserveScroll: true,
     onSuccess: () => {
       toast('Terima kasih! Penilaianmu sudah terkirim.')
-      activeTab.value = 'history'
+      if (props.fromOrder) {
+        // Kembali ke pesanan setelah review
+        setTimeout(() => router.visit(route('orders.my')), 1500)
+      } else {
+        activeTab.value = 'history'
+      }
     },
     onError: (errors) => {
       if (errors.rating) toast(errors.rating)
       else if (errors.id_produk) toast(errors.id_produk)
+      else toast('Terjadi kesalahan saat menyimpan review')
     }
   })
 }
@@ -73,6 +101,31 @@ function toast(message) {
   toastMsg.value = message
   showToast.value = true
   setTimeout(() => (showToast.value = false), 2200)
+}
+
+function getProductImage(imagePath) {
+  console.log('getProductImage called with:', imagePath)
+  
+  if (!imagePath) {
+    console.log('No image path, returning default')
+    return '/assets/dashboard/profil.png'
+  }
+  
+  // If already a complete URL (from asset() helper)
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    console.log('Full URL detected:', imagePath)
+    return imagePath
+  }
+  
+  // If already starts with /storage/ or /assets/
+  if (imagePath.startsWith('/storage/') || imagePath.startsWith('/assets/')) {
+    console.log('Path with prefix detected:', imagePath)
+    return imagePath
+  }
+  
+  // Otherwise return as-is (backend should handle it)
+  console.log('Returning path as-is:', imagePath)
+  return imagePath
 }
 </script>
 
@@ -103,21 +156,21 @@ function toast(message) {
         <div v-if="currentItem" class="p-6 bg-white border shadow-sm rounded-2xl">
           <div v-if="pending.length > 1" class="flex flex-wrap gap-2 mb-6">
             <button
-              v-for="item in pending"
-              :key="item.detail_id"
+              v-for="(item, idx) in pending"
+              :key="idx"
               type="button"
-              @click="selectedDetailId = item.detail_id"
+              @click="selectedIndex = idx"
               class="px-3 py-1 text-xs font-medium rounded-full border transition"
-              :class="selectedDetailId === item.detail_id
+              :class="selectedIndex === idx
                 ? 'bg-green-100 border-green-500 text-green-700'
                 : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-green-400'">
-              {{ item.name }}
+              {{ item.name || item.nama }}
             </button>
           </div>
 
           <!-- Header produk -->
           <div class="flex items-start gap-4">
-            <img :src="currentItem.image" class="object-contain w-16 h-16 bg-white border rounded-md" alt="produk">
+            <img :src="getProductImage(currentItem.image)" class="object-contain w-16 h-16 bg-white border rounded-md" alt="produk">
             <div class="flex-1">
               <p class="text-base font-semibold leading-tight">{{ currentItem.name }}</p>
               <p class="text-xs text-gray-600">{{ currentItem.note || 'Pesanan siap dinilai' }}</p>
@@ -157,7 +210,7 @@ function toast(message) {
       <!-- Histori pembelian -->
       <section v-show="activeTab==='history'" class="space-y-4">
         <div v-for="it in historyList" :key="it.id" class="flex items-center gap-4 p-4 border border-green-100 bg-green-50/70 rounded-2xl">
-          <img :src="it.image" alt="produk" class="object-contain w-16 h-16 bg-white border rounded-md" />
+          <img :src="getProductImage(it.image)" alt="produk" class="object-contain w-16 h-16 bg-white border rounded-md" />
           <div class="flex-1">
             <p class="text-sm font-semibold leading-tight">
               {{ it.name }} <span class="font-normal text-gray-600"> {{ it.note }}</span>

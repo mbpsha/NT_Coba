@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
     status: { type: String, required: true },
@@ -19,21 +18,12 @@ const activeIndex = computed(() => {
         default: return -1
     }
 })
-
-// GO TO REVIEWS -> gunakan route named 'reviews.index'
-const goToReviews = () => {
-  // hanya navigasi bila status selesai
-    if (activeIndex.value === 3) {
-        // menggunakan named route (Ziggy / route() helper)
-        router.visit(route('reviews.index'), { preserveScroll: true })
-    }
-}
 </script>
 
 <template>
     <section class="w-full">
         <div class="rounded-xl bg-white/70 backdrop-blur ring-1 ring-gray-200 p-5 shadow-sm">
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-3 gap-4">
 
             <!-- STEP 1: Pembayaran Terverifikasi -->
             <div class="flex flex-col items-center text-center gap-2">
@@ -80,35 +70,6 @@ const goToReviews = () => {
             </div>
             <p :class="['text-xs', activeIndex >= 2 ? 'text-gray-800' : 'text-gray-400']">
                 Dalam Pengiriman
-            </p>
-            </div>
-
-            <!-- STEP 4: Rating (aktif hanya jika selesai) -->
-            <div class="flex flex-col items-center text-center gap-2">
-            <button
-                type="button"
-                @click="goToReviews"
-                :disabled="activeIndex !== 3"
-                class="group focus:outline-none disabled:cursor-not-allowed"
-            >
-                <div :class="[
-                    'w-12 h-12 grid place-items-center rounded-xl shadow-sm transition',
-                    activeIndex === 3 ? 'bg-green-100 text-green-600 group-hover:scale-105' : 'bg-gray-100 text-gray-400'
-                ]">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-                </div>
-            </button>
-
-            <p
-                @click="activeIndex === 3 && goToReviews()"
-                :class="[
-                'text-xs font-medium underline',
-                activeIndex === 3 ? 'text-green-700 cursor-pointer' : 'text-gray-400 cursor-not-allowed'
-                ]"
-            >
-                Beri Penilaian
             </p>
             </div>
         </div>

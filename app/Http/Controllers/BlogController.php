@@ -28,7 +28,14 @@ class BlogController extends Controller
     public function update(BlogRequest $request, $id)
     {
         $blog = Blog::findOrFail($id);
-        $blog->update($request->validated());
+        $data = $request->validated();
+        
+        // Preserve existing image if no new image provided
+        if (empty($data['foto'])) {
+            unset($data['foto']);
+        }
+        
+        $blog->update($data);
         return response()->json($blog);
     }
 

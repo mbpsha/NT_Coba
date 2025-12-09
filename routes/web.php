@@ -104,15 +104,18 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 
     // Order & Payment - WAJIB VERIFIKASI EMAIL
-    Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/order/cart/create', [OrderController::class, 'createFromCart'])->name('order.cart.create');
+    Route::post('/order/{id_produk}/create', [OrderController::class, 'createFromCheckout'])->name('order.create');
     Route::post('/payment/{id_order}/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
 
     // User Orders (Pesanan Saya) - WAJIB VERIFIKASI EMAIL
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
+    Route::post('/pesanan-saya/{id}/confirm-received', [OrderController::class, 'confirmReceived'])->name('orders.confirm-received');
+    Route::post('/pesanan-saya/{id}/complete', [OrderController::class, 'completeOrder'])->name('orders.complete');
 
     // Reviews
     Route::get('/review', [ReviewController::class, 'ratingPage'])->name('reviews.index');
+    Route::get('/review/create/{id_order}', [ReviewController::class, 'createFromOrder'])->name('reviews.create');
     Route::post('/review', [ReviewController::class, 'submitFromUser'])->name('reviews.store');
 });
 
@@ -150,6 +153,8 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     // Orders
     Route::get('/orders', [OrderController::class, 'indexAdmin'])->name('orders.index');
     Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+    Route::post('/orders/{id}/confirm-received', [OrderController::class, 'adminConfirmReceived'])->name('admin.orders.confirm-received');
 
     // Payments
     Route::get('/payments', [PaymentController::class, 'indexAdmin'])->name('payments.index');

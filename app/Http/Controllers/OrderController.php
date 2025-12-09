@@ -61,6 +61,24 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Order status updated successfully!');
     }
 
+    /**
+     * Admin confirm order received - mark order as selesai so user can review
+     */
+    public function adminConfirmReceived(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        // Only allow confirm from dikirim status
+        if ($order->status !== 'dikirim') {
+            return redirect()->back()->with('error', 'Pesanan harus dalam status dikirim untuk dikonfirmasi');
+        }
+
+        // Update status ke selesai
+        $order->update(['status' => 'selesai']);
+
+        return redirect()->back()->with('success', 'Pesanan telah dikonfirmasi diterima customer. Customer sekarang bisa memberikan review.');
+    }
+
     public function store(OrderRequest $request)
     {
         $order = Order::create($request->validated());
@@ -113,13 +131,10 @@ class OrderController extends Controller
                         'is_estimated' => $order->shipping_is_estimated,
                     ],
                     'products' => $order->orderDetails->map(function ($detail) {
-                        $gambar = $detail->product->gambar
-                            ? asset('storage/' . ltrim($detail->product->gambar, '/'))
-                            : asset('/assets/dashboard/profil.png');
-
+                        // Gunakan raw path dari database - Vue template akan handle
                         return [
                             'nama' => $detail->product->nama_produk ?? 'Produk tidak ditemukan',
-                            'gambar_url' => $gambar, // gunakan URL siap pakai
+                            'gambar' => $detail->product->gambar ?? '/assets/dashboard/profil.png',
                             'harga' => $detail->harga,
                             'jumlah' => $detail->jumlah,
                             'subtotal' => $detail->harga * $detail->jumlah
@@ -371,5 +386,45 @@ class OrderController extends Controller
             DB::rollBack();
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Confirm order received by user
+     */
+    public function confirmReceived(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = Order::where('id_order', $id)
+            ->where('id_user', $user->id_user)
+            ->firstOrFail();
+
+        // Only allow confirm from dikirim status
+        if ($order->status !== 'dikirim') {
+            return redirect()->route('orders.my')->with('error', 'Pesanan harus dalam status dikirim terlebih dahulu');
+        }
+
+        return redirect()->route('orders.my')->with('success', 'Pesanan telah dikonfirmasi diterima');
+    }
+
+    /**
+     * Complete order - user marks order as complete/done
+     * After this, order status = 'selesai' and user can write review
+     */
+    public function completeOrder(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = Order::where('id_order', $id)
+            ->where('id_user', $user->id_user)
+            ->firstOrFail();
+
+        // Only allow complete from dikirim status
+        if ($order->status !== 'dikirim') {
+            return redirect()->route('orders.my')->with('error', 'Pesanan harus dalam status dikirim untuk bisa diselesaikan');
+        }
+
+        // Update status ke selesai
+        $order->update(['status' => 'selesai']);
+
+        return redirect()->route('orders.my')->with('success', 'Pesanan telah diselesaikan. Anda sekarang bisa memberikan review');
     }
 }

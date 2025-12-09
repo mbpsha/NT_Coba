@@ -67,7 +67,14 @@ class ReviewController extends Controller
             $product = $detail->product;
             $order   = $detail->order;
 
-            $image = $product?->gambar ?: '/assets/dashboard/profil.png';
+            // Remove /storage/ prefix if exists before adding it with asset()
+            $imagePath = $product?->gambar ?: '';
+            if ($imagePath) {
+                $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                $image = asset('storage/' . $imagePath);
+            } else {
+                $image = asset('/assets/dashboard/profil.png');
+            }
 
             return [
                 'detail_id'   => $detail->id_order_detail,
@@ -86,7 +93,15 @@ class ReviewController extends Controller
             ->get()
             ->map(function ($review) {
                 $product = $review->product;
-                $image   = $product?->gambar ?: '/assets/dashboard/profil.png';
+                
+                // Remove /storage/ prefix if exists before adding it with asset()
+                $imagePath = $product?->gambar ?: '';
+                if ($imagePath) {
+                    $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                    $image = asset('storage/' . $imagePath);
+                } else {
+                    $image = asset('/assets/dashboard/profil.png');
+                }
 
                 return [
                     'id'         => $review->id_review,
@@ -146,5 +161,59 @@ class ReviewController extends Controller
         );
 
         return back()->with('success', 'Terima kasih! Penilaianmu berhasil disimpan.');
+    }
+
+    /**
+     * Create review from order - show review form for products in a specific order
+     */
+    public function createFromOrder(Request $request, $id_order)
+    {
+        $user = $request->user();
+
+        // Get order with products
+        $order = \App\Models\Order::where('id_order', $id_order)
+            ->where('id_user', $user->id_user)
+            ->with('orderDetails.product')
+            ->firstOrFail();
+
+        // Check if order is completed
+        if ($order->status !== 'selesai') {
+            return redirect()->route('orders.my')->with('error', 'Hanya pesanan yang selesai bisa di-review');
+        }
+
+        // Get products from order with existing reviews
+        $products = $order->orderDetails->map(function ($detail) use ($user) {
+            $product = $detail->product;
+            
+            // Remove /storage/ prefix if exists before adding it with asset()
+            $imagePath = $product->gambar ?: '';
+            if ($imagePath) {
+                $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                $image = asset('storage/' . $imagePath);
+            } else {
+                $image = asset('/assets/dashboard/profil.png');
+            }
+
+            // Check if user already reviewed this product
+            $existingReview = \App\Models\Review::where('id_produk', $product->id_produk)
+                ->where('id_user', $user->id_user)
+                ->first();
+
+            return [
+                'id_produk' => $product->id_produk,
+                'nama' => $product->nama_produk,
+                'gambar' => $image,
+                'deskripsi' => $product->deskripsi ?? '',
+                'jumlah_dibeli' => $detail->jumlah,
+                'rating_existing' => $existingReview?->rating ?? null,
+                'komentar_existing' => $existingReview?->komentar ?? null,
+            ];
+        });
+
+        return Inertia::render('User/ReviewsAndHistory', [
+            'pendingReviews' => $products,
+            'history' => [],
+            'fromOrder' => $id_order,
+        ]);
     }
 }
