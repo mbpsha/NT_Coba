@@ -5,10 +5,16 @@ import Logo from '*/dashboard/logo-tandur.png'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
+
+const onLogout = () => {
+    router.post(route('logout'), {}, {
+        onSuccess: () => router.visit('/', { replace: true, preserveState: false })
+    })
+}
 </script>
 
 <template>
-    <header class="fixed top-0 right-0 left-64 h-16 bg-gradient-to-r from-green-300 to-green-300 shadow-md z-15">
+    <header class="fixed top-0 right-0 left-64 h-16 bg-gradient-to-b from-green-200 to-green-260 shadow-md z-15">
         <div class="flex items-center justify-between h-full px-8">
             <div class="flex items-center gap-3">
                 <img :src="Logo" alt="NGUNDUR" class="h-12" />
@@ -22,6 +28,11 @@ const user = computed(() => page.props.auth.user)
                     </svg>
                     <span class="font-medium">{{ user?.nama || 'Admin' }}</span>
                 </div>
+
+                <!-- tombol logout -->
+                <button @click="onLogout" class="px-3 py-1.5 rounded-md bg-white/20 hover:bg-red-300 text-black text-sm">
+                    Log-out
+                </button>
             </div>
         </div>
     </header>

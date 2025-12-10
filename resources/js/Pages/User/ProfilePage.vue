@@ -1,5 +1,6 @@
 <script setup>
 import { Link, useForm, usePage, router } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import Logo from '*/dashboard/logo-ngundur.png'
 
 const page = usePage()
@@ -18,10 +19,18 @@ const form = useForm({
   checkout_qty: checkoutIntent?.qty || 1,
 })
 
+const showSavedToast = ref(false)
+
 function onPhoneInput(e){ form.no_telp = (e.target.value || '').replace(/\D+/g,'') }
 function save(){
   form.no_telp = (form.no_telp || '').replace(/\D+/g,'')
-  form.put(route('profile.update'), { preserveScroll: true })
+  form.put(route('profile.update'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showSavedToast.value = true
+      setTimeout(() => { showSavedToast.value = false }, 2500)
+    }
+  })
 }
 
 // Tombol kembali: pakai history jika ada, fallback ke berita
@@ -123,5 +132,22 @@ function backToCheckout(){
             </form>
         </div>
         </main>
+
+        <!-- Toast popup -->
+        <transition name="fade">
+          <div
+            v-if="showSavedToast"
+            class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 text-sm text-white bg-green-600 rounded-md shadow"
+            role="alert"
+          >
+            Informasi profil berhasil disimpan.
+          </div>
+        </transition>
     </div>
 </template>
+
+<style>
+/* animasi sederhana untuk toast */
+.fade-enter-active, .fade-leave-active { transition: opacity .2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>

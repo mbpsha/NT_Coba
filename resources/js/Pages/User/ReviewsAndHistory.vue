@@ -130,11 +130,10 @@ function getProductImage(imagePath) {
 </script>
 
 <template>
-  <div class="min-h-screen text-gray-900 font-inter bg-gray-50">
+  <div class="min-h-screen text-gray-900 font-inter bg-gray-50 flex flex-col">
     <Header />
     <Head title="Beri Penilaian" />
-
-    <main class="max-w-5xl px-4 pt-24 pb-20 mx-auto sm:px-6 lg:px-8">
+    <main class="flex-1 max-w-5xl px-4 pt-24 pb-20 mx-auto sm:px-6 lg:px-8">
       <!-- Tabs -->
       <div class="flex items-center justify-center gap-10 mb-6">
         <button
