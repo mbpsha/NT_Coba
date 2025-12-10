@@ -5,6 +5,12 @@ import Logo from '*/dashboard/logo-tandur.png'
 
 const page = usePage()
 const user = computed(() => page.props.auth.user)
+
+const onLogout = () => {
+    router.post(route('logout'), {}, {
+        onSuccess: () => router.visit('/', { replace: true, preserveState: false })
+    })
+}
 </script>
 
 <template>
@@ -22,6 +28,11 @@ const user = computed(() => page.props.auth.user)
                     </svg>
                     <span class="font-medium">{{ user?.nama || 'Admin' }}</span>
                 </div>
+
+                <!-- tombol logout -->
+                <button @click="onLogout" class="px-3 py-1.5 rounded-md bg-white/20 hover:bg-red-300 text-black text-sm">
+                    Log-out
+                </button>
             </div>
         </div>
     </header>

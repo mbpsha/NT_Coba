@@ -247,7 +247,7 @@ function submitPayment() {
                 </div>
                 <button class="text-xs px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
                         @click="openAddressForm">
-                  + Tambah Alamat Baru
+                  + Tambah Alamat Pengiriman
                 </button>
               </div>
             </div>
