@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\News;
 use App\Models\User;
+use Illuminate\Http\Request;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\UserMiddleware;
 use App\Http\Controllers\Auth\AuthController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Auth\VerificationController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -32,6 +35,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    // Forgot Password
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+    Route::get('/reset-password', function (Request $request) {
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $request->query('token'),
+            'email' => $request->query('email'),
+        ]);
+    })->name('password.reset.view');
 });
 
 // Email Verification Routes
@@ -112,6 +125,7 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::get('/pesanan-saya', [OrderController::class, 'myOrders'])->name('orders.my');
     Route::post('/pesanan-saya/{id}/confirm-received', [OrderController::class, 'confirmReceived'])->name('orders.confirm-received');
     Route::post('/pesanan-saya/{id}/complete', [OrderController::class, 'completeOrder'])->name('orders.complete');
+    Route::post('/pesanan-saya/{id}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
 
     // Reviews
     Route::get('/review', [ReviewController::class, 'ratingPage'])->name('reviews.index');

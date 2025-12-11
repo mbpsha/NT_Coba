@@ -75,6 +75,14 @@ class ReviewController extends Controller
             } else {
                 $image = asset('/assets/dashboard/profil.png');
             }
+            // Remove /storage/ prefix if exists before adding it with asset()
+            $imagePath = $product?->gambar ?: '';
+            if ($imagePath) {
+                $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                $image = asset('storage/' . $imagePath);
+            } else {
+                $image = asset('/assets/dashboard/profil.png');
+            }
 
             return [
                 'detail_id'   => $detail->id_order_detail,
@@ -93,6 +101,15 @@ class ReviewController extends Controller
             ->get()
             ->map(function ($review) {
                 $product = $review->product;
+                
+                // Remove /storage/ prefix if exists before adding it with asset()
+                $imagePath = $product?->gambar ?: '';
+                if ($imagePath) {
+                    $imagePath = preg_replace('#^/?(storage/)?#', '', $imagePath);
+                    $image = asset('storage/' . $imagePath);
+                } else {
+                    $image = asset('/assets/dashboard/profil.png');
+                }
                 
                 // Remove /storage/ prefix if exists before adding it with asset()
                 $imagePath = $product?->gambar ?: '';

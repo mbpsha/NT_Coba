@@ -17,10 +17,16 @@ class AdminDashboardController extends Controller
     public function index()
     {
         // Get statistics
+        // Successful orders: finalized/completed orders (status = 'selesai')
+        // This avoids relying on payment column names that may differ.
+        $successfulOrders = Order::where('status', 'selesai')->count();
+
         $stats = [
             'totalProducts' => Product::count(),
             'totalUsers' => User::where('role', '!=', 'admin')->count(),
             'totalOrders' => Order::count(),
+            'successfulOrders' => $successfulOrders,
+            // Keep using existing Payment status column used elsewhere in the app
             'pendingPayments' => Payment::where('status', 'pending')->count(),
         ];
 

@@ -58,12 +58,12 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Total Orders -->
+                <!-- Total Successful Orders -->
                 <div class="p-6 bg-white border-l-4 border-purple-500 rounded-lg shadow-md">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-500 uppercase">Total Orders</p>
-                            <h3 class="mt-1 text-3xl font-bold text-gray-800">{{ stats?.totalOrders || 0 }}</h3>
+                            <h3 class="mt-1 text-3xl font-bold text-gray-800">{{ stats?.successfulOrders ?? stats?.totalSuccessfulOrders ?? stats?.totalOrders ?? 0 }}</h3>
                         </div>
                         <div class="p-3 bg-purple-100 rounded-full">
                             <svg class="w-8 h-8 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
@@ -214,11 +214,11 @@ onMounted(() => {
                                               }"
                                               :title="`${sale.month}: Rp ${Number(sale.amount || 0).toLocaleString('id-ID')}`"
                                             >
-                                              <!-- Tooltip on hover -->
-                                              <div v-if="sale.amount > 0" class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-xl z-10">
+                                                <!-- Tooltip on hover -->
+                                                <div v-if="sale.amount > 0" class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-xl z-10">
                                                 Rp {{ Number(sale.amount || 0).toLocaleString('id-ID') }}
                                                 <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
-                                              </div>
+                                                </div>
                                             </div>
                                             <!-- Month label -->
                                             <span class="mt-4 text-xs font-semibold text-gray-700 whitespace-nowrap">{{ sale.month }}</span>

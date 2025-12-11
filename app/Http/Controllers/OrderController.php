@@ -389,6 +389,36 @@ class OrderController extends Controller
     }
 
     /**
+     * User cancels their order
+     */
+    public function cancelOrder(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = Order::with(['orderDetails.product'])
+            ->where('id_order', $id)
+            ->where('id_user', $user->id_user)
+            ->firstOrFail();
+
+        // Prevent cancel if already finished or canceled
+        if (in_array($order->status, ['selesai', 'dibatalkan'])) {
+            return redirect()->route('orders.my')->with('error', 'Pesanan tidak dapat dibatalkan.');
+        }
+
+        // Update status to canceled
+        $order->status = 'dibatalkan';
+        $order->save();
+
+        // Restore stock for each item
+        foreach ($order->orderDetails as $detail) {
+            if ($detail->product) {
+                $detail->product->increment('stok', $detail->jumlah);
+            }
+        }
+
+        return redirect()->route('orders.my')->with('success', 'Pesanan berhasil dibatalkan.');
+    }
+
+    /**
      * Confirm order received by user
      */
     public function confirmReceived(Request $request, $id)

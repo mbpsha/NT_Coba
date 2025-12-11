@@ -86,7 +86,8 @@ function createOrderFromCart() {
     preserveState: false,
     onError: (errors) => {
       console.error('Order creation failed:', errors)
-      alert('Gagal membuat pesanan. Periksa data Anda.')
+      const errorMsg = errors.error || errors.message || Object.values(errors)[0] || 'Gagal membuat pesanan. Periksa data Anda.'
+      alert(errorMsg)
     }
   })
 }

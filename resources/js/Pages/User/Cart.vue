@@ -2,7 +2,8 @@
 import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import { Head, router, useForm } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   user: { type: Object, default: () => ({}) },
@@ -29,8 +30,10 @@ const imgUrl = (g) => {
 const fmt = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n)
 
 // Fallback hitung subtotal jika backend kirim 0
+const itemsList = ref((props.items || []).map(i => ({ ...i })))
+
 const subtotalCalc = computed(() =>
-  props.items.reduce((s,it)=> s + ((it.product?.harga||0) * (it.qty || it.jumlah || 0)), 0)
+  itemsList.value.reduce((s,it)=> s + ((it.product?.harga||0) * (it.qty || it.jumlah || 0)), 0)
 )
 
 const summaryView = computed(() => {
@@ -78,13 +81,27 @@ function openAddressForm(){
 
 // Update qty cart item
 function updateQty(cartDetailId, newQty) {
-  if (newQty < 1) return
-  router.post(route('cart.update.qty'), {
+  // allow 0 to remove item
+  if (newQty < 0) return
+
+  // optimistic UI update: update local itemsList immediately
+  const idx = itemsList.value.findIndex(i => i.id_detail_keranjang === cartDetailId)
+  if (idx !== -1) {
+    if (newQty <= 0) {
+      // remove locally
+      itemsList.value.splice(idx, 1)
+    } else {
+      itemsList.value[idx].qty = newQty
+    }
+  }
+
+  // send request to server; if it fails, reload page to reflect server state
+  axios.post(route('cart.update.qty'), {
     id_detail: cartDetailId,
     qty: newQty
-  }, {
-    preserveScroll: true,
-    preserveState: true,
+  }).catch(() => {
+    // fallback: reload to sync
+    window.location.reload()
   })
 }
 
@@ -93,7 +110,7 @@ function incrementQty(item) {
 }
 
 function decrementQty(item) {
-  if ((item.qty || 1) <= 1) return
+  // if currently 1, decrementing will remove the item
   updateQty(item.id_detail_keranjang, (item.qty || 1) - 1)
 }
 
@@ -118,7 +135,7 @@ console.log('Render Cart.vue')
       <!-- Items + Summary -->
       <div v-else class="grid md:grid-cols-[1fr_280px] gap-6">
         <div class="space-y-3">
-          <div v-for="it in items" :key="it.id_detail_keranjang"
+            <div v-for="it in itemsList" :key="it.id_detail_keranjang"
               class="flex items-center gap-4 bg-white rounded-xl border p-3">
               <img
                 :src="imgUrl(it.product.gambar)"
@@ -131,8 +148,7 @@ console.log('Render Cart.vue')
               <p class="text-sm font-medium">{{ it.product?.nama_produk || 'Produk' }}</p>
               <div class="flex items-center gap-2 mt-2">
                 <button @click="decrementQty(it)"
-                        :disabled="(it.qty || 1) <= 1"
-                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">
                   -
                 </button>
                 <span class="text-sm font-medium w-8 text-center">{{ it.qty || 1 }}</span>

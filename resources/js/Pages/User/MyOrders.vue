@@ -51,7 +51,6 @@ function getProductImage(product) {
   return product.gambar
 }
 </script>
-
 <template>
   <div class="min-h-screen text-gray-900 bg-gray-100 font-inter">
     <Header />
@@ -75,7 +74,6 @@ function getProductImage(product) {
                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
         </svg>
         <h3 class="mt-4 text-lg font-semibold text-gray-600">Belum ada pesanan</h3>
-        <p class="mt-2 text-sm text-gray-500">Yuk, mulai belanja produk berkualitas dari kami!</p>
 
         <button
           @click="router.visit('/toko')"
@@ -90,11 +88,19 @@ function getProductImage(product) {
         <div
           v-for="order in orders"
           :key="order.id_order"
-          class="overflow-hidden bg-white border rounded-lg shadow-sm"
+          :class="[
+            'overflow-hidden rounded-lg shadow-sm border',
+            order.status === 'dibatalkan' ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
+          ]"
         >
 
           <!-- HEADER -->
-          <div class="flex items-center justify-between px-5 py-3 border-b bg-gray-50">
+          <div
+            :class="[
+              'flex items-center justify-between px-5 py-3 border-b',
+              order.status === 'dibatalkan' ? 'bg-red-100 border-red-200' : 'bg-gray-50 border-gray-200'
+            ]"
+          >
             <div class="flex items-center gap-4">
               <div>
                 <p class="text-xs text-gray-500">Order ID</p>
@@ -117,6 +123,16 @@ function getProductImage(product) {
                 :order-id="order.id_order"
               />
               
+              <!-- Batalkan pesanan: tampil jika belum selesai/dibatalkan -->
+              <button
+                v-if="order.status === 'pending' && order.payment_status !== 'verified'"
+                @click="router.post(route('orders.cancel', order.id_order))"
+                class="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                title="Batalkan pesanan"
+              >
+                Batalkan Pesanan
+              </button>
+
               <!-- Tombol selesaikan pesanan saat status sudah dikirim -->
               <button
                 v-if="order.status === 'dikirim'"

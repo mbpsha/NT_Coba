@@ -95,7 +95,7 @@ function getStatusColor(status) {
                                         class="px-3 py-1 rounded-full text-xs font-semibold"
                                         :class="getStatusColor(order.status)"
                                     >
-                                        {{ order.status }}
+                                        {{ order.status === 'dibatalkan' ? 'Dibatalkan Pembeli' : order.status }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
