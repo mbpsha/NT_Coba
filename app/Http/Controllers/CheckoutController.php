@@ -167,6 +167,88 @@ class CheckoutController extends Controller
             return redirect()->route('login');
         }
 
+        // Cek apakah ada order yang baru dibuat (dari session)
+        $orderId = session('order_id');
+        if ($orderId) {
+            // Load order yang sudah dibuat untuk tampilkan halaman konfirmasi pembayaran
+            $order = Order::with(['orderDetails.product', 'address'])
+                ->where('id_order', $orderId)
+                ->where('id_user', $user->id_user)
+                ->first();
+
+            if ($order) {
+                // Siapkan data produk dari order details
+                $products = [];
+                foreach ($order->orderDetails as $detail) {
+                    $products[] = [
+                        'id_detail_keranjang' => null, // tidak ada karena sudah jadi order
+                        'id_produk'   => $detail->product->id_produk,
+                        'nama_produk' => $detail->product->nama_produk,
+                        'harga'       => $detail->harga,
+                        'qty'         => $detail->jumlah,
+                        'stok'        => $detail->product->stok,
+                        'gambar_url'  => $this->getProductImageUrl($detail->product->gambar),
+                    ];
+                }
+
+                // Alamat dari order
+                $address = $order->address;
+
+                // Shipping quote dari order
+                $shippingQuote = [
+                    'cost' => $order->shipping_cost,
+                    'weight' => $order->shipping_weight,
+                    'destination_city_id' => $order->shipping_destination_city_id,
+                    'courier' => $order->shipping_courier,
+                    'service' => $order->shipping_service,
+                    'etd' => $order->shipping_etd,
+                    'is_estimated' => $order->shipping_is_estimated,
+                ];
+
+                // Hitung subtotal dari order details
+                $subtotal = 0;
+                foreach ($order->orderDetails as $detail) {
+                    $subtotal += $detail->harga * $detail->jumlah;
+                }
+
+                return Inertia::render('User/CheckoutCart', [
+                    'order_id' => $order->id_order,
+
+                    'user' => [
+                        'id_user'   => $user->id_user,
+                        'id_alamat' => $address->id_alamat,
+                        'nama'      => $user->nama ?? $user->username,
+                        'email'     => $user->email,
+                        'no_telp'   => $user->no_telp,
+                        'alamat'    => $address->alamat_lengkap,
+                    ],
+
+                    'shipping' => [
+                        'name'  => $address->nama_penerima,
+                        'text'  => $address->alamat_lengkap,
+                        'phone' => $address->no_telp_penerima,
+                        'quote' => $shippingQuote,
+                    ],
+
+                    'products' => $products,
+                    'cart_id'  => null, // tidak ada cart lagi
+
+                    'summary' => [
+                        'admin'   => $order->admin_fee,
+                        'ongkir'  => $order->shipping_cost,
+                        'subtotal' => $subtotal,
+                        'total'   => $order->total_harga,
+                        'weight'  => $order->shipping_weight,
+                        'courier' => $order->shipping_courier,
+                        'service' => $order->shipping_service,
+                        'etd'     => $order->shipping_etd,
+                        'is_shipping_estimated' => $order->shipping_is_estimated,
+                    ],
+                ]);
+            }
+        }
+
+        // Jika tidak ada order di session, tampilkan cart checkout normal
         // Ambil cart items
         $cart = Cart::where('id_user', $user->id_user)->first();
         if (!$cart || !$cart->cartDetails()->exists()) {

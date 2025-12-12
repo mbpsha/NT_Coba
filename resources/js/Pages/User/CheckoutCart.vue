@@ -57,6 +57,11 @@ function openAddressForm() {
 
 // Update qty di cart
 function updateQty(productItem, change) {
+  // Disable update qty jika order sudah dibuat
+  if (orderId.value || !props.cart_id) {
+    return
+  }
+  
   const newQty = productItem.qty + change
   if (newQty < 1) return
   if (newQty > productItem.stok) {
@@ -123,9 +128,12 @@ function submitPayment() {
 
     <main class="max-w-5xl px-4 pt-24 pb-16 mx-auto sm:px-6 lg:px-8">
       <div class="flex items-center justify-between mb-4">
-        <h1 class="text-lg font-semibold">Checkout - Keranjang</h1>
-        <button @click="router.visit('/cart')" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+        <h1 class="text-lg font-semibold">{{ orderId ? 'Konfirmasi Pembayaran' : 'Checkout - Keranjang' }}</h1>
+        <button v-if="!orderId" @click="router.visit('/cart')" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
           Kembali ke Keranjang
+        </button>
+        <button v-else @click="router.visit(route('orders.my'))" class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+          Lihat Pesanan Saya
         </button>
       </div>
 
@@ -156,7 +164,7 @@ function submitPayment() {
                     <div class="mt-2 text-sm font-bold text-red-600">{{ fmt(product.harga) }}</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs text-gray-600">Jumlah:</span>
-                      <div class="flex items-center gap-1">
+                      <div v-if="!orderId && cart_id" class="flex items-center gap-1">
                         <button @click="updateQty(product, -1)"
                                 :disabled="product.qty <= 1"
                                 class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -169,6 +177,7 @@ function submitPayment() {
                           +
                         </button>
                       </div>
+                      <span v-else class="w-8 text-center text-sm font-medium">{{ product.qty }}</span>
                       <span class="text-[10px] text-gray-500">(Stok: {{ product.stok }})</span>
                     </div>
                   </div>
@@ -201,7 +210,8 @@ function submitPayment() {
                     </p>
                   </div>
                 </div>
-                <button class="text-xs px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
+                <button v-if="!orderId && cart_id"
+                        class="text-xs px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
                         @click="openAddressForm">
                   + Tambah Alamat Baru
                 </button>
