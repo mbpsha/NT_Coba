@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { Link, usePage, useForm, router } from '@inertiajs/vue3'
 
-import Logo from '*/dashboard/logo-ngundur.png'
+import Logo from '*/dashboard/logo-tandur.png'
 
 const page = usePage()
 const user = computed(()=> page.props.auth?.user || null)
