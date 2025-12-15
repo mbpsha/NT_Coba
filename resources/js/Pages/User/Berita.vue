@@ -23,7 +23,7 @@ const cover = (img) => img ? `/storage/${img}` : '/assets/dashboard/berita-1.png
         url('/assets/dashboard/bg-berita.jpg');"
     >
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 md:pt-8">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-wide text-[#2D6A4F] mb-6 md:mb-8">
+        <h1 class="text-4xl md:text-4xl font-extrabold tracking-wide text-[#2D6A4F] mb-6 md:mb-8">
           BERITA PERTANIAN
         </h1>
 
