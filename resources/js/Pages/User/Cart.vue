@@ -118,10 +118,10 @@ console.log('Render Cart.vue')
 </script>
 
 <template>
-  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
+  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen flex flex-col">
     <Header />
     <Head title="Keranjang" />
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6">
+    <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-lg font-semibold">Keranjang</h1>
         <button @click="router.visit('/toko')" class="px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300">Kembali</button>
