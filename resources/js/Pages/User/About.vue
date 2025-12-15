@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/vue3'
 
 // gunakan aset yang sama seperti sebelumnya
 import Logo from '*/dashboard/logo-tandur.png'
-import Profil from '*/dashboard/keunggulan-alat-0.png'
+import Profil from '*/dashboard/keunggulan-alat.png'
 import Gambar3D from '*/dashboard/gambar-3D.png'
 </script>
 
@@ -86,11 +86,11 @@ import Gambar3D from '*/dashboard/gambar-3D.png'
 
             <!-- Panel Gambar: atas keunggulan-alat-0.png, bawah gambar-3D.png -->
             <div class="grid grid-cols-1 gap-4">
-              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-3 h-auto">
-                <img :src="Profil" alt="Keunggulan Alat" class="h-29 md:h-32 object-contain" />
+              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-2 md:p-2 h-40 md:h-53">
+                <img :src="Profil" alt="Keunggulan Alat" class="h-full w-auto object-contain" />
               </div>
-              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-3 h-auto">
-                <img :src="Gambar3D" alt="Render 3D" class="h-29 md:h-32 object-contain" />
+              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-2 md:p-2 h-40 md:h-55">
+                <img :src="Gambar3D" alt="Render 3D" class="h-full w-auto object-contain" />
               </div>
             </div>
           </section>
