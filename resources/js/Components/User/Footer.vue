@@ -15,7 +15,7 @@ const imageBlendStyle = computed(() => ({
         <div class="relative overflow-hidden text-white bg-[#47764A]"> <!-- overflow-hidden to avoid seams -->
             <!-- Image + gradient overlay that fades into background color -->
             <div
-                class="absolute inset-y-0 right-0 hidden w-1/3 md:block bg-no-repeat bg-cover bg-right pointer-events-none"
+                class="absolute inset-y-0 right-0 hidden w-1/3 bg-right bg-no-repeat bg-cover pointer-events-none md:block"
                 :style="imageBlendStyle"
             ></div>
 
@@ -27,11 +27,11 @@ const imageBlendStyle = computed(() => ({
                         Gamping, Sleman, Daerah Istimewa Yogyakarta
                     </p>
                     <div class="mt-4 space-y-1 text-sm text-white/90">
-                        <p><span class="font-semibold">Phone</span> +62 000-000-000</p>
-                        <p><span class="font-semibold">WA</span> +62 000-000-000</p>
+                        <p><span class="font-semibold">Phone</span> +62 813-2749-5481</p>
+                        <p><span class="font-semibold">WA</span> +62 813-2749-5481</p>
                         <p><span class="font-semibold">Service Hours</span> Senin–Jum'at 09.00–16.00</p>
                     </div>
-                    <div class="max-w-sm mt-6 h-px bg-white/30"></div>
+                    <div class="h-px max-w-sm mt-6 bg-white/30"></div>
                     <p class="mt-4 text-xs text-white/70">© 2025 TANDUR</p>
                 </div>
 
