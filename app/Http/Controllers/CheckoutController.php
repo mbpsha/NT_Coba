@@ -540,7 +540,7 @@ class CheckoutController extends Controller
     private function getProductImageUrl($gambar)
     {
         if (!$gambar) {
-            return asset('/assets/dashboard/profil.png');
+            return asset('assets/dashboard/profil.png');
         }
 
         $clean = preg_replace('#^/?(public|storage)/#', '', str_replace('\\', '/', $gambar));
