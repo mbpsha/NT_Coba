@@ -5,7 +5,8 @@ import { Head } from '@inertiajs/vue3'
 
 // gunakan aset yang sama seperti sebelumnya
 import Logo from '*/dashboard/logo-tandur.png'
-import Profil from '*/dashboard/profil.png'
+import Profil from '*/dashboard/keunggulan-alat.png'
+import Gambar3D from '*/dashboard/gambar-3D.png'
 </script>
 
 <template>
@@ -83,13 +84,13 @@ import Profil from '*/dashboard/profil.png'
               </ul>
             </div>
 
-            <!-- 3 Kartu gambar profil (konten asli) -->
+            <!-- Panel Gambar: atas keunggulan-alat-0.png, bawah gambar-3D.png -->
             <div class="grid grid-cols-1 gap-4">
-              <div class="bg-white/10 rounded-xl h-40 flex items-center justify-center shadow ring-1 ring-white/20">
-                <img :src="Profil" alt="" class="h-20 w-20 object-contain" />
+              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-2 md:p-2 h-40 md:h-53">
+                <img :src="Profil" alt="Keunggulan Alat" class="h-full w-auto object-contain" />
               </div>
-              <div class="bg-white/10 rounded-xl h-40 flex items-center justify-center shadow ring-1 ring-white/20">
-                <img :src="Profil" alt="" class="h-20 w-20 object-contain" />
+              <div class="bg-white/9 rounded-xl flex items-center justify-center shadow ring-0 ring-white/15 p-2 md:p-2 h-40 md:h-55">
+                <img :src="Gambar3D" alt="Render 3D" class="h-full w-auto object-contain" />
               </div>
             </div>
           </section>

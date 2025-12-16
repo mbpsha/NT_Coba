@@ -118,44 +118,46 @@ console.log('Render Cart.vue')
 </script>
 
 <template>
-  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen">
+  <div class="font-inter text-gray-900 bg-gray-100 min-h-screen flex flex-col">
     <Header />
     <Head title="Keranjang" />
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-lg font-semibold">Keranjang</h1>
-        <button @click="router.visit('/toko')" class="px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300">Kembali</button>
+    <main class="flex-1 px-4 sm:px-6 lg:px-8 pt-24 pb-16 space-y-6">
+      <div class="relative w-full">
+        <h1 class="text-lg font-semibold text-center">Keranjang</h1>
+        <button
+          @click="router.visit('/toko')"
+          class="absolute left-4 top-0 px-4 py-2 text-sm rounded-md bg-gray-200 hover:bg-gray-300"
+        >
+          ← Kembali
+        </button>
       </div>
 
       <!-- Empty -->
-      <div v-if="!items.length" class="p-6 bg-white rounded-xl border text-sm text-gray-600">
+      <div v-if="!items.length" class="max-w-5xl mx-auto p-6 bg-white rounded-xl border text-sm text-gray-600">
         Keranjang kosong.
       </div>
 
       <!-- Items + Summary -->
-      <div v-else class="grid md:grid-cols-[1fr_280px] gap-6">
+      <div v-else class="max-w-5xl mx-auto grid md:grid-cols-[1fr_280px] gap-6">
         <div class="space-y-3">
-            <div v-for="it in itemsList" :key="it.id_detail_keranjang"
-              class="flex items-center gap-4 bg-white rounded-xl border p-3">
-              <img
-                :src="imgUrl(it.product.gambar)"
-                alt=""
-                class="w-16 h-16 object-contain rounded border"
-                @error="$event.target.src = FALLBACK"
-              />
+          <div
+            v-for="it in itemsList"
+            :key="it.id_detail_keranjang"
+            class="flex items-center gap-4 bg-white rounded-xl border p-3"
+          >
+            <img
+              :src="imgUrl(it.product.gambar)"
+              alt=""
+              class="w-16 h-16 object-contain rounded border"
+              @error="$event.target.src = FALLBACK"
+            />
 
             <div class="flex-1">
               <p class="text-sm font-medium">{{ it.product?.nama_produk || 'Produk' }}</p>
               <div class="flex items-center gap-2 mt-2">
-                <button @click="decrementQty(it)"
-                  class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">
-                  -
-                </button>
+                <button @click="decrementQty(it)" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">-</button>
                 <span class="text-sm font-medium w-8 text-center">{{ it.qty || 1 }}</span>
-                <button @click="incrementQty(it)"
-                        class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">
-                  +
-                </button>
+                <button @click="incrementQty(it)" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 hover:bg-gray-100">+</button>
               </div>
               <p class="text-[11px] text-gray-500 mt-1">{{ fmt(it.product?.harga || 0) }} / pcs</p>
             </div>
@@ -164,8 +166,7 @@ console.log('Render Cart.vue')
               <div class="text-sm font-semibold text-green-700">
                 {{ fmt((it.product?.harga || 0) * (it.qty || 0)) }}
               </div>
-              <button @click="checkoutSingle(it)"
-                      class="text-[11px] px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700">
+              <button @click="checkoutSingle(it)" class="text-[11px] px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700">
                 Checkout
               </button>
             </div>
@@ -179,8 +180,7 @@ console.log('Render Cart.vue')
           <div class="flex justify-between"><span>Biaya Pengiriman</span><span>{{ fmt(summaryView.ongkir) }}</span></div>
           <div class="border-t my-2"></div>
           <div class="flex justify-between font-semibold"><span>Total</span><span>{{ fmt(summaryView.total) }}</span></div>
-          <button @click="checkoutAll"
-                  class="w-full h-10 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm">
+          <button @click="checkoutAll" class="w-full h-10 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm">
             Checkout All
           </button>
         </aside>
