@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\News;
 use App\Models\User;
@@ -60,9 +61,9 @@ Route::middleware('auth')->group(function () {
 
 // Halaman publik
 Route::get('/dashboard', function () {
-    if (auth()->check()) {
+    if (Auth::check()) {
         // Jika admin -> redirect ke admin dashboard
-        if (auth()->user()->role === 'admin') {
+        if (Auth::user()->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
     }

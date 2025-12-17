@@ -3,7 +3,6 @@ import Header from '@/Components/User/Header.vue'
 import Footer from '@/Components/User/Footer.vue'
 import { Head, router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import axios from 'axios'
 
 const props = defineProps({
   user: { type: Object, default: () => ({}) },
@@ -95,13 +94,17 @@ function updateQty(cartDetailId, newQty) {
     }
   }
 
-  // send request to server; if it fails, reload page to reflect server state
-  axios.post(route('cart.update.qty'), {
+  // send request to server using Inertia (auto handles CSRF)
+  router.post(route('cart.update.qty'), {
     id_detail: cartDetailId,
     qty: newQty
-  }).catch(() => {
-    // fallback: reload to sync
-    window.location.reload()
+  }, {
+    preserveScroll: true,
+    preserveState: true,
+    onError: () => {
+      // fallback: reload to sync
+      router.reload()
+    }
   })
 }
 

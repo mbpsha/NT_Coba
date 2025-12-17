@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 
-import Logo from '*/dashboard/logo-ngundur.png'
+import Logo from '*/dashboard/logo-tandur.png'
 import Background from '*/login/BackgroundWOverlay.png'
 
 const page = usePage()
@@ -106,16 +106,16 @@ function sendResetLink() {
               />
               <button
                 type="button"
-                class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
                 :aria-label="showPassword ? 'Hide password' : 'Show password'"
                 @click="togglePassword"
               >
-                <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
                   <circle cx="12" cy="12" r="3" stroke-width="2" stroke="currentColor" />
                 </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M3 3l18 18M10.58 10.58A3 3 0 0113.5 13.5M6.1 6.1C3.9 7.9 2.25 12 2.25 12s3.75 7.5 9.75 7.5c2.02 0 3.82-.52 5.34-1.38M13.42 13.42C12.99 13.8 12.52 14 12 14a3 3 0 01-3-3c0-.52.2-.99.58-1.42M17.9 17.9C20.1 16.1 21.75 12 21.75 12s-3.75-7.5-9.75-7.5c-1.03 0-2.01.15-2.93.42" />
                 </svg>
@@ -123,7 +123,7 @@ function sendResetLink() {
             </div>
             <div v-if="form.errors.password" class="mt-1 text-sm text-red-600">{{ form.errors.password }}</div>
             <!-- Lupa Password link aligned right under password -->
-            <div class="mt-2 flex justify-end">
+            <div class="flex justify-end mt-2">
               <button type="button" class="text-sm text-black underline" @click="showReset = !showReset">
                 {{ showReset ? 'Tutup Reset Password' : 'Lupa Password?' }}
               </button>
@@ -136,7 +136,7 @@ function sendResetLink() {
         </form>
 
         <!-- Reset Password panel -->
-        <div v-if="showReset" class="mt-4 p-4 bg-white/80 rounded-md">
+        <div v-if="showReset" class="p-4 mt-4 rounded-md bg-white/80">
           <h2 class="mb-2 text-sm font-semibold text-gray-800">Reset Password</h2>
           <p class="mb-3 text-xs text-gray-600">Masukkan email Anda. Kami akan mengirimkan link untuk reset password.</p>
           <div>
