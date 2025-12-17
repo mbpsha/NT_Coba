@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\Product;
@@ -96,10 +97,22 @@ class CartController extends Controller
             'qty' => 'required|integer|min:0'
         ]);
 
-        $detail = CartDetail::findOrFail($validated['id_detail']);
+        $detail = CartDetail::with('cart')->findOrFail($validated['id_detail']);
+
+        // Debug untuk hosting
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Not authenticated'], 401);
+        }
 
         // Pastikan user owns this cart
-        abort_unless($detail->cart->id_user === Auth::id(), 403);
+        if ($detail->cart->id_user !== Auth::id()) {
+            Log::error('Cart ownership mismatch', [
+                'cart_user_id' => $detail->cart->id_user,
+                'auth_user_id' => Auth::id(),
+                'detail_id' => $validated['id_detail']
+            ]);
+            abort(403, 'Unauthorized cart access');
+        }
 
         $qty = (int) $validated['qty'];
 

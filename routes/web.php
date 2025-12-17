@@ -30,6 +30,23 @@ use App\Http\Controllers\Auth\NewPasswordController;
 // Root -> dashboard publik
 Route::get('/', fn () => redirect()->route('dashboard'));
 
+// DEBUG ROUTE - HAPUS SETELAH TESTING!
+Route::get('/debug-session', function() {
+    $user = Auth::user();
+    return response()->json([
+        'auth_check' => Auth::check(),
+        'auth_id' => Auth::id(),
+        'user' => $user ? [
+            'id_user' => $user->id_user,
+            'email' => $user->email,
+            'username' => $user->username,
+        ] : null,
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_data' => session()->all(),
+    ]);
+})->middleware('auth');
+
 // Auth (guest)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
