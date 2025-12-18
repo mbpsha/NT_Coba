@@ -45,7 +45,15 @@ Route::middleware('auth')->group(function () {
 
 // Halaman publik
 Route::get('/dashboard', function () {
-    $latestNews = News::published()->latest()->take(5)->get(); // kirim untuk carousel
+    if (auth()->check()) {
+        // Jika admin -> redirect ke admin dashboard
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+    }
+    // Jika bukan admin (termasuk guest), tampilkan dashboard user seperti biasa
+    $latestNews = News::published()->latest()->take(5)->get();
+
     return Inertia::render('User/Dashboard', [
         'welcome'     => 'Halo',
         'latestNews'  => $latestNews,
