@@ -89,7 +89,7 @@ function getStatusColor(status) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ order.id_order }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.user?.nama || 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ new Date(order.created_at).toLocaleDateString('id-ID') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Rp {{ order.total_harga?.toLocaleString('id-ID') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Rp {{ order.total_harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-3 py-1 rounded-full text-xs font-semibold"
@@ -176,15 +176,15 @@ function getStatusColor(status) {
                             <tbody>
                                 <tr v-for="item in selectedOrder.order_details" :key="item.id" class="border-t">
                                     <td class="px-4 py-3">{{ item.product?.nama_produk }}</td>
-                                    <td class="px-4 py-3">Rp {{ item.harga?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-4 py-3">Rp {{ item.harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                     <td class="px-4 py-3">{{ item.jumlah }}</td>
-                                    <td class="px-4 py-3 font-semibold">Rp {{ (item.harga * item.jumlah)?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-4 py-3 font-semibold">Rp {{ (item.harga * item.jumlah)?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 </tr>
                             </tbody>
                             <tfoot class="bg-gray-50 border-t-2">
                                 <tr>
                                     <td colspan="3" class="px-4 py-3 text-right font-semibold">Total:</td>
-                                    <td class="px-4 py-3 font-bold text-lg text-green-600">Rp {{ selectedOrder.total_harga?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-4 py-3 font-bold text-lg text-green-600">Rp {{ selectedOrder.total_harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 </tr>
                             </tfoot>
                         </table>

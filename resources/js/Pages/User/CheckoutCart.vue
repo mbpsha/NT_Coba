@@ -15,7 +15,7 @@ const props = defineProps({
 })
 
 const page = usePage()
-const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+const fmt = (n) => 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits:0 }).format(n).replace(/,/g, '.')
 const formatWeight = (weight) => {
   if (!weight) return ''
   const kg = weight / 1000

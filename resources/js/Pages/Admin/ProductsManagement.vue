@@ -107,17 +107,17 @@ function normalizeNumber(value) {
 }
 
 function formatHargaDisplay(value) {
-  // Format dengan koma untuk display
+  // Format dengan titik untuk display (pemisah ribuan)
   const num = normalizeNumber(value)
   if (!Number.isFinite(num)) return ''
-  return num.toLocaleString('id-ID')
+  return num.toLocaleString('id-ID').replace(/,/g, '.')
 }
 
 function handleHargaInput(event) {
   // Hanya ambil digit
   const raw = event.target.value.replace(/\D/g, '')
-  // Update input display dengan format koma
-  event.target.value = raw ? Number(raw).toLocaleString('id-ID') : ''
+  // Update input display dengan format titik sebagai pemisah ribuan
+  event.target.value = raw ? Number(raw).toLocaleString('id-ID').replace(/,/g, '.') : ''
   // Update form value dengan angka mentah
   form.harga = raw
 }
@@ -208,7 +208,7 @@ function deleteProduct(id) {
                                     <img :src="product.gambar || '/assets/dashboard/profil.png'" alt="Product" class="object-cover w-12 h-12 rounded">
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ product.nama_produk }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">Rp {{ product.harga?.toLocaleString('id-ID') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">Rp {{ product.harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{{ product.stok }} unit</td>
                                 <!-- Actions -->
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">

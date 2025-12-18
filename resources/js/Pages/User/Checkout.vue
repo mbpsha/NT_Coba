@@ -15,7 +15,7 @@ const props = defineProps({
 })
 
 const page = usePage()
-const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+const fmt = (n) => 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits:0 }).format(n).replace(/,/g, '.')
 const formatWeight = (weight) => {
   if (!weight) return ''
   const kg = weight / 1000
@@ -85,11 +85,21 @@ function decrementQty() {
 const orderForm = useForm({
   qty: currentQty,
 })
+
+const orderCreatedSuccessfully = ref(false)
+
 function createOrder() {
   orderForm.qty = currentQty.value
   orderForm.post(route('order.create', { id_produk: props.product.id_produk }), {
-    preserveScroll: false,
-    preserveState: false,
+    preserveScroll: true,
+    preserveState: true,
+    onSuccess: () => {
+      // Show success message
+      orderCreatedSuccessfully.value = true
+      setTimeout(() => {
+        orderCreatedSuccessfully.value = false
+      }, 3000)
+    },
     onError: (errors) => {
       console.error('Order creation failed:', errors)
       alert('Gagal membuat pesanan. Periksa data Anda.')
@@ -267,6 +277,15 @@ function submitPayment() {
             </div>
 
             <!-- Tombol Buat Pesanan / Selesaikan Pembayaran -->
+            <div v-if="orderCreatedSuccessfully" class="px-4 py-3 mb-3 border-l-4 border-green-500 rounded-md bg-green-50">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm font-semibold text-green-800">✓ Pesanan berhasil dibuat! Silakan upload bukti pembayaran di bawah.</p>
+              </div>
+            </div>
+
             <button @click="createOrder"
                     :disabled="orderForm.processing || !!orderId"
                     class="w-full h-10 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">

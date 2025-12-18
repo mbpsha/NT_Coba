@@ -81,7 +81,7 @@ function getStatusColor(status) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ payment.id_payment }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ payment.id_order }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ payment.order?.user?.nama || 'N/A' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Rp {{ payment.jumlah?.toLocaleString('id-ID') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">Rp {{ payment.jumlah?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ payment.metode_pembayaran }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ new Date(payment.created_at).toLocaleDateString('id-ID') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -154,7 +154,7 @@ function getStatusColor(status) {
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Amount</p>
-                            <p class="font-medium text-green-600">Rp {{ selectedPayment.jumlah?.toLocaleString('id-ID') }}</p>
+                            <p class="font-medium text-green-600">Rp {{ selectedPayment.jumlah?.toLocaleString('id-ID').replace(/,/g, '.') }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Payment Date</p>
@@ -168,7 +168,7 @@ function getStatusColor(status) {
                                     : 'Belum dihitung' }}
                             </p>
                             <p v-if="selectedPayment.order?.shipping_cost" class="text-xs text-gray-500">
-                                Ongkir: Rp {{ selectedPayment.order.shipping_cost?.toLocaleString('id-ID') }}
+                                Ongkir: Rp {{ selectedPayment.order.shipping_cost?.toLocaleString('id-ID').replace(/,/g, '.') }}
                                 <span v-if="selectedPayment.order?.shipping_etd">• ETD {{ selectedPayment.order.shipping_etd }} hari</span>
                             </p>
                         </div>
@@ -215,14 +215,14 @@ function getStatusColor(status) {
                                 <tr v-for="item in selectedPayment.order?.order_details" :key="item.id" class="border-t">
                                     <td class="px-4 py-3">{{ item.product?.nama_produk }}</td>
                                     <td class="px-4 py-3">{{ item.jumlah }}</td>
-                                    <td class="px-4 py-3">Rp {{ item.harga?.toLocaleString('id-ID') }}</td>
-                                    <td class="px-4 py-3 font-semibold">Rp {{ (item.harga * item.jumlah)?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-4 py-3">Rp {{ item.harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
+                                    <td class="px-4 py-3 font-semibold">Rp {{ (item.harga * item.jumlah)?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 </tr>
                             </tbody>
                             <tfoot class="bg-gray-50 border-t-2">
                                 <tr>
                                     <td colspan="3" class="px-4 py-3 text-right font-semibold">Total:</td>
-                                    <td class="px-4 py-3 font-bold text-lg text-green-600">Rp {{ selectedPayment.order?.total_harga?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-4 py-3 font-bold text-lg text-green-600">Rp {{ selectedPayment.order?.total_harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                 </tr>
                             </tfoot>
                         </table>

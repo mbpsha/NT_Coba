@@ -9,7 +9,7 @@ const props = defineProps({
   orders: { type: Array, required: true }
 })
 
-const fmt = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n)
+const fmt = (n) => 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits:0 }).format(n).replace(/,/g, '.')
 
 const paymentStatusColor = (status) => {
   const colors = {

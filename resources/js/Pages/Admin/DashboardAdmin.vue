@@ -112,7 +112,7 @@ onMounted(() => {
                             <tbody>
                                 <tr v-for="product in recentProducts" :key="product.id" class="border-b hover:bg-gray-50">
                                     <td class="px-2 py-3">{{ product.nama_produk }}</td>
-                                    <td class="px-2 py-3">Rp {{ product.harga?.toLocaleString('id-ID') }}</td>
+                                    <td class="px-2 py-3">Rp {{ product.harga?.toLocaleString('id-ID').replace(/,/g, '.') }}</td>
                                     <td class="px-2 py-3">
                                         <span class="px-2 py-1 text-xs text-green-700 bg-green-100 rounded">Terverifikasi</span>
                                     </td>
@@ -212,11 +212,11 @@ onMounted(() => {
                                                   return Math.max(pct, val > 0 ? 3 : 0) + '%'
                                                 })()
                                               }"
-                                              :title="`${sale.month}: Rp ${Number(sale.amount || 0).toLocaleString('id-ID')}`"
+                                              :title="`${sale.month}: Rp ${Number(sale.amount || 0).toLocaleString('id-ID').replace(/,/g, '.')}`"
                                             >
                                               <!-- Tooltip on hover -->
                                               <div v-if="sale.amount > 0" class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap shadow-xl z-10">
-                                                Rp {{ Number(sale.amount || 0).toLocaleString('id-ID') }}
+                                                Rp {{ Number(sale.amount || 0).toLocaleString('id-ID').replace(/,/g, '.') }}
                                                 <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
                                               </div>
                                             </div>
