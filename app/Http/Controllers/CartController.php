@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\Product;
@@ -96,10 +97,7 @@ class CartController extends Controller
             'qty' => 'required|integer|min:0'
         ]);
 
-        $detail = CartDetail::findOrFail($validated['id_detail']);
-
-        // Pastikan user owns this cart
-        abort_unless($detail->cart->id_user === Auth::id(), 403);
+        $detail = CartDetail::with('cart')->findOrFail($validated['id_detail']);
 
         $qty = (int) $validated['qty'];
 

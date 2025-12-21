@@ -168,7 +168,8 @@ class CheckoutController extends Controller
         }
 
         // Cek apakah ada order yang baru dibuat (dari session)
-        $orderId = session('order_id');
+        $orderId = session('_order_id') ?? session('order_id');
+
         if ($orderId) {
             // Load order yang sudah dibuat untuk tampilkan halaman konfirmasi pembayaran
             $order = Order::with(['orderDetails.product', 'address'])
@@ -540,7 +541,7 @@ class CheckoutController extends Controller
     private function getProductImageUrl($gambar)
     {
         if (!$gambar) {
-            return asset('/assets/dashboard/profil.png');
+            return asset('assets/dashboard/profil.png');
         }
 
         $clean = preg_replace('#^/?(public|storage)/#', '', str_replace('\\', '/', $gambar));

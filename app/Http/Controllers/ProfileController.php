@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Address;
+use App\Services\RajaOngkirService;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
@@ -50,6 +51,8 @@ class ProfileController extends Controller
             'alamat'      => ['nullable','string','max:255'],
             'province_id' => ['nullable','integer'],
             'city_id'     => ['nullable','integer'],
+            'provinsi'    => ['nullable','string','max:100'],
+            'kabupaten'   => ['nullable','string','max:100'],
             'kecamatan'   => ['nullable','string','max:100'],
             'kelurahan'   => ['nullable','string','max:100'],
             'nama_jalan'  => ['nullable','string','max:150'],
@@ -64,11 +67,27 @@ class ProfileController extends Controller
         $user->fill(Arr::only($data, ['nama','username','email','no_telp','alamat']))->save();
 
         $addressPayload = Arr::only($data, [
-            'province_id','city_id','kecamatan','kelurahan',
+            'province_id','city_id','provinsi','kabupaten','kecamatan','kelurahan',
             'nama_jalan','no_rumah','kode_pos','catatan','alamat'
         ]);
 
         if (array_filter($addressPayload)) {
+            // Auto-ambil nama provinsi dan kabupaten dari RajaOngkir jika tidak dikirim dari frontend
+            $rajaOngkir = app(RajaOngkirService::class);
+
+            $provinsiName = $data['provinsi'] ?? null;
+            $kabupatenName = $data['kabupaten'] ?? null;
+
+            // Jika provinsi kosong tapi ada province_id, ambil dari API
+            if (!$provinsiName && !empty($data['province_id'])) {
+                $provinsiName = $rajaOngkir->getProvinceName($data['province_id']);
+            }
+
+            // Jika kabupaten kosong tapi ada city_id, ambil dari API
+            if (!$kabupatenName && !empty($data['city_id'])) {
+                $kabupatenName = $rajaOngkir->getCityName($data['city_id'], $data['province_id'] ?? null);
+            }
+
             Address::updateOrCreate(
                 ['id_user' => $user->id_user, 'is_default' => true],
                 [
@@ -78,8 +97,10 @@ class ProfileController extends Controller
                     'alamat_lengkap'   => $data['alamat'] ?? '',
                     'province_id'      => $data['province_id'] ?? null,
                     'city_id'          => $data['city_id'] ?? null,
+                    'provinsi'         => $provinsiName ?? '',
+                    'kabupaten'        => $kabupatenName ?? '',
                     'kecamatan'        => $data['kecamatan'] ?? '',
-                    'kelurahan'        => $data['kelurahan'] ?? '',
+                    'kelurahan_desa'   => $data['kelurahan'] ?? '',
                     'nama_jalan'       => $data['nama_jalan'] ?? '',
                     'no_rumah'         => $data['no_rumah'] ?? '',
                     'kode_pos'         => $data['kode_pos'] ?? '',

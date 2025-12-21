@@ -27,7 +27,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 
 // Root -> dashboard publik
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', fn() => redirect()->route('dashboard'));
 
 // Auth (guest)
 Route::middleware('guest')->group(function () {
@@ -70,16 +70,16 @@ Route::get('/dashboard', function () {
     $latestNews = News::published()->latest()->take(5)->get();
 
     return Inertia::render('User/Dashboard', [
-        'welcome'     => 'Halo',
-        'latestNews'  => $latestNews,
+        'welcome' => 'Halo',
+        'latestNews' => $latestNews,
     ]);
 })->name('dashboard');
 
 // Berita Dinamis
-    Route::get('/berita',    [NewsController::class, 'index'])->name('berita');
-    Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
-    Route::get('/blog',   fn () => Inertia::render('User/Blog'))->name('blog');
-    Route::get('/about',  fn () => Inertia::render('User/About'))->name('about');
+Route::get('/berita', [NewsController::class, 'index'])->name('berita');
+Route::get('/berita/{id}', [NewsController::class, 'show'])->name('berita.show');
+Route::get('/blog', fn() => Inertia::render('User/Blog'))->name('blog');
+Route::get('/about', fn() => Inertia::render('User/About'))->name('about');
 
 
 Route::middleware(['auth', 'user'])->group(function () {
@@ -88,7 +88,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     // Toko
     Route::get('/toko', [TokoController::class, 'index'])->name('toko');
-    Route::get('/shop', fn () => redirect()->route('toko'))->name('shop');
+    Route::get('/shop', fn() => redirect()->route('toko'))->name('shop');
 });
 
 // Protected - No verification required (browsing, cart, etc)

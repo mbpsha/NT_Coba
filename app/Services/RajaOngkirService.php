@@ -189,4 +189,55 @@ class RajaOngkirService
             return null;
         }
     }
+
+    /**
+     * Get Province Name by ID
+     */
+    public function getProvinceName($provinceId): ?string
+    {
+        if (!$provinceId) return null;
+
+        try {
+            $provinces = $this->getProvinces();
+
+            foreach ($provinces as $province) {
+                if (($province['id'] ?? null) == $provinceId) {
+                    return $province['name'] ?? null;
+                }
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("RajaOngkir Get Province Name Error: {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    /**
+     * Get City Name by ID
+     */
+    public function getCityName($cityId, $provinceId = null): ?string
+    {
+        if (!$cityId) return null;
+
+        try {
+            // Jika ada province_id, cari di cities by province
+            if ($provinceId) {
+                $cities = $this->getCitiesByProvince($provinceId);
+            } else {
+                // Fallback: search all cities
+                $cities = $this->searchCities('');
+            }
+
+            foreach ($cities as $city) {
+                if (($city['id'] ?? null) == $cityId) {
+                    return $city['name'] ?? null;
+                }
+            }
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("RajaOngkir Get City Name Error: {$e->getMessage()}");
+            return null;
+        }
+    }
 }

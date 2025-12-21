@@ -227,7 +227,7 @@ onMounted(async () => {
         {{ $page.props.flash.success }}
       </div>
 
-      <section class="p-6 border border-green-200 shadow bg-green-50/70 rounded-xl space-y-4">
+      <section class="p-6 space-y-4 border border-green-200 shadow bg-green-50/70 rounded-xl">
         <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
           <div>
             <label class="block mb-1 text-sm">Username</label>
@@ -287,7 +287,7 @@ onMounted(async () => {
 
             <div
               v-if="!showAddressForm && storedAddressSummary"
-              class="p-4 bg-white border border-green-200 rounded-lg text-sm text-gray-700 leading-relaxed"
+              class="p-4 text-sm leading-relaxed text-gray-700 bg-white border border-green-200 rounded-lg"
             >
               {{ storedAddressSummary }}
             </div>
@@ -304,7 +304,7 @@ onMounted(async () => {
 
             <div
               v-if="showAddressForm"
-              class="grid gap-3 p-4 bg-white/80 border border-green-200 rounded-lg"
+              class="grid gap-3 p-4 border border-green-200 rounded-lg bg-white/80"
             >
               <div>
                 <label class="block mb-1 text-xs text-gray-600">Provinsi *</label>
@@ -399,7 +399,7 @@ onMounted(async () => {
                 <p v-if="form.errors.catatan" class="mt-1 text-xs text-red-600">{{ form.errors.catatan }}</p>
               </div>
 
-              <div class="text-xs text-gray-500 border-t pt-2">
+              <div class="pt-2 text-xs text-gray-500 border-t">
                 <p><strong>Alamat Preview:</strong></p>
                 <p>{{ formattedAddress || 'Lengkapi alamat untuk menampilkan preview.' }}</p>
               </div>
@@ -442,7 +442,7 @@ onMounted(async () => {
     <transition name="fade">
       <div
         v-if="showSavedToast"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 text-sm text-white bg-green-600 rounded-md shadow"
+        class="fixed px-4 py-2 text-sm text-white -translate-x-1/2 bg-green-600 rounded-md shadow bottom-6 left-1/2"
         role="alert"
       >
         Informasi profil berhasil disimpan.
