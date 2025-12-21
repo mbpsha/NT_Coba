@@ -38,7 +38,6 @@ npm audit fix --force
 
 ```bash
 cp .env.example .env
-php artisan key:generate
 ```
 
 ---
@@ -66,6 +65,10 @@ php artisan migrate
 
 ```bash
 php artisan db:seed
+```
+
+```bash
+atau bisa import database yang disertakan
 ```
 
 ---
@@ -104,32 +107,4 @@ Akses aplikasi:
 
 ```
 http://127.0.0.1:8000
-```
-
----
-
-### ⚠️ URUTAN PENTING (JANGAN DIBALIK)
-
-1. `composer install`
-2. `npm install`
-3. Setup `.env` & `php artisan key:generate`
-4. `php artisan migrate`
-5. `npm run dev` atau `npm run build`
-6. `php artisan serve`
-
 <!-- ...existing content... -->
-
-```
-
----
-
-Ini **udah clean, profesional, dan dosen-approved**.  
-Lu tinggal commit README ini, dosen pull → baca → jalan.
-
-Kalau lu mau next step:
-- bikin **README versi Inggris**
-- atau tambahin **diagram arsitektur Laravel + Vue**
-- atau nyiapin **jawaban kalau dosen nanya “kenapa audit force?”**
-
-gas, tinggal bilang.
-```
