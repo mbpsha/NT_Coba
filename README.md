@@ -1,6 +1,3 @@
-😂 iya iya, masuk akal. Nih **VERSI FINAL – SATU BLOK UTUH**, tinggal **CTRL+A → COPY → PASTE** ke `README.md`. Nggak ada potongan, nggak ribet.
-
-````md
 <!-- ...existing content... -->
 
 ## Setup Instructions
