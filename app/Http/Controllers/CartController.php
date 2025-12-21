@@ -99,21 +99,6 @@ class CartController extends Controller
 
         $detail = CartDetail::with('cart')->findOrFail($validated['id_detail']);
 
-        // Debug untuk hosting
-        if (!Auth::check()) {
-            return response()->json(['error' => 'Not authenticated'], 401);
-        }
-
-        // Pastikan user owns this cart
-        if ($detail->cart->id_user !== Auth::id()) {
-            Log::error('Cart ownership mismatch', [
-                'cart_user_id' => $detail->cart->id_user,
-                'auth_user_id' => Auth::id(),
-                'detail_id' => $validated['id_detail']
-            ]);
-            abort(403, 'Unauthorized cart access');
-        }
-
         $qty = (int) $validated['qty'];
 
         if ($qty <= 0) {

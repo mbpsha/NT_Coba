@@ -375,6 +375,17 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Simpan order_id ke session untuk payment confirmation
+            session(['_order_id' => $order->id_order]);
+
+            \Log::info('[ORDER_CREATED] Order created successfully', [
+                'order_id' => $order->id_order,
+                'user_id' => $user->id_user,
+                'total' => $total,
+                'session_id' => session()->getId(),
+                'session_order_id_saved' => session('_order_id'),
+            ]);
+
             return redirect()->route('checkout.cart')->with([
                 'order_created' => true,
                 'order_id' => $order->id_order,

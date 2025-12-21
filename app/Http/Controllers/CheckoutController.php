@@ -168,7 +168,16 @@ class CheckoutController extends Controller
         }
 
         // Cek apakah ada order yang baru dibuat (dari session)
-        $orderId = session('order_id');
+        $orderId = session('_order_id') ?? session('order_id');
+
+        \Log::info('[CHECKOUT_CART] Checking order_id from session', [
+            'session_id' => session()->getId(),
+            'session_order_id' => session('_order_id'),
+            'session_order_id_alt' => session('order_id'),
+            'final_order_id' => $orderId,
+            'user_id' => $user->id_user,
+        ]);
+
         if ($orderId) {
             // Load order yang sudah dibuat untuk tampilkan halaman konfirmasi pembayaran
             $order = Order::with(['orderDetails.product', 'address'])

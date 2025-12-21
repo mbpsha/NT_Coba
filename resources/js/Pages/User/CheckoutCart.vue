@@ -61,7 +61,7 @@ function updateQty(productItem, change) {
   if (orderId.value || !props.cart_id) {
     return
   }
-  
+
   const newQty = productItem.qty + change
   if (newQty < 1) return
   if (newQty > productItem.stok) {
@@ -113,10 +113,7 @@ function submitPayment() {
   }
   payForm.post(route('payment.confirm', { id_order: orderId.value }), {
     forceFormData: true,
-    preserveScroll: true,
-    onSuccess: () => {
-      router.visit(route('orders.my'), { preserveScroll: true })
-    }
+    preserveScroll: false
   })
 }
 </script>

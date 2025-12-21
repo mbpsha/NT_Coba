@@ -113,10 +113,7 @@ function submitPayment() {
   }
   payForm.post(route('payment.confirm', { id_order: orderId.value }), {
     forceFormData: true,
-    preserveScroll: true,
-    onSuccess: () => {
-      router.visit(route('orders.my'), { preserveScroll: true })
-    }
+    preserveScroll: false
   })
 }
 </script>
